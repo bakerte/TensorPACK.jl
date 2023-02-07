@@ -63,7 +63,7 @@ println()
 const TENPACK = TensorPACK
 export TENPACK
 
-libpath = "lib/"
+libpath = "../lib/"
 
 #Linear algebra routines
 
