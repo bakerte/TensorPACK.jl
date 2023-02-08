@@ -1,5 +1,6 @@
 
-include("../TENPACK.jl")
+include("../src/TENPACK.jl")
+using .TensorPACK
 
 function testfct(test::Bool,message::String)
 #  try test
