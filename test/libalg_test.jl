@@ -13,10 +13,10 @@ tol = [1E-4,1E-10,1E-5,1E-11]
 for g = 1:length(typevec)
   local A = rand(typevec[g],100,100)
   local A += A'
-  local D,U = TENPACK.libeigen(A)
+  local D,U = libeigen(A)
 
   local tA = tens(A)
-  local tD,tU = TENPACK.libeigen(tA)
+  local tD,tU = libeigen(tA)
 
   local checkD,checkU = LinearAlgebra.eigen(A)
 
