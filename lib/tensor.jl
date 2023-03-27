@@ -321,7 +321,11 @@ function makeId(A::tens{W},iA::Array{P,1}) where {W <: Number, P <: Union{Intege
 #    addId = reshape!(addId,prod(size(addId)),1)
     Id = tens(Id.T * addId.T) #contract(Id,ndims(Id),addId,1)
   end
-  newsize = ntuple(g->size(Id,g),2*length(iA))
+  newsize = Array{intType,1}(undef,2*length(iA))
+  @inbounds @simd for x = 1:length(iA)
+    newsize[2*x-1] = size(A,iA[x][1])
+    newsize[2*x] = size(A,iA[x][1])
+  end
   return reshape!(Id,newsize...)
 end
 
