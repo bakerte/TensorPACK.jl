@@ -343,8 +343,8 @@ function makeId(A::Array{W,N},iA::Array{P,1}) where {N, W <: Number,P <: Union{I
   end
   newsize = Array{intType,1}(undef,2*length(iA))
   @inbounds @simd for x = 1:length(iA)
-    newsize[2*x-1] = size(A,iA[x])
-    newsize[2*x] = size(A,iA[x])
+    newsize[2*x-1] = size(A,iA[x][1])
+    newsize[2*x] = size(A,iA[x][1])
   end
   return reshape!(Id,newsize...)
 end
@@ -1860,3 +1860,4 @@ Generates a matrix of size `(x,y)` with element type `outtype`.
 @inline function undefMat(outtype::DataType,x::Integer,y::Integer)
   return Array{outtype,2}(undef,x,y)
 end
+export undefMat
