@@ -60,17 +60,22 @@ LinearAlgebra.BLAS.set_num_threads(juliathreads)
 #println("BLAS threads: ",ccall((:openblas_get_num_threads64_, Base.libblas_name), Cint, ()))
 println()
 
-const TENPACK = TensorPACK
-export TENPACK
 
-libpath = "../lib/"
+const libdir = @__DIR__
+
+libpath = libdir*"/lib/"
 
 #Linear algebra routines
 
 include(libpath*"tensor.jl")
 
 include(libpath*"libalg.jl")
-include(libpath*"Krylov.jl")
+
+
+
+const testpath = libdir*"/test/"
+
+include(testpath*"alltest.jl")
 
 end
 
