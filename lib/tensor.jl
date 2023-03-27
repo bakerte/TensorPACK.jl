@@ -318,8 +318,8 @@ function makeId(A::tens{W},iA::Array{P,1}) where {W <: Number, P <: Union{Intege
   Id = makeId(W,size(A,iA[1][1]),addone=true,addRightDim=true)
   for g = 2:length(iA)
     addId = makeId(W,size(A,iA[g][1]),addone=true,addRightDim=false)
-    addId = reshape!(addId,size(addId)...,1)
-    Id = contract(Id,ndims(Id),addId,1)
+#    addId = reshape!(addId,prod(size(addId)),1)
+    Id = tens(Id.T * addId.T) #contract(Id,ndims(Id),addId,1)
   end
   newsize = ntuple(g->size(Id,g),2*length(iA))
   return reshape!(Id,newsize...)
@@ -330,9 +330,23 @@ function makeId(A::tens{W},iA::Integer) where {W <: Number}
 end
 
 function makeId(A::Array{W,N},iA::Array{P,1}) where {N, W <: Number,P <: Union{Integer,Tuple}}
-  densA = tens(A)
-  Id = makeId(densA,iA)
-  return makedens(Id)
+  a = size(A,iA[1][1])
+  Id = zeros(W,a,a) + LinearAlgebra.I #makeId(W,size(A,iA[1][1]),addone=true,addRightDim=false)
+  Id = reshape!(Id,prod(size(Id)),1)
+
+  for g = 2:length(iA)
+    b = size(A,iA[g][1])
+    addId = zeros(W,b,b) + LinearAlgebra.I
+    addId = reshape!(addId,1,prod(size(addId)))
+    Id = reshape!(Id,prod(size(Id)),1)
+    Id *= addId #contract(Id,ndims(Id),addId,1)
+  end
+  newsize = Array{intType,1}(undef,2*length(iA))
+  @inbounds @simd for x = 1:length(iA)
+    newsize[2*x-1] = size(A,iA[x])
+    newsize[2*x] = size(A,iA[x])
+  end
+  return reshape!(Id,newsize...)
 end
 
 function makeId(A::Array{W,N},iA::Integer...) where {W <: Number,N}
@@ -1186,7 +1200,7 @@ function inverse_element(x::Number,zeronum::Real)
   return abs(x) > zeronum ? 1/x : 0.
 end
 =#
-import Base.inv
+#import Base.inv
 """
   G = invmat!(M[,zero=])
 
@@ -1216,7 +1230,7 @@ Creates inverse of a diagonal matrix with output `G`; if value is below `zero`, 
 See also: [`invmat!`](@ref)
 """
 function invmat(M::TensType;zeronum::Float64=1E-16) 
-  return invmat!(copy(M),zeronum=zeronum)
+  return invmat!(copy(M))#,zeronum=zeronum)
 end
 export invmat
 
