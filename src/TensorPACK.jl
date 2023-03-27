@@ -63,7 +63,7 @@ println()
 
 const libdir = @__DIR__
 
-libpath = libdir*"..//lib/"
+libpath = libdir*"/../lib/"
 
 #Linear algebra routines
 
@@ -73,7 +73,7 @@ include(libpath*"libalg.jl")
 
 
 
-const testpath = libdir*"../test/"
+const testpath = libdir*"/../test/"
 
 include(testpath*"alltest.jl")
 
