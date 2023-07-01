@@ -3,7 +3,7 @@ println("#            +--------------+")
 println("#>-----------|  svdtest.jl  |-----------<")
 println("#            +--------------+")
 
-using BenchmarkTools
+#using BenchmarkTools
 
 @makeQNs "spin" U1
 QS = 2
