@@ -60,6 +60,8 @@ LinearAlgebra.BLAS.set_num_threads(juliathreads)
 #println("BLAS threads: ",ccall((:openblas_get_num_threads64_, Base.libblas_name), Cint, ()))
 println()
 
+const TENPACK = TensorPACK
+export TENPACK
 
 const libdir = @__DIR__
 
