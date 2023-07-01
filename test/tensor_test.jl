@@ -168,11 +168,11 @@ fulltest &= testfct(testval,"makeId (index inputs, [1,2,3])")
 println()
 
 B = convertTens(ComplexF64,tens(A))
-testval = eltype(B) == ComplexF64 && size(B) == size(A) && norm(B) == norm(A) && typeof(B) <: denstens
+testval = eltype(B) == ComplexF64 && size(B) == size(A) && isapprox(norm(B),norm(A)) && typeof(B) <: denstens
 fulltest &= testfct(testval,"convertTens(denstens)")
 
 B = convertTens(ComplexF64,A)
-testval = eltype(B) == ComplexF64 && size(B) == size(A) && norm(B) == norm(A)
+testval = eltype(B) == ComplexF64 && size(B) == size(A) && isapprox(norm(B),norm(A))
 fulltest &= testfct(testval,"convertTens(Array)")
 
 println()
