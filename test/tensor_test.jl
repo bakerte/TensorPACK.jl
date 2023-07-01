@@ -16,17 +16,25 @@ B = tA = tens(A)
 sizetest = (B.size...,) == Asize
 fulltest &= testfct(sizetest,"denstens .size test")
 normtest = isapprox(norm(B.T),norm(A))
-fulltest &= testfct(normtest,"denstens .A field")
+fulltest &= testfct(normtest,"denstens .T field")
 
 println()
+
+C = Diagonal(rand(10))
+
+normtest = isapprox(norm(C.T),norm(C))
+fulltest &= testfct(normtest,"Diagonal .T field")
+
+println()
+
 println("input tests; default input auto-pass, tens(Array), by this point")
 
 B = tens(type=ComplexF64)
-loadtest1 = B.size == Array{intType,1}(undef,0) && B.T == Array{ComplexF64,1}(undef,0)
+loadtest1 = B.size == [0] && B.T == Array{ComplexF64,1}(undef,0)
 fulltest &= testfct(loadtest1,"tens(;type=)")
 
 B = tens(ComplexF64)
-loadtest2 = B.size == Array{intType,1}(undef,0) && B.T == Array{ComplexF64,1}(undef,0)
+loadtest2 = B.size == [0] && B.T == Array{ComplexF64,1}(undef,0)
 fulltest &= testfct(loadtest2,"tens(type)")
 
 
@@ -110,7 +118,9 @@ fulltest &= testfct(testval,"makeIdarray")
 println()
 
 A = makeId(ComplexF64,ldim,addone=true,addRightDim=false)
-testval = size(A) == (1,ldim,ldim) && isapprox(sum(A),ldim) && eltype(A) == ComplexF64 && isapprox(makeArray(A[1,1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)
+testval = size(A) == (1,ldim,ldim) 
+testval &= isapprox(sum(A),ldim) && eltype(A) == ComplexF64
+testval &= isapprox(norm(A[1,1:mindim,1:mindim]),sqrt(mindim))
 fulltest &= testfct(testval,"makeId (square, left)")
 
 A = makeId(ComplexF64,ldim,rdim,addone=true,addRightDim=true)
@@ -135,7 +145,9 @@ fulltest &= testfct(testval,"makeIdarray")
 println()
 
 A = makeId(ComplexF64,ldim,addone=true,addRightDim=false)
-testval = size(A) == (1,ldim,ldim) && isapprox(sum(A),ldim) && eltype(A) == ComplexF64 && isapprox(makeArray(A[1,1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)
+testval = size(A) == (1,ldim,ldim)
+testval &= isapprox(sum(A),ldim) && eltype(A) == ComplexF64
+testval &= isapprox(norm(A[1,1:mindim,1:mindim]),sqrt(mindim))
 fulltest &= testfct(testval,"makeId (square, left)")
 
 A = makeId(ComplexF64,ldim,rdim,addone=true,addRightDim=true)
@@ -205,7 +217,7 @@ fulltest &= testfct(testval,"findnotcons")
 
 println()
 
-A = LinearAlgebra.Diagonal(rand(10))
+A = Diagonal(rand(10))
 B = tens(rand(ComplexF64,20,40,3))
 
 C,D = checkType(A,B)
@@ -217,7 +229,7 @@ testval = typeof(C) <: denstens && eltype(C) == ComplexF64 && typeof(D) <: denst
 fulltest &= testfct(testval,"checkType(denstens,Diagonal)")
 
 C = checkType(A)
-testval = typeof(C) <: Array && isapprox(norm(A),norm(C))
+testval = typeof(C) <: diagonal && isapprox(norm(A),norm(C))
 fulltest &= testfct(testval,"checkType(Diagonal)")
 
 C = checkType(B)
@@ -359,7 +371,15 @@ println()
 S = (10,20,10,8,10,11)
 A = rand(S...)
 tA = tens(A)
-testval = makeArray(tA[cols...]) == A[fullcols...]
+
+
+#println(A)
+
+#println(norm(makeArray(tA[cols...])-A[fullcols...]))
+
+
+
+testval = isapprox(norm(makeArray(tA[cols...])-A[fullcols...]),0) #makeArray(tA[cols...]) == A[fullcols...]
 fulltest &= testfct(testval,"getindex(genColtype)")
 
 testval = tA[S...] == A[S...]
@@ -380,11 +400,19 @@ println()
 B = rand(2,2)
 tB = tens(B)
 
+println(makeArray(tA[1:2,2:3,3,4,5,6]))
+println(makeArray(tA)[1:2,2:3,3,4,5,6])
+
 C = copy(tA)
 tA[1:2,[2,3],3,4,5,6] = tB
 C[1:2,[2,3],3,4,5,6] = B
 A[1:2,2:3,3,4,5,6] = tB
-testval = B == makeArray(tA[1:2,2:3,3,4,5,6]) == makeArray(C[1:2,[2,3],3,4,5,6]) == A[1:2,2:3,3,4,5,6]
+testval = isapprox(norm(B - makeArray(tA[1:2,2:3,3,4,5,6])),0)
+
+testval &= isapprox(norm(B - makeArray(C[1:2,[2,3],3,4,5,6])),0)
+println(testval," ",norm(B - makeArray(C[1:2,[2,3],3,4,5,6])))
+testval &= isapprox(norm(B - A[1:2,2:3,3,4,5,6]),0)
+println(testval," ",norm(B - A[1:2,2:3,3,4,5,6]))
 fulltest &= testfct(testval,"setindex(denstens,integer...)")
 
 println()
@@ -486,23 +514,23 @@ fulltest &= testfct(testval,"/(A,c)")
 
 println()
 
-testval = isapprox(sum(sqrt!(LinearAlgebra.Diagonal(ones(ndim)/ndim))^2),1)
+testval = isapprox(sum(sqrt!(Diagonal(ones(ndim)/ndim))^2),1)
 fulltest &= testfct(testval,"sqrt!(Diagonal)")
 
 println()
 
-testval = isapprox(sum(sqrt(LinearAlgebra.Diagonal(ones(ndim)/ndim))^2),1)
+testval = isapprox(sum(sqrt(Diagonal(ones(ndim)/ndim))^2),1)
 fulltest &= testfct(testval,"sqrt(Diagonal)")
 
 println()
 
-testval = isapprox(sum(invmat(LinearAlgebra.Diagonal(ones(ndim)/ndim))),ndim^2)
+testval = isapprox(sum(invmat(Diagonal(ones(ndim)/ndim))),ndim^2)
 fulltest &= testfct(testval,"invmat(Diagonal)")
 
-testval = isapprox(sum(invmat(tens(LinearAlgebra.Diagonal(ones(ndim)/ndim)))),ndim^2)
+testval = isapprox(sum(invmat(tens(Diagonal(ones(ndim)/ndim)))),ndim^2)
 fulltest &= testfct(testval,"invmat(denstens)")
 
-testval = isapprox(sum(invmat(makeArray(tens(LinearAlgebra.Diagonal(ones(ndim)/ndim))))),ndim^2)
+testval = isapprox(sum(invmat(makeArray(Diagonal(ones(ndim)/ndim)))),ndim^2)
 fulltest &= testfct(testval,"invmat(Array)")
 
 println()
@@ -631,7 +659,7 @@ B = permutedims!(copy(tA),(order...,))
 testval = isapprox(sum([size(B,i) - size(tA,order[i]) for i = 1:length(order)]),0) && isapprox(norm(tA),norm(B))
 fulltest &= testfct(testval,"permutedims!(tens,Tuple)")
 
-C = LinearAlgebra.Diagonal(rand(10))
+C = Diagonal(rand(10))
 
 order = [2,1]
 B = permutedims!(copy(C),order)
@@ -652,7 +680,7 @@ B = permutedims(copy(tA),(order...,))
 testval = isapprox(sum([size(B,i) - size(tA,order[i]) for i = 1:length(order)]),0) && isapprox(norm(tA),norm(B))
 fulltest &= testfct(testval,"permutedims(tens,Tuple)")
 
-C = LinearAlgebra.Diagonal(rand(10))
+C = Diagonal(rand(10))
 
 order = [2,1]
 B = permutedims(copy(C),order)

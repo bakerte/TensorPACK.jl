@@ -26,13 +26,22 @@ function testfct(test::Bool,message::String)
     println()
   end
   
-  const tests = [
+  tests = [
     "tensor_test.jl",
-    "libalg_test.jl"#=,
-  ######
-  ######
-  ######
-  "dmrg_test.jl"=#
+
+    "QN_test.jl",
+    "Qtensor_test.jl",
+
+    "libalg_test.jl",
+
+    "Qlinearalgebra.jl",
+    "contract_time.jl",
+    "svdtest.jl",
+
+    "dense_contract_test.jl",
+    "dense_decomposition_test.jl",
+    "krylov_test.jl",
+    "strassen_test.jl"
   ]
   
   """
@@ -42,7 +51,7 @@ function testfct(test::Bool,message::String)
   
   See also: [`libdir`](@ref)
   """
-  function libtest(;tests::Array{String,1}=tests,path::String=libdir*"/test/")
+  function libtest(;tests::Array{String,1}=tests,dir::String=libdir,path::String=dir*"/test/")
   
     fulltestrecord = Array{Bool,1}(undef,length(tests))
   
