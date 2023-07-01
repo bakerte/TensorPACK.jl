@@ -9,7 +9,7 @@
 # This code is native to the julia programming language (v1.5.4+)
 #
 
-const libblastrampoline = "libblastrampoline"
+const libblastrampoline = "libblastrampoline" * (Sys.iswindows() ? "-5" : "")
 #libblastrampoline_handle = C_NULL
 
 import LinearAlgebra: BlasReal, BlasComplex, BlasFloat, BlasInt, DimensionMismatch, checksquare, axpy!
@@ -21,7 +21,12 @@ for elty in (:Float32,:Float64,:ComplexF32,:ComplexF64)
 
     #tridiagonal
     function libeigen!(dv::AbstractVector{$elty}, ev::AbstractVector{$elty},n::Integer; job::Char='V', rank::Integer=2,fct::Function=stev!)
-      return fct(dv, ev, n, job=job, rank=rank)
+      if n < length(dv)
+        out = fct(dv[1:n], ev[1:n], n, job=job, rank=rank)
+      else
+        out = fct(dv, ev, n, job=job, rank=rank)
+      end
+      return out
     end
 
     function libeigen!(dv::AbstractVector{$elty}, ev::AbstractVector{$elty};job::Char='V', rank::Integer=2) #stev!
@@ -29,7 +34,12 @@ for elty in (:Float32,:Float64,:ComplexF32,:ComplexF64)
     end
 
     function libeigen(dv::AbstractVector{$elty}, ev::AbstractVector{$elty},n::Integer; job::Char='V', rank::Integer=2) #stev!
-      return libeigen!(copy(dv),copy(ev),n,job=job,rank=rank)
+      if n < length(dv)
+        out = libeigen!(dv[1:n],ev[1:n],n,job=job,rank=rank)
+      else
+        out = libeigen!(copy(dv),copy(ev),n,job=job,rank=rank)
+      end
+      return out
     end
 
     function libeigen(dv::AbstractVector{$elty}, ev::AbstractVector{$elty};job::Char='V', rank::Integer=2) #stev!
