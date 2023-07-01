@@ -10,7 +10,7 @@
 #
 
 """
-TENPACK  (version 0.1)\n
+TENPACK  (version 0.2)\n
 (made for julia v1.8.5+ (January 8, 2023), see included license)
 
 Code: https://github.com/bakerte/TENPACK.jl
@@ -63,17 +63,32 @@ println()
 
 const libdir = @__DIR__
 
-libpath = libdir*"/../lib/"
+libpath = libdir*"/lib/"
 
 #Linear algebra routines
 
 include(libpath*"tensor.jl")
-
 include(libpath*"libalg.jl")
 
 
+include(libpath*"QN.jl")
+include(libpath*"Qtensor.jl")
 
-const testpath = libdir*"/../test/"
+
+include(libpath*"contractions.jl")
+include(libpath*"strassen.jl")
+
+
+include(libpath*"decompositions.jl")
+include(libpath*"Krylov.jl")
+
+
+
+include(libpath*"Qcontractions.jl")
+include(libpath*"Qdecompositions.jl")
+
+
+const testpath = libdir*"/test/"
 
 include(testpath*"alltest.jl")
 
