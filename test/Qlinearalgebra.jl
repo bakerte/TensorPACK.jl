@@ -47,11 +47,7 @@ println()
 
 U,D,V = svd(A,[Ltup,Rtup],nozeros=false)
 
-println(size(tA))
-
 tU,tD,tV = svd(tA,[Ltup,Rtup],nozeros=false)
-
-println(size(tU)," ",size(tD)," ",size(tV))
 
 C = reshape(makeArray(tA),length(chi)^length(Ltup),length(chi)^length(Rtup))
 checkU,checkD,checkV = LinearAlgebra.svd(C)
