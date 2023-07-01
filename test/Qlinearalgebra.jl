@@ -29,32 +29,32 @@ Rtup = [i+S for i = 1:S]
 tA = tens(makeArray(A))
 tB = tens(makeArray(B))
 
-@time C = contract(A,Ltup,B,Rtup)
-@time tC = contract(tA,Ltup,tB,Rtup)
+C = contract(A,Ltup,B,Rtup)
+tC = contract(tA,Ltup,tB,Rtup)
 
 testval = isapprox(makeArray(C),makeArray(tC))
 fulltest &= testfct(testval,"contract on dense and Qtens")
 
 println()
 
-@time C = ccontract(A,B)
-@time tC = ccontract(tA,tB)
+C = ccontract(A,B)
+tC = ccontract(tA,tB)
 
 testval = isapprox(C,tC)
 fulltest &= testfct(testval,"dot on dense and Qtens")
 
 println()
 
-@time U,D,V = svd(A,[Ltup,Rtup],nozeros=false)
+U,D,V = svd(A,[Ltup,Rtup],nozeros=false)
 
 println(size(tA))
 
-@time tU,tD,tV = svd(tA,[Ltup,Rtup],nozeros=false)
+tU,tD,tV = svd(tA,[Ltup,Rtup],nozeros=false)
 
 println(size(tU)," ",size(tD)," ",size(tV))
 
 C = reshape(makeArray(tA),length(chi)^length(Ltup),length(chi)^length(Rtup))
-@time checkU,checkD,checkV = LinearAlgebra.svd(C)
+checkU,checkD,checkV = LinearAlgebra.svd(C)
 
 rA = U*D*V
 rtA = tU*tD*tV
@@ -66,11 +66,11 @@ fulltest &= testfct(testval,"svd on dense and Qtens")
 
 println()
 
-@time U,D,V = svd(A,[Ltup,Rtup])
-@time tU,tD,tV = svd(tA,[Ltup,Rtup])
+U,D,V = svd(A,[Ltup,Rtup])
+tU,tD,tV = svd(tA,[Ltup,Rtup])
 
 C = reshape(makeArray(tA),length(chi)^length(Ltup),length(chi)^length(Rtup))
-@time checkU,checkD,checkV = LinearAlgebra.svd(C)
+checkU,checkD,checkV = LinearAlgebra.svd(C)
 
 rA = U*D*V
 rtA = tU*tD*tV
@@ -82,8 +82,8 @@ fulltest &= testfct(testval,"svd on dense and Qtens [nozeros=true]")
 
 println()
 
-@time U,D,V = svd(A,m=10,[Ltup,Rtup])
-@time tU,tD,tV = svd(tA,m=10,[Ltup,Rtup])
+U,D,V = svd(A,m=10,[Ltup,Rtup])
+tU,tD,tV = svd(tA,m=10,[Ltup,Rtup])
 
 rA = U*D*V
 rtA = tU*tD*tV

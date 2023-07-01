@@ -400,9 +400,6 @@ println()
 B = rand(2,2)
 tB = tens(B)
 
-println(makeArray(tA[1:2,2:3,3,4,5,6]))
-println(makeArray(tA)[1:2,2:3,3,4,5,6])
-
 C = copy(tA)
 tA[1:2,[2,3],3,4,5,6] = tB
 C[1:2,[2,3],3,4,5,6] = B
@@ -410,9 +407,7 @@ A[1:2,2:3,3,4,5,6] = tB
 testval = isapprox(norm(B - makeArray(tA[1:2,2:3,3,4,5,6])),0)
 
 testval &= isapprox(norm(B - makeArray(C[1:2,[2,3],3,4,5,6])),0)
-println(testval," ",norm(B - makeArray(C[1:2,[2,3],3,4,5,6])))
 testval &= isapprox(norm(B - A[1:2,2:3,3,4,5,6]),0)
-println(testval," ",norm(B - A[1:2,2:3,3,4,5,6]))
 fulltest &= testfct(testval,"setindex(denstens,integer...)")
 
 println()
