@@ -217,11 +217,6 @@ function permq(A::Qtens{W,Q},iA::Array{intType,1}) where {W <: Number, Q <: Qnum
 end
 
 function dmul!(X::Qtens{R,Q},Y::Qtens{W,Q}) where {R <: Number, W <: Number, Q <: Qnum}
-  #assert diagonal types in one of hte matrices here
-  return maincontractor(false,false,X,(ndims(X),),Y,(1,),inplace=true)
-end
-
-function dmul!(X::Qtens{R,Q},Y::Qtens{W,Q}) where {R <: Number, W <: Number, Q <: Qnum}
   return maincontractor(false,false,X,(ndims(X),),Y,(1,),inplace=true)
 end
 
