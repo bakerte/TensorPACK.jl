@@ -41,7 +41,8 @@ function testfct(test::Bool,message::String)
     "dense_contract_test.jl",
     "dense_decomposition_test.jl",
     "krylov_test.jl",
-    "strassen_test.jl"
+    "strassen_test.jl",
+    "tensornetwork_test.jl"
   ]
   
   """
