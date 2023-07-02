@@ -90,6 +90,9 @@ include(libpath*"Qcontractions.jl")
 include(libpath*"Qdecompositions.jl")
 
 
+include(libpath*"tensornetwork.jl")
+
+
 const testpath = libdir*"/../test/"
 
 include(testpath*"alltest.jl")
