@@ -175,20 +175,20 @@ function contractinds(A::nametens,B::nametens;check::Bool=false)
   pairs = Matrix{Bool}(undef,length(A.names),length(B.names))
   counter = 0
   for b = 1:size(pairs,2)
-    for a = b:size(pairs,1)
+    for a = 1:size(pairs,1)
       if A.names[a] == B.names[b]
         counter += 1
         pairs[a,b] = true
-        pairs[b,a] = true
+#        pairs[b,a] = true
       else
         pairs[a,b] = false
-        pairs[b,a] = false
+#        pairs[b,a] = false
       end
     end
 
     if check
       checkcounter = 0
-      @inbounds @simd for x = b:size(pairs,1)
+      @inbounds @simd for x = 1:size(pairs,1)
         checkcounter += pairs[x,b]
       end
       if checkcounter > 1
@@ -204,9 +204,8 @@ function contractinds(A::nametens,B::nametens;check::Bool=false)
   b = 0
   while newcounter < counter
     b += 1
-    a = b-1
     search_bool = true
-    for a = b:size(pairs,1)
+    for a = 1:size(pairs,1)
       if pairs[a,b]
         newcounter += 1
         vecA[newcounter] = a
@@ -232,26 +231,10 @@ Contracts `A` and any number of `B` along common indices; simple algorithm at pr
 function *(A::nametens,B::nametens)
   vecA,vecB,pairs = contractinds(A,B)
 
-  xnewnames = 0
   ynewnames = 0
   for y = 1:size(pairs,2)
     counter = 0
-  #  x = y
-  #  while x < size(pairs,1) && counter == 0
-  #    x += 1
-    @inbounds @simd for x = y:size(pairs,1)
-      counter += pairs[x,y]
-    end
-    if counter == 0
-      xnewnames += 1
-    end
-
-
-    counter = 0
-    x = 0
-  #  while x < y && counter == 0
-  #    x += 1
-    @inbounds @simd for x = 1:y
+    @inbounds @simd for x = 1:size(pairs,1)
       counter += pairs[x,y]
     end
     if counter == 0
@@ -259,19 +242,30 @@ function *(A::nametens,B::nametens)
     end
   end
 
+  xnewnames = 0
+  for x = 1:size(pairs,1)
+    counter = 0
+    @inbounds @simd for y = 1:size(pairs,2)
+      counter += pairs[x,y]
+    end
+    if counter == 0
+      xnewnames += 1
+    end
+  end
+
   newnames = Array{String,1}(undef,xnewnames+ynewnames)
 
   name_counter = 0
-  y = 0
+  x = 0
   while name_counter < xnewnames
-    y += 1
+    x += 1
     counter = 0
-    @inbounds @simd for x = y:size(pairs,1)
+    @inbounds @simd for y = 1:size(pairs,2)
       counter += pairs[x,y]
     end
     if counter == 0
       name_counter += 1
-      newnames[name_counter] = A.names[y]
+      newnames[name_counter] = A.names[x]
     end
   end
 
@@ -279,7 +273,7 @@ function *(A::nametens,B::nametens)
   while name_counter < xnewnames + ynewnames
     y += 1
     counter = 0
-    @inbounds @simd for x = 1:y
+    @inbounds @simd for x = 1:size(pairs,1)
       counter += pairs[x,y]
     end
     if counter == 0
