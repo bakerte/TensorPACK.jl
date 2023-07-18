@@ -172,7 +172,7 @@ function length(Qts::TNnetwork)
 end
 
 function contractinds(A::nametens,B::nametens;check::Bool=false)
-  pairs = Matrix{Bool}(undef,length(A.names),length(B.names))
+  pairs = Array{Bool,2}(undef,length(A.names),length(B.names))
   counter = 0
   for b = 1:size(pairs,2)
     for a = 1:size(pairs,1)
@@ -228,7 +228,8 @@ end
 
 Contracts `A` and any number of `B` along common indices; simple algorithm at present for the order
 """
-function *(A::nametens,B::nametens)
+function *(A::nametens,B::nametens,fct::Function=contract)
+
   vecA,vecB,pairs = contractinds(A,B)
 
   ynewnames = 0
@@ -288,8 +289,32 @@ function *(A::nametens,B::nametens)
 end
 
 function *(A::directedtens,B::directedtens)
-  C = A.T * B.T
-  newarrows = vcat(A.arrows[retindsA],B.arrows[retindsB])
+  if A.conj && B.conj
+    C = *(A.T,B.T,fct=ccontractc)
+  elseif A.conj && !B.conj
+    C = *(A.T,B.T,fct=ccontract)
+  elseif !A.conj && B.conj
+    C = *(A.T,B.T,fct=contractc)
+  else
+    C = *(A.T,B.T,fct=contract)
+  end
+  
+  newarrows = Array{Bool,1}(undef,ndims(C))
+  counter = 0
+  for a = 1:length(C.names)
+    if C.names[a] in A.T.names
+      counter += 1
+      newarrows[counter] = A.conj ? !A.arrows[a] : A.arrows[a]
+    end
+  end
+  if counter != length(newarrows)
+    for a = 1:length(C.names)
+      if C.names[a] in B.T.names
+        counter += 1
+        newarrows[counter] = B.conj ? !B.arrows[a] : B.arrows[a]
+      end
+    end
+  end
   return directedtens(C,newarrows,false)
 end
 
@@ -692,6 +717,31 @@ function sqrt!(A::TNobj;root::Number=0.5)
   return A
 end
 
+"""
+    sqrt(A)
+
+Takes the square root of named tensor `A`
+
+See also: [`sqrt`](@ref)
+"""
+function sqrtabs(A::TNobj;root::Number=0.5)
+  B = copy(A)
+  return sqrtabs!(B,root=root)
+end
+
+"""
+    sqrt!(A)
+
+Takes the square root of named tensor `A`
+
+See also: [`sqrt!`](@ref)
+"""
+function sqrtabs!(A::TNobj;root::Number=0.5)
+  A.N = tensorcombination!(A.N,fct=abs)
+  A.N = tensorcombination!(A.N,alpha=(root,),fct=^)#sqrt!(A.N,root=root)
+  return A
+end
+
 import Base.ndims
 """
     ndims(A)
@@ -1008,1076 +1058,428 @@ export joinTens
  #
  # Kiana
  # 
-
-  mutable struct sizeT{W,B} <: TNobj where {W <: Integer,B <: Union{Any,String}}
-    size::Array{W,1}
-    names::Array{B,1}
-  end
-
-  function sizeT(Qt::nametens{W,B}) where {W <: Union{qarray,AbstractArray,denstens}, B <: Union{Any,String}}
-    return sizeT{Int64,B}(size(Qt),Qt.names)
-  end
-
-  function size(Qt::sizeT{W,B}) where {W <: Integer,B <: Union{Any,String}}
-    return Qt.size
-  end
-
-  function size(Qt::sizeT{W,B},i::Integer) where {W <: Integer,B <: Union{Any,String}}
-    return Qt.size[i]
-  end
-
-  function commoninds(A::TNobj,B::TNobj)
-    Ainds = intType[]
-    Binds = intType[]
-    let A = A, B = B, Ainds = Ainds, Binds = Binds
-      for i = 1:length(A.names)
-        for j = 1:length(B.names)
-          if A.names[i] == B.names[j]
-            push!(Ainds,i)
-            push!(Binds,j)
-          end
-        end
-      end
-    end
-    allA = [i for i = 1:ndims(A)]
-    allB = [i for i = 1:ndims(B)]
-    notconA = setdiff(allA,Ainds)
-    notconB = setdiff(allB,Binds)
-    return Ainds,Binds,notconA,notconB
-  end
-
-  function contractcost(A::TNobj,B::TNobj)
-    conA,conB,notconA,notconB = commoninds(A,B)
-    concost = prod(w->size(A,conA[w]),1:length(conA))
-    concost *= prod(w->size(A,notconA[w]),1:length(notconA))
-    concost *= prod(w->size(B,notconB[w]),1:length(notconB))
-    return concost
-  end
-  export contractcost
-
-
-  function sizecost(A::TNobj,B::TNobj;alpha::Bool=true)#arxiv:2002.01935
-    conA,conB,notconA,notconB = commoninds(A,B)
-    cost = prod(w->size(A,w),notconA)*prod(w->size(B,w),notconB)
-    if alpha
-      cost -= prod(size(A)) + prod(size(B))
-    end
-    return cost
-  end
-  export sizecost
-#=
-  function bgreedy(TNnet::TNnetwork;nsamples::Integer=length(TNnet.net),costfct::Function=contractcost)
-    numtensors = length(TNnet.net) #number of tensors
-    basetensors = [sizeT(TNnet.net[i]) for i = 1:numtensors] #sizes of the tensors
-    savecontractlist = Int64[] #a list of possible ways to contract the network
-    savecost = 99999999999999999999999 #very high cost to contracting the intial steps
-    for i = 1:nsamples
-      currTensInd = (i-1) % nsamples + 1
-      contractlist = [currTensInd]
-      A = basetensors[currTensInd]
-
-      availTens = [i for i = 1:numtensors]
-      deleteat!(availTens,currTensInd)
-      searchindex = copy(availTens)
-
-      nextTens = rand(1:length(searchindex),1)[1]
-
-      newcost = 0
-
-      while length(availTens) > 1
-        B = basetensors[searchindex[nextTens]]
-        if isdisjoint(A.names,B.names)
-          deleteat!(searchindex,nextTens)
-          nextTens = rand(1:length(searchindex),1)[1]
-        else
-          push!(contractlist,searchindex[nextTens])
-
-          searchindex = setdiff(availTens,contractlist)
-          availTens = setdiff(availTens,contractlist[end])
-          
-
-          vecA,vecB = contractinds(A,B)
-          retindsA = setdiff([i for i = 1:ndims(A)],vecA)
-          retindsB = setdiff([i for i = 1:ndims(B)],vecB)
-          newnames = vcat(A.names[retindsA],B.names[retindsB])
-          newsizes = vcat(size(A)[retindsA],size(B)[retindsB])
-
-          newcost += costfct(A,B)
-
-          A = sizeT(newsizes,newnames)
-
-          nextTens = rand(1:length(searchindex),1)[1]
-        end
-      end
-      push!(contractlist,availTens[end])
-      if savecost > newcost
-        savecost = newcost
-        savecontractlist = contractlist
-      end
-    end
-    return savecontractlist
-  end
-  export bgreedy
-
-#  import .contractions.contract
-  function contract(Z::network;method::Function=bgreedy)
-    order = method(Z)
-    outTensor = Z[order[1]]*Z[order[2]]
-    for i = 3:length(order)
-      outTensor = outTensor * Z[order[i]]
-    end
-    return outTensor
-  end
-
-=#
-
-
-#=
-  function KHP(Qts::network,invec::Array{R,1};nsamples::Integer=sum(p->length(Qts[p].names),invec),costfct::Function=contractcost) where R <: Integer
-    exclude_ind = invec[1]
-    numtensors = length(Qts) - length(invec)
-    basetensors = [sizeT(Qts[i]) for i = 1:numtensors]
-    savecost = 99999999999999999999999
-
-    savecontractlist = Int64[]
-
-    startnames = Qts[invec[1]].names
-    for g = 2:length(invec)
-      startnames = vcat(startnames,Qts[invec[g]].names)
-    end
-    startnames = unique(startnames)
-
-    for i = 1:nsamples
-      currTensInd = (i-1) % length(startnames) + 1
-      contractlist = Int64[]
-
-      availTens = setdiff([i for i = 1:numtensors],invec)
-      searchindex = copy(availTens)
-
-      nextTens = rand(1:length(searchindex),1)[1]
-
-      newcost = 0
-
-      A = sizeT([1],[startnames[currTensInd]])
-
-
-
-println(availTens)
-
-
-      while length(availTens) > 1
-
-        println(searchindex)
-        println(searchindex[nextTens])
-
-        B = basetensors[searchindex[nextTens]]
-        if isdisjoint(A.names,B.names)
-          println("FAIL ",searchindex," ",nextTens)
-          deleteat!(searchindex,nextTens)
-          nextTens = rand(1:length(searchindex),1)[1]
-          println(nextTens)
-        else
-
-          if length(contractlist) > 0 
-            newcost += costfct(A,B)
-  end
-
-          push!(contractlist,searchindex[nextTens])
-
-          searchindex = setdiff(availTens,contractlist)
-          availTens = setdiff(availTens,contractlist[end])
-          
-
-          vecA,vecB = contractinds(A,B)
-          retindsA = setdiff([i for i = 1:ndims(A)],vecA)
-          retindsB = setdiff([i for i = 1:ndims(B)],vecB)
-          newnames = vcat(A.names[retindsA],B.names[retindsB])
-          newsizes = vcat(size(A)[retindsA],size(B)[retindsB])
-
-          A = sizeT(newsizes,newnames)
-
-          nextTens = rand(1:length(searchindex),1)[1]
-        end
-      end
-
-      A = basetensors[currTensInd]
-
-
-      push!(contractlist,availTens[end])
-      if savecost > newcost
-        savecost = newcost
-        savecontractlist = contractlist
-      end
-    end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#=
-    searching = true
-    x = 1
-    currnames = startnames
-    newcost = 0
-    contractorder = []
-    while searching && x <= length(currnames)
-      firstindex = currnames[x]
-
-      nextTens = rand(1:length(activeTensors),1)[1]
-
-      w = 1
-      while isdisjoint(firstindex,Qts[activeTensors[nextTens]].names) && w < length(activeTensors)
-        nextTens = rand(1:length(activeTensors),1)[1]
-        w += 1
-      end
-      if w == length(activeTensors)
-        x += 1
-      else
-        push!(contractorder,activeTensors[nextTens])
-        deleteat!(activeTensors,nextTens)
-        searching = length(contractorder) != (length(Qts)-length(exclude_ind))
-      end
-    end
-    push!(contractorder,activeTensors[1])
-    newcost = 0
-    println(contractorder)
-    println(numtensors)
-    A = basetensors[contractorder[end]]
-    for m = numtensors:-1:2
-      B = basetensors[contractorder[m]]
-      newcost += costfct(A,B)
-
-      vecA,vecB = contractinds(A,B)
-      retindsA = setdiff([i for i = 1:ndims(A)],vecA)
-      retindsB = setdiff([i for i = 1:ndims(B)],vecB)
-      newnames = vcat(A.names[retindsA],B.names[retindsB])
-      newsizes = vcat(size(A)[retindsA],size(B)[retindsB])
-
-#      newcost += costfct(A,B)
-
-      A = sizeT(newsizes,newnames)
-    end
-    if newcost < savecost
-      savecontractorder = reverse(contractorder)
-    end
-=#
-    return savecontractorder
-  end
-  export KHP
-=#
-#end
-
-
-
-
-#=
-  function LRpermute(conA,A)
-    Aleft = sort(conA,rev=true) == [ndims(A) - i + 1 for i = 1:length(conA)]
-    Aright = sort(conA) == [i for i = 1:length(conA)]
-    if Aleft
-      permA = "L"
-    elseif Aright
-      permA = "R"
-    else
-      permA = "LR" #signifies permutation
-    end
-    return permA
-  end
-
-  function checkpermute(A::TNobj,conA::Array{intType,1},B::TNobj,
-                        conB::Array{intType,1},nelems::Array{intType,1},i::Integer,j::Integer)
-    permA = LRpermute(conA,A)
-    permB = LRpermute(conB,B)
-    nelemA = nelems[i]
-    nelemB = nelems[j]
-    if permA == permB == "L"
-      if nelemA > nelemB
-        permB = "R"
-      else
-        permA = "R"
-      end
-    elseif permA == permB == "R"
-      if nelemA > nelemB
-        permB = "L"
-      else
-        permA = "L"
-      end
-#    elseif permA == permB == "LR" #|| permA == "LR" || permB == "LR"
-    end
-    return permA,permB
-  end
-
-  function commoninds(A::TNobj,B::TNobj)
-    Ainds = intType[]
-    Binds = intType[]
-    let A = A, B = B, Ainds = Ainds, Binds = Binds
-      #=Threads.@threads=# for i = 1:length(A.names)
-        for j = 1:length(B.names)
-          if A.names[i] == B.names[j] && A.arrows[i] != B.arrows[j]
-            push!(Ainds,i)
-            push!(Binds,j)
-          end
-        end
-      end
-    end
-    return Ainds,Binds
-  end
-
-  function contractcost(A::TNobj,B::TNobj)
-    conA,conB = commoninds(A,B)
-    allA = [i for i = 1:ndims(A)]
-    allB = [i for i = 1:ndims(B)]
-    notconA = setdiff(allA,conA)
-    notconB = setdiff(allB,conB)
-    permA = permutes(notconA,conA)
-    permB = permutes(conB,notconB)
-    concost = prod(w->size(A,conA[w]),1:length(conA))
-    concost *= prod(w->size(A,notconA[w]),1:length(notconA))
-    concost *= prod(w->size(B,notconB[w]),1:length(notconB))
-    return concost,permA,permB
-  end
-
-  function conorder(T::TNobj...)
-    NT = length(T)
-    free = fill(true,NT,NT)
-    costs = fill(true,NT,NT)
-    permutes = fill(true,NT,NT)
-    contens = fill(true,NT,NT)
-    @simd for i = 1:NT
-      free[i,i] = false
-      permutes[i,i] = false
-      #missing test for consecutive kronecker....contens?
-    end
-    order = [Array{UInt8,1}(undef,NT) for i = 1:NT, j = 1:NT]
-    leftright = Array{String,1}(undef,NT,NT,2)
-    nelems = Array{intType,1}(undef,NT)
-    @simd for i = 1:NT
-      nelems[i] = prod(size(T[i]))
-      order[i][j] = i
-    end
-    for i = 1:NT
-      for j = 1:NT
-        if free[i,j]
-          if concost == 0
-            if contens[i,j]
-              #kronecker product
-              contens[i,j] = false
-              leftright[i,j,1],leftright[i,j,2] = "L","R"
-            else
-              free[i,j] = false
-              costs[i,j] = 0
-            end
-          else
-            concost = contractcost(T[i],T[j])
-            leftright[i,j,1],leftright[i,j,2] = checkpermute(T[i],T[j],nelems,i,j) #HERE: Must also put in niformation from previous tensors level
-            if concost > costs[i,j]
-              costs[i,j] = concost
-            end
-          end
-        end
-      end
-      xy = argmin(costs)
-    end
-  end
-
-
-  import .contractions.contract
-  function contract(Z::network)
-  end
-=#
-
-
-#       +--------------------------+
-#>------| Code by Kiana Gallagher  |---------<
-#       +--------------------------+
-
-#ContractFunctions.jl
-
-struct Indicies
+ struct Indices
 	names::Vector{String}
-	dimensions::Vector{intType}
-
+	dimensions::Vector{Int64}
 end
 
 
-"""
-to_ascii()
-
-Converts an ascii code of type UInt16 to a string value.
-
-Parameters:
-string: a string to be converted to an ascii value.
-
-Returns:
-A vector sotring the ascii equivalent for each letter of the string given.
-
-"""
-function to_ascii(string::String)::UInt32
-	return Base.codepoint(string)
-
-end
-
-
-"""
-to_string()
-
-Converts a string to an ascii code value.
-
-Parameters:
-ascii_val: a vectory of ascii values to be converted to a string.
-
-Returns:
-The string equivalent of the ascii valus given.
-
-"""
-function to_string(ascii_val::UInt32)::String # this may need to be updated, look for an altnernative
-	return Base.transcode(String, UInt32[ascii_val])
-
-end
-
-
-function remove_tensors(original_network::TNnetwork, to_remove::TNnetwork) #OK
-	updated_network = []
-
-	for tensor in original_network
-		if !(tensor in to_remove)
-			push!(updated_network, tensor)
-		end
-
-	end
-
-	return updated_network
-end
-
-
-function find_common_edges(left_edges::Indicies, right_edges::Indicies)::Indicies #OK
-	common_edges_names = []
-	common_edges_dimensions = []
-
-	for (pos, edge_name) in enumerate(left_edges.names)
-		if edge_name in right_edges.names 
-			push!(common_edges_names, edge_name)
-			push!(common_edges_dimensions, left_edges.dimensions[pos])
-
+function get_weight(tensor::nametens{tens{W}, String}) where W <: Number #stable2
+	sum = 0
+	for dim in tensor.N.size
+		if dim != 1
+			sum +=1 
 		end
 	end
-
-	return Indicies(common_edges_names, common_edges_dimensions)
-
+	return sum
 end
 
 
-function lable_edges(left_edges::Indicies, right_edges::Indicies, common_edges::Indicies)::Indicies #OK
-	all_edge_names = vcat(left_edges.names, right_edges.names)
-	all_edge_dimensions = vcat(left_edges.dimensions, right_edges.dimensions)
+function find_start(graph::Vector{nametens{tens{W}, String}})::nametens{tens{W}, String} where W <: Number #stable2
+	start = graph[1]
+	min_num_ind = get_weight(start)
+	min_cost = get_cost(start.N.size)
 
-	curr_pos = 0
-	num_elements = length(left_edges.names) + length(right_edges.names) - 2*length(common_edges.names)
-	new_tensor_names = Vector{String}(undef, num_elements)
-	new_tensor_dimensions = Vector{Int64}(undef, num_elements)
+	for tensor in graph
+		num_ind = get_weight(tensor)
+		cost = get_cost(tensor.N.size)
 
-	for (pos, edge) in enumerate(all_edge_names)
-		if !(edge in common_edges.names)
-			new_tensor_names[curr_pos+=1] =  edge
-			new_tensor_dimensions[curr_pos] =  all_edge_dimensions[pos]
+		if num_ind<min_num_ind
+			start = tensor
+			min_num_ind = num_ind
+			min_cost = cost
 
-		end
-	end
-
-	return Indicies(new_tensor_names, new_tensor_dimensions)
-
-end
-
-
-function permute(edges::Indicies, common_edges::Vector{String})::intType # Check if it is possible to specify #OK
-	permute_cost = 1
-	position = Vector{intType}(undef, length(common_edges))
-
-	for (pos, edge) in enumerate(common_edges)
-		index = findfirst(==(edge), edges.names)
-		position[pos] = index
-
-	end
-
-	sort!(position)
-
-	if !(length(edges.names) in position) && !(1 in position)
-		for edge_dim in edges.dimensions
-			permute_cost *= edge_dim
-			
-		end
-
-		return permute_cost
-
-	else
-		for pos in range(2, length(common_edges))
-			if (position[pos]-position[pos-1]) != 1
-
-				permute_required = true
-				
-				for edge_dim in edges.dimensions
-					permute_cost *= edge_dim
-			
-				end
-
-				return permute_cost
-
+		elseif (num_ind==min_num_ind)
+			if (cost<min_cost)
+				start = tensor
+				min_num_ind = num_ind
+				min_cost = cost
 			end
 		end
 	end
-
-	return 0
+	return start
 end
 
 
-function cost(edges::Indicies)::Int64 #OK
-	cost = 1
+function connecting_edges(graph::Vector{nametens{tens{W}, String}})::Dict{String, Vector{nametens{tens{W}, String}}} where W <: Number #stable2
+	shared_edges = Dict{String, Vector{nametens{tens{W}, String}}}()
 
-	for edge_dim in edges.dimensions
-	cost *= edge_dim
-
-	end
-
-	return cost
-
-end 
-
-
-function contract_in_order(string_val::String, dictionary::Dict{Char, nametens{tens{Float64}, String}})::nametens{tens{Float64}, String} #OK 
-	match_found = false
-	start_string = 1
-	end_string = 1 
-
-	#Looks like a do-while loop
-
-	m = match(r"[^\(\)]{2}", string_val, end_string)
-
-	if (m != nothing)
-
-		left_tensor = m.match[1]
-
-		right_tensor = m.match[lastindex(m.match)]
-
-		end_string = length(m.match) + m.offset
-
-		contracted = dictionary[left_tensor]*dictionary[right_tensor]
-
-		result = multiply(string_val, m.match, dictionary, contracted)
-
-		match_found = true
-
-	end
-
-	while (match_found)
-		m = match(r"[^\(\)]{2}", string_val, end_string)
-
-		if (m != nothing)
-
-			left_tensor = m.match[1]
-
-			right_tensor = m.match[lastindex(m.match)]
-
-			end_string = length(m.match) + m.offset
-
-			contracted = dictionary[left_tensor]*dictionary[right_tensor]
-
-			result *= multiply(string_val, m.match, dictionary, contracted)
-
-		else
-			match_found = false
-
-		end
-	end
-
-	return result
-end
-
-
-function multiply(string_val::String, last_string, dictionary::Dict{Char, nametens{tens{Float64}, String}}, contracted::nametens{tens{Float64}, String})::nametens{tens{Float64}, String} #OK
-	regex_left = Regex("[^\\(\\)]\\($(last_string)")
-	m_left = match(regex_left, string_val)
-
-	if !(m_left == nothing)
-
-		tensor_key = m_left.match[1]
-
-		new_string = "$(tensor_key)\\($(last_string)\\)"
-		new_contract = dictionary[tensor_key]*contracted
-
-		result = multiply(string_val, new_string, dictionary, new_contract)
-
-
-	elseif (m_left == nothing)
-	    regex_right = Regex("$(last_string)\\)[^\\(\\)]")
-	    m_right = match(regex_right, string_val)
-
-	    if !(m_right == nothing)
-
-			tensor_key = m_right.match[lastindex(m_right.match)]
-
-			new_string = "\\($(last_string)\\)$(tensor_key)"
-			new_contract = contracted*dictionary[tensor_key]
-
-			result = multiply(string_val, new_string, dictionary, new_contract)
-
-		else
-			result = contracted
-
-		end
-	end
-
-	return result
-end
-
-############
-############
-############
-# END OF Contract_functions.jl
-############
-############
-############
-
-#Greedy.jl
-
-function common_edges(network)
-	shared_edges = Dict()
-
-  Nobjs = length(network)
-
-	for w = 1:Nobjs
-    tensor = network[w]
+	for tensor in graph
 		for edge in tensor.names
 			if edge in keys(shared_edges)
-				push!(shared_edges[edge], tensor)
-
+				push!(shared_edges[edge], tensor) # possible ways to make this more efficient???
 			else
 				shared_edges[edge] = [tensor]
-
 			end
-
 		end
-
-
 	end
-
 	return shared_edges
 end
 
 
-function cost_possible(shared_edges)
-	all_costs = Dict()
-	cost_vals = []
+function common_info(temp_start::Indices, right_tensor::nametens{tens{W}, String}) where W <: Number  #stable2
+	num_common = 0
+	mult_commom = 1
 
-	for tensors in values(shared_edges)
-		for left_tensor in tensors
-			for right_tensor in tensors
-				if !(left_tensor == right_tensor) && (length(tensors) != 1)
-
-#          println(left_tensor.names)
-#          println(left_tensor.N.size)
-
-          leftsize = [left_tensor.N.size[i] for i = 1:length(left_tensor.N.size)]
-          rightsize = [right_tensor.N.size[i] for i = 1:length(right_tensor.N.size)]
-
-					left_details = Indicies(left_tensor.names, leftsize)
-					right_details = Indicies(right_tensor.names, rightsize)
-
-					common_edges = find_common_edges(left_details, right_details)
-
-					permute_cost = permute(left_details, common_edges.names) + permute(right_details, common_edges.names) 
-					cost_tot = (cost(left_details) + cost(right_details))÷cost(common_edges)
-
-					#order = find_order(left_tensor, right_tensor)
-					all_costs[cost_tot] = (tensors = (left_tensor, right_tensor), common = common_edges)
-					push!(cost_vals, cost_tot)
-
-
-				end
-
-			end
+	for (pos, edge_name) in enumerate(temp_start.names)
+		if edge_name in right_tensor.names 
+			num_common += 1
+			mult_commom *= temp_start.dimensions[pos]
 		end
 	end
-
-	return (possible_costs = cost_vals, cost_dict = all_costs)
-
-
-
-end
-
-function greedy(network)
-  return greedy!(copy(network))
-end
-
-function greedy!(thisnetwork)
-
-	shared_edges = common_edges(thisnetwork)
-	cost_details = cost_possible(shared_edges)
-
-	while length(cost_details.possible_costs) != 0
-
-
-		sort!(cost_details.possible_costs) #is it better to sort in place?? to do a comparison when pushing to the dict
-
-		least_expensive = cost_details.cost_dict[cost_details.possible_costs[1]] # do the contraction and repeat the process OR update the current elements
-
-		left_tensor = least_expensive.tensors[1] # the left tensor
-		right_tensor = least_expensive.tensors[2] # the right tensor
-
-		result = left_tensor*right_tensor #expensive
-
-    x = 1
-    while x < length(thisnetwork) && left_tensor != thisnetwork[x]
-      x += 1
-    end
-
-    y = 1
-    while y < length(thisnetwork) && right_tensor != thisnetwork[y]
-      y += 1
-    end
-
-    left_location = x
-    right_location = y
-
-#		left_location = findfirst(==(left_tensor), network)
-#		right_location = findfirst(==(right_tensor), network)
-
-    thisnetwork[left_location] = result
-
-    tempfix = thisnetwork.net
-
-		deleteat!(tempfix, right_location)
-    thisnetwork = network(tempfix)
-
-		shared_edges = common_edges(thisnetwork) #expensive
-		cost_details = cost_possible(shared_edges) #expensive
-
-
-end
-
-  return thisnetwork[1]
-end
-
-import ..Base.keys
-function keys(A::TNnetwork)
-  return keys(A.net)
-end
-
-#ContractionAlg.jl
-
-struct PseudoTensor
-	name::String
-	edges::Indicies
-	composition::Vector{String}
-	cost::intType
+	return (num_common, mult_commom)
 end
 
 
-"""
-convert_tensor()
-
-The default tensors are converted into PseudoTensor datatypes.
-
-Parameters:
-tensor:
-ascii_val:
-position:
-
-Returns:
-PseudoTensor:
-
-"""
-function convert_tensor(tensor::nametens{tens{Float64}, String}, ascii_val::UInt32)::PseudoTensor #OK 
-
-	# Gives the tensor the next possible name
-	name = to_string(ascii_val)
-
-	# Creating empty lists for stores the details of each index.
-	edge_names = Vector{String}(undef, length(tensor.names))
-	edge_dimensions = Vector{Int64}(undef, length(tensor.names))
-
-	for pos = 1:length(tensor.names)
-		edge_names[pos] = tensor.names[pos]
-		edge_dimensions[pos] = tensor.N.size[pos]
-
+function get_cost(edges::Vector{Int64})::Int64 #stable2
+	cost = 1
+	for edge_dim in edges
+		cost *= edge_dim
 	end
-
-	# The for loop updates the information of the Indicies.
-	# @time for pos in range(1, length(tensor.names))
-	# 	push!(edge_names, tensor.names[pos])
-	# 	push!(edge_dimensions, tensor.N.size[pos])
-
-	# end
-
-	# Stores the details of the Indicies for a tensor.
-	edges = Indicies(edge_names, edge_dimensions)
-
-	# Returns a PseudoTensor struct.
-	return PseudoTensor(name, edges, [name], 0)
-
+	return cost
 end 
 
 
-function combine(left_composition, right_composition)
-	combined = vcat(left_composition, right_composition)
+function find_next(temp_start::Indices, start::nametens{tens{W}, String}, shared_edges::Dict{String, Vector{nametens{tens{W}, String}}})::Tuple{nametens{tens{W}, String}, Int64} where W <: Number #stable2
+	new_edges = -1
+	next = start
+	min_cost = -1
+	max_common = 0
 
-	return unique!(combined)
+	for edge in temp_start.names
+		if haskey(shared_edges, edge)
+			if length(shared_edges[edge]) != 0
+				right_tensor = shared_edges[edge][1]
 
-end
+				common_details = common_info(temp_start, right_tensor) # consider returing the names of the indices they have in common
 
+				num_common = common_details[1]
+				added_edges = get_weight(right_tensor)-num_common
+				cost_tot = (get_cost(temp_start.dimensions)*get_cost(right_tensor.N.size))÷common_details[2] 
 
-"""
-simple_contract()
+				if (min_cost==-1)
+					new_edges = added_edges
+					min_cost = cost_tot
+					max_common = num_common
+					next = right_tensor
 
-Contracts two tensors that are of type PseudoTensor.
+				elseif (num_common>max_common)
+					new_edges = added_edges
+					min_cost = cost_tot
+					max_common = num_common
+					next = right_tensor
 
-"""
-function simple_contract(left_tensor::PseudoTensor, right_tensor::PseudoTensor, common_edges::Indicies)::PseudoTensor #GOOD
-	name = "("*left_tensor.name*right_tensor.name*")" # A new name is given to the new tensor # alright
+				elseif (num_common==max_common)
+					if (added_edges<new_edges)
+						new_edges = added_edges
+						min_cost = cost_tot
+						max_common = num_common
+						next = right_tensor
 
-	permute_cost = permute(left_tensor.edges, common_edges.names) + permute(right_tensor.edges, common_edges.names) 
-
-	new_edges = lable_edges(left_tensor.edges, right_tensor.edges, common_edges) #HERE
-	added_cost = cost(new_edges) + cost(common_edges)
-	new_cost = left_tensor.cost + right_tensor.cost + added_cost + permute_cost
-
-	# Updates the composition of the tensors.
-	new_composition = combine(left_tensor.composition, right_tensor.composition)
-	
-	return PseudoTensor(name, new_edges, new_composition, new_cost)
-
-end
-
-
-function find_same(left_comp::Vector{String}, right_comp::Vector{String})::Bool
-
-for tensor in left_comp
-	if tensor in right_comp
-		return true
-
-	end
-
-end
-
-return false
-
-end
-
-
-function expand_table(table::Dict{String, PseudoTensor}, starting_ascii::UInt32, network_size::intType)::Vector{PseudoTensor} #OK
-	final_contractions = PseudoTensor[] # Holds the contractions that contract the whole network together.
-	#queue = Queue{PseudoTensor}() # Initializes an empty queue.
-	queue = PseudoTensor[]
-
-	# Puts all the base case PseudoTensors into a queue.
-	for tensor in values(table)
-		# enqueue!(queue, tensor)
-		push!(queue, tensor)
-
-	end
-
-	while (length(queue) != 0)
-		#left_tensor = dequeue!(queue)
-		left_tensor = pop!(queue)
-
-		# The current left tensor is compared to all the other tensors in the table
-		for right_tensor in values(table)
-			# Will not contract on itself.
-			if (left_tensor == right_tensor) 
-				continue
-
-			# Ensures it will not contract with a tree that already contains the left tensor.
-			elseif find_same(left_tensor.composition, right_tensor.composition) # this is expensive, create a new function
-				continue
-
-			else
-				# Checks if the left and right tensor have an Indicies in common.
-				common_edges = find_common_edges(left_tensor.edges, right_tensor.edges) #this seems fairly effcient
-
-				# If they have an edge in common then it is possible to contract.
-				if (length(common_edges.names) != 0)
-
-					# A new tensor is produced from contracting the left and right tensor.
-					new_tensor = simple_contract(left_tensor, right_tensor, common_edges) #seems decent
-
-					if (length(new_tensor.composition) == network_size)
-						push!(final_contractions, new_tensor) #possible way to turn this into a counting problem... so the array can be of fixed size
-
-					else
-						table[new_tensor.name] = new_tensor
-						push!(queue, new_tensor)
-						# enqueue!(queue, new_tensor)
-
+					elseif (added_edges==new_edges)
+						if (cost_tot<min_cost)
+							new_edges = added_edges
+							min_cost = cost_tot
+							max_common = num_common
+							next = right_tensor
+						end
 					end
 				end
 			end
 		end
 	end
-	
-	return final_contractions
-
+	return (next, max_common)
 end
 
 
-"""
-find_min()
+# tried to use vcat but it still takes 1 alloc for each vcat, so it is still 2 alloc to run the algorithm.
+function update_temp(left::Indices, right::Indices, max_common::Int64) #stable2
+	new_length = (length(left.names)+length(right.names))-(2*max_common)
 
-Finds the minimum cost of contracting the network and return the last contraction completed
-for the minimum cost network.
+	new_names = Vector{String}(undef, new_length) # takes 1 alloc
+	new_dimensions = Vector{Int64}(undef, new_length) # takes 1 alloc 
 
-"""
-function find_min(final_product::Vector{PseudoTensor})::PseudoTensor #OK
-	answer = final_product[1]
-	min_val = final_product[1].cost
+	num_updated = 1
+	for pos in 1:length(left.names)
+		if !(left.names[pos] in right.names)
+			new_names[num_updated] = left.names[pos]
+			new_dimensions[num_updated] = left.dimensions[pos]
 
-	for result in final_product
-		if (result.cost<=min_val)
-			if (result.name<answer.name)
-				answer = result
-				min_val = result.cost
+			num_updated += 1
+		end
+	end
+
+	for pos in 1:length(right.names)
+		if !(right.names[pos] in left.names)
+			new_names[num_updated] = right.names[pos]
+			new_dimensions[num_updated] = right.dimensions[pos]
+
+			num_updated += 1
+		end
+	end
+	return Indices(new_names, new_dimensions)
+end
+
+
+function update_edges(next::nametens{tens{W}, String}, shared_edges::Dict{String, Vector{nametens{tens{W}, String}}})::Dict{String, Vector{nametens{tens{W}, String}}} where W <: Number #stable2
+	for edge in next.names
+		adjacent = shared_edges[edge]
+		location = findfirst(==(next), adjacent)
+		deleteat!(adjacent, location)
+	end
+	return shared_edges
+end
+
+
+# only takes one allocation
+function permute(edges::Indices, position) #stable2
+	cost = 1
+#=
+	for (pos, edge) in enumerate(common_edges)
+		index = findfirst(==(edge), edges.names)
+		position[pos] = index
+
+	end
+=#
+	sort!(position)
+
+	if !(length(edges.names) in position) && !(1 in position)
+		for edge_dim in edges.dimensions
+			cost *= edge_dim
+		end
+		# weight = cost÷length(edges.names)
+		return cost,position
+	else
+		for pos in range(2, length(position))
+			if (position[pos]-position[pos-1]) != 1
+				for edge_dim in edges.dimensions
+					cost *= edge_dim
+				end
+				# weight = cost÷length(edges.names)
+				return cost,position
 			end
 		end
 	end
-
-	return answer
-
+	return 0,position # returning a tuple versus  A, B seems to make no difference in terms of alloc
 end
 
 
-"""
-contract()
-
-This function contracts the tensor network given.
-
-"""
-function contract(network::TNnetwork; starting_ascii::UInt32=0x000000A1 #=rand(UInt32)=#, remove = intType[]) #where W <: Number #it does not like typehints with kwargs #GOOD
-	if length(remove) != 0
-		network = remove_tensors(network, remove)
-
-	end
-
-  if true
-    contracted_result = greedy(network)
-  else
-    table::Dict{String, PseudoTensor} = Dict() # A dictionary is used to store the tensors that have been made.
-    base_cases::Dict{Char, nametens{tens{Float64}, String}} = Dict() # Holds the basic tensors and their correpsonding names that have been assigned.
-
-    # Creates a PseudoTensor datatype for each nametens datatype.
-
-    g = length(network)
-    for w = 1:g #tensor in network 
-      tensor = network[w]
-      temp_tensor = convert_tensor(tensor, starting_ascii)
-      
-      table[temp_tensor.name] = temp_tensor
-      base_cases[only(temp_tensor.name)] = tensor
-
-      starting_ascii += 0x00000001
-
-    end
-
-    final_result = expand_table(table, starting_ascii, length(network))
-
-    if length(final_result)==0
-      error("The tensor network given is disjoint")
-
-    end
-
-    best_order = find_min(final_result)
-
-    contracted_result = contract_in_order(best_order.name, base_cases) 
-  end
-	return contracted_result 
-
-
-end
-
-
-function contract(remove::Array{intType,1},input_network::TNnetwork; starting_ascii::UInt32=0x000000A1 #=rand(UInt32)=#)
-  return contract(input_network,starting_ascii=starting_ascii,remove=remove)
-end
-
-function contract(remove::Array{intType,1},input_network::TNobj...; starting_ascii::UInt32=0x000000A1 #=rand(UInt32)=#)
-  return contract(network(input_network...),starting_ascii=starting_ascii,remove=remove)
-end
-
-function contract(input_network::TNobj...; starting_ascii::UInt32=0x000000A1 #=rand(UInt32)=#,remove::Array{intType,1}=intType[])
-  return contract(network(input_network...),starting_ascii=starting_ascii,remove=remove)
-end
-
-function contract(remove::Array{intType,1},input_network::Array{W,1}; starting_ascii::UInt32=0x000000A1 #=rand(UInt32)=#) where W <: TNobj
-  return contract(network(input_network),starting_ascii=starting_ascii,remove=remove)
-end
-
-function contract(input_network::Array{W,1}; starting_ascii::UInt32=0x000000A1 #=rand(UInt32)=#,remove::Array{intType,1}=intType[]) where W <: TNobj
-  return contract(network(input_network),starting_ascii=starting_ascii,remove=remove)
-end
-
-#=
-function main(val::Int64) #GOOD
-	starting_ascii = 0x000000A1 # This is the first unicode value listed online.
-	A::Vector{nametens{tens{Float64}, String}} = [nametens(tens(rand(1,2,2,1)), ["a$(i-1)", "b$i", "c$(i)", "a$i"]) for i in range(1,val)] # 10 is the max number tested so far
-	#A::Vector{nametens{tens{Float64}, String}} = [nametens(tens(rand(1,2,1)), ["a$(i-1)", "b$i", "a$i"]) for i in range(1,val)]
-
-	# A = nametens(tens(rand(1,2,1)), ["a0", "b1", "a1"])
-	# B = nametens(tens(rand(1,2,1)), ["a1", "b2", "a2"])
-	# C = nametens(tens(rand(1,2,1)), ["a2", "b3", "a3"])
-	# D = nametens(tens(rand(1,2,1)), ["a3", "b4", "a4"])
-	# E = nametens(tens(rand(1,2,1)), ["a4", "b5", "a5"])
-
-	# F = [A,B,C,D,E]
-
-	B::Vector{nametens{tens{Float64}, String}} = []
-
-	middle = 0
-
-	for i in 1:2
-		for j in 1:2
-
-		push!(B, nametens(rand(1,1,2,1,1), ["h"*"$(i)"*"$(j-1)", "h"*"$(i)"*"$(j)", "b$(middle)", "v"*"$(i-1)"*"$(j)", "v"*"$(i)"*"$(j)"]))
-		middle += 1
-
+function find_common_edges(left_edges::Vector{String}, right_edges::Vector{String}, num_common::Int64) #stable2
+	pos_left = Array{intType,1}(undef,num_common)
+	pos_right = Array{intType,1}(undef,num_common)
+	val = 1
+	counter = 0
+	while val <= num_common #&& counter < length(left_edges)
+		counter += 1
+		if left_edges[counter] in right_edges
+			pos_left[val] = counter
+			pos_right[val] = findfirst(==(left_edges[counter]),right_edges)
+			val +=1
 		end
 	end
-
-	# C = [B[2], B[1], B[4], B[3]]
-
-	# for b in B
-	# 	println(b.names)
-
-	# end
-
-	result = contract(A, starting_ascii)
+	return pos_left, pos_right
+end
 
 
+function order(left::Indices, right::Indices, left_order::Vector{Int64}) #stable2
+	last_pos = -1
+	cost = 1
 
-	# @time contract(A, starting_ascii)
-	# println()
+	for pos in left_order
+		edge = left.names[pos]
+		index = findfirst(==(edge), right.names)
+		if !(index>last_pos)
+			for edge_dim in left.dimensions
+				cost *= edge_dim
+				
+			end
 
+			cost = cost÷length(left.names)
+			for edge_dim in right.dimensions
+				cost *= edge_dim
+			end
+
+			cost = cost÷length(right.names)
+			return cost
+		else
+			last_pos = index
+		end
+	end
+	return 0
+end
+
+
+function permute_cost(left::Indices, right::Indices, pos_left::Vector{Int64}, pos_right::Vector{Int64}) #stable2
+
+	costA,posA = permute(left, pos_left)
+	costB,posB = permute(right, pos_right)
+
+
+	if !(costA==0)&&!(costB==0)
+		return costA+costB
+	elseif (costA==0)&&(costB==0)
+		return order(left, right, posA)
+	else
+		return costA+costB
+	end
+end
+
+
+
+function best_order(next_tensors::Vector{nametens{tens{W}, String}}, num_connecting::Vector{Int64}, temp_start::Indices) where W <: Number #stable2
+
+	temp_next = Indices(next_tensors[1].names, next_tensors[1].N.size)
+
+	left = best_order_helper(next_tensors, num_connecting, temp_start, 0, "", "left", 1)
+	right = best_order_helper(next_tensors, num_connecting, temp_start, 0, "", "right", 1)
+
+	if left[1]<=right[1]
+		return left[2]
+
+	else 
+		return right[2]
+
+	end
 
 end
 
-val = parse(Int64, ARGS[1])
-#main(val)
+#THIS FUNCITON IS VERY EXPENSIVE
+#new idea: don't check all the different combinations, just look left and right and make a decision on the added cost
+# it will NOT pick the best but hopefully it will pick a "good" choice anyways
+function best_order_helper(next_tensors::Vector{nametens{tens{W}, String}}, num_connecting::Vector{Int64}, temp_start::Indices, cost::Int64, order::String, side::String, depth::Int64) where W <: Number #stable2
 
-@btime main(val)
+	if length(order) == length(next_tensors)
+		return (cost, order)
 
-#@btime contract(T, 0x000000A1)
+	elseif (side == "left")
+		temp_next = Indices(next_tensors[depth].names, next_tensors[depth].N.size)
+		pos_left,pos_right = find_common_edges(temp_next.names, temp_start.names, num_connecting[depth]) #takes (1 allocation: 64 bytes)
 
-#@btime (T[1]*T[2])*(T[3]*T[4])
+		cost += permute_cost(temp_next, temp_start, pos_left,pos_right) #takes 0.000001 seconds (4 allocations: 320 bytes)
 
-=#
+		left = update_temp(temp_next, temp_start, num_connecting[depth]) #takes 0.000002 seconds (2 allocations: 208-224 bytes)
+		order = order*"L"
+		depth += 1
+
+		next_left = best_order_helper(next_tensors, num_connecting, left, cost, order, "left", depth)
+		next_right = best_order_helper(next_tensors, num_connecting, left, cost, order, "right", depth)
+
+		if next_left[1]<=next_right[1]
+			return next_left
+		else 
+			return next_right
+		end
+
+	else
+		temp_next = Indices(next_tensors[depth].names, next_tensors[depth].N.size)
+		pos_left,pos_right = find_common_edges(temp_start.names, temp_next.names, num_connecting[depth])
+
+		cost += permute_cost(temp_start, temp_next, pos_left,pos_right)
+
+		right = update_temp(temp_start, temp_next, num_connecting[depth])
+		order = order*"R"
+		depth += 1
 
 
+		next_left = best_order_helper(next_tensors, num_connecting, right, cost, order, "left", depth)
+		next_right = best_order_helper(next_tensors, num_connecting, right, cost, order, "right", depth)
 
+		if next_left[1]<=next_right[1]
+			return next_left
+		else 
+			return next_right
+		end
+	end
+end
 
+function contract!(graph::network) #stable2
+	graph = graph.net
+	contract_around = false
 
+	start = find_start(graph) #takes 0 alloc
+	
+	location = findfirst(==(start), graph) #takes 0 alloc
+	deleteat!(graph, location) #takes 0 alloc
 
+  shared_edges = connecting_edges(graph) #takes 1.01 k allocations: 93.688 KiB
+	
+  initial_start = Indices(start.names, start.N.size)
+
+	future = 3
+	next_tensors = Vector{nametens{tens{Float64}, String}}(undef, future) #takes (1 allocation: 80 bytes)
+	num_connecting = Vector{Int64}(undef, future) #takes (1 allocation: 80 bytes)
+
+	while (length(graph)>0)
+		temp_start = Indices(start.names, start.N.size)
+		future = 3
+
+		if (length(graph)<future)
+			future = length(graph)
+			next_tensors = Vector{nametens{tens{Float64}, String}}(undef, length(graph))
+			num_connecting = Vector{Int64}(undef, length(graph))
+
+		end
+
+		while (length(graph)>0)&&(future>0) #the time of the algorithm seems to jump around a bit.. possible type instability?..
+
+			if (contract_around) # we have contracted around the starting tensor so we can follow the alogorihtm as expected
+				next_details = find_next(temp_start, start, shared_edges) #takes 0 alloc cause this to return the common edges?...
+				next = next_details[1]
+
+				temp_next = Indices(next.names, next.N.size)
+				shared_edges = update_edges(next, shared_edges) #takes 0 alloc
+
+				next_tensors[length(next_tensors)-future+1] = next #create a nicer looking index system?...
+				num_connecting[length(next_tensors)-future+1] = next_details[2]
+
+				location = findfirst(==(next), graph)
+				deleteat!(graph, location)
+
+				# this is semi expensive, takes about 600 alloc for the whole program (2*300 tensors)
+				temp_start = update_temp(temp_start, temp_next, next_details[2]) #takes 2 allocations: 208-224 bytes
+				future -= 1
+
+			else
+				next_details = find_next(initial_start, start, shared_edges)
+				next = next_details[1]
+
+				if (next==start)
+					contract_around = true
+
+				else
+
+					temp_next = Indices(next.names, next.N.size)
+					shared_edges = update_edges(next, shared_edges)
+
+					next_tensors[length(next_tensors)-future+1] = next #create a nicer looking index system?...
+					num_connecting[length(next_tensors)-future+1] = next_details[2]
+
+					location = findfirst(==(next), graph)
+					deleteat!(graph, location)
+
+					temp_start = update_temp(temp_start, temp_next, next_details[2])
+					future -= 1
+
+				end
+
+			end
+		end
+
+		temp_start = Indices(start.names, start.N.size)
+		#THIS IS VERY EXPENSIVE (112*(300 tensors/3))
+		answer = best_order(next_tensors, num_connecting, temp_start) #takes 0.000032 seconds (112 allocations: 7.953 KiB)
+
+		#THIS IS VERY EXPENSIVE (163*(300 tensors/3))
+		#takes about 163 alloc for each time this for loop is done
+		for pos in 1:length(answer)
+			if answer[pos] == 'L'
+				start = next_tensors[pos]*start
+			else 
+				start = start*next_tensors[pos]
+			end
+		end
+
+		#IN TOTAL THE 2 MOST EXPENSIVE PARTS TAKE ABOUT 27,500 ALLOC OUT OF 30,915 ALLOC (about 88.95%)
+	end
+	return start
+end

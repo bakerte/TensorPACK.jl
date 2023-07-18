@@ -560,13 +560,23 @@ function checkType(A::tens{W},B::tens{G}) where {W <: Number, G <: Number}
 end
 
 function checkType(A::diagonal{W},B::tens{G}) where {W <: Number, G <: Number}
-  outType = typeof(eltype(A)(1)*eltype(B)(1))
-  return diagonal{outType}(A.T),tens{outType}(B)
+  if W == G
+    mA,mB = A,B
+  else
+    outType = typeof(eltype(A)(1)*eltype(B)(1))
+    mA,mB = diagonal{outType}(A.T),tens{outType}(B)
+  end
+  return mA,mB
 end
 
 function checkType(A::tens{W},B::diagonal{G}) where {W <: Number, G <: Number}
-  outType = typeof(eltype(A)(1)*eltype(B)(1))
-  return tens{outType}(A),diagonal{outType}(B.T)
+  if W == G
+    mA,mB = A,B
+  else
+    outType = typeof(eltype(A)(1)*eltype(B)(1))
+    mA,mB = tens{outType}(A),diagonal{outType}(B.T)
+  end
+  return mA,mB
 end
 export checkType
 
@@ -1184,7 +1194,6 @@ function setindex!(B::tens{W},A::Array{W,N},a::genColType...) where {W <: Number
   @inbounds @simd for w = 1:length(G)
     B.T[w] = G[w]
   end
-#  B.T = reshape(G,prod(size(G))...)
   nothing
 end
 
@@ -1193,12 +1202,24 @@ function setindex!(B::Array{W,N},A::tens{W},a::genColType...) where {W <: Number
   B[a...] = G
   nothing
 end
-
-function setindex!(B::tens{W},A::W,a::Integer,b::Integer...) where W <: Number
-  @inbounds index = a-1
-  @inbounds @simd for q = length(b):-1:1
-    index += b[q]-1
+#=
+function setindex!(B::tens{W},A::W,a::Integer...) where W <: Number
+  @inbounds index = a[end]-1
+  @inbounds @simd for q = length(a)-1:-1:1
+    index *= size(B,q)
+    index += a[q]-1
   end
+  @inbounds B.T[index+1] = A
+  nothing
+end
+=#
+function setindex!(B::tens{W},A::W,a::Integer,b::Integer...) where W <: Number
+  index = 0
+  @inbounds @simd for q = length(b)0:-1:1
+    index += b[q]-1
+    index *= size(B,q)
+  end
+  index += a-1
   @inbounds B.T[index+1] = A
   nothing
 end
@@ -1545,6 +1566,48 @@ end
 function sqrt(M::diagonal{W}) where W <: Number
   return sqrt!(copy(M))
 end
+
+import Base.abs
+function abs(x::Number,a::Number)
+  return abs(x)
+end
+
+"""
+  G = sqrtabs!(M)
+
+Takes the square root of a dense tensor (new tensor created) or Qtensor (in-place) with output `G`
+"""
+function sqrtabs!(M::TensType)
+  M = tensorcombination!(M,fct=abs)
+  return tensorcombination!(M,alpha=(0.5,),fct=^)
+end
+
+function sqrtabs!(M::diagonal{W}) where W <: Number
+  @inbounds @simd for i = 1:length(M)
+    M[i] = sqrt(abs(M[i]))
+  end
+  return M
+end
+export sqrt!
+
+import Base.sqrt
+"""
+  G = sqrt(M)
+
+Takes the square root of a tensor with output `G`
+
+See also: [`sqrt`](@ref)
+"""
+function sqrtabs(M::TensType)
+  G = tensorcombination(M,fct=abs)
+  return tensorcombination!(G,alpha=(0.5,),fct=^)
+end
+
+function sqrtabs(M::diagonal{W}) where W <: Number
+  return sqrt!(copy(M))
+end
+
+
 #=
 """
   G = inverse_element(x,zero)
@@ -2191,6 +2254,36 @@ function joinindex!(A::W,B::R,inds::intvecType) where {W <: TensType, R <: TensT
   return joinindex!(inds,mA,mB)
 end
 export joinindex!
+
+"""
+  directsum(A,B...[,group=[1,2]])
+
+Takes the direct sum of rank-2 tensors `A` and any number of tensors `B`. One can extend beyond matrices by modifying `group` which is the extra argument in `joinindex!`
+
+See also: [`joinindex`](@ref) [`joinindex!`](@ref) [`directsum!`](@ref)
+"""
+function directsum(A::TensType,B::TensType...;group::Array{W,1}=[1,2],fct::Function=joinindex) where W <: Integer
+  if length(B) > 0
+    out = fct(group,A,B[1])
+    for w = 2:length(B)
+      out = joinindex!(group,out,B[w])
+    end
+  else
+    out = A
+  end
+  return out
+end
+
+"""
+  directsum!(A,B...[,group=[1,2]])
+
+Takes the direct sum of rank-2 tensors `A` and any number of tensors `B`. One can extend beyond matrices by modifying `group` which is the extra argument in `joinindex!`. Modifies `A` in-place
+
+See also: [`joinindex`](@ref) [`joinindex!`](@ref) [`directsum!`](@ref)
+"""
+function directsum!(A::TensType,B::TensType...;group::Array{W,1}=[1,2],fct::Function=joinindex!) where W <: Integer
+  return directsum!(A,B...,group=group,fct=fct)
+end
 
 """
   showQtens(Qt[,show=])
