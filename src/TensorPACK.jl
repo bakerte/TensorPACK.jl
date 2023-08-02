@@ -70,7 +70,6 @@ libpath = libdir*"/../lib/"
 #Linear algebra routines
 
 include(libpath*"tensor.jl")
-include(libpath*"autodiff.jl")
 include(libpath*"libalg.jl")
 
 
@@ -93,6 +92,7 @@ include(libpath*"Qdecompositions.jl")
 
 include(libpath*"tensornetwork.jl")
 
+include(libpath*"autodiff.jl")
 
 const testpath = libdir*"/../test/"
 
