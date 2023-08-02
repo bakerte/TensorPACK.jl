@@ -55,7 +55,7 @@ function testfct(test::Bool,message::String)
   
   See also: [`libdir`](@ref)
   """
-  function libtest(;tests::Array{String,1}=tests,dir::String=libdir,path::String=dir*"/test/")
+  function libtest(;tests::Array{String,1}=tests,dir::String=libdir,path::String=dir*"/../test/")
   
     fulltestrecord = Array{Bool,1}(undef,length(tests))
   
