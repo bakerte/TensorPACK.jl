@@ -509,6 +509,34 @@ end
   return Qtens(Qlabels,datatype=datatype,currblock=currQtens.currblock,flux=currQtens.flux,blockfct=zeros)
 end
 
+
+
+import Base.ones
+@inline function ones(Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};datatype::DataType=Float64,flux::Q=Q()) where Q <: Qnum
+  newQlabels = Array{Q,1}[arrows[a] ? Qlabels[a] : inv.(Qlabels[a]) for a = 1:length(arrows)]
+  return Qtens(newQlabels,datatype=datatype,flux=flux,blockfct=ones)
+end
+
+@inline function ones(Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels),datatype::DataType=Float64) where Q <: Qnum
+  return Qtens(Qlabels,datatype=datatype,flux=flux,currblock=currblock,blockfct=ones)
+end
+
+@inline function ones(datatype::DataType,Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels)) where Q <: Qnum
+  return Qtens(Qlabels,datatype=datatype,flux=flux,currblock=currblock,blockfct=ones)
+end
+
+@inline function ones(currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+  Qlabels = fullQnumMat(currQtens)
+  return Qtens(Qlabels,datatype=W,currblock=currQtens.currblock,flux=currQtens.flux,blockfct=ones)
+end
+
+@inline function ones(datatype::DataType,currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+  Qlabels = fullQnumMat(currQtens)
+  return Qtens(Qlabels,datatype=datatype,currblock=currQtens.currblock,flux=currQtens.flux,blockfct=ones)
+end
+
+
+
 import Base.zero
   """Like the default function zero(t::Array), return an object with the same properties containing only zeros."""
   @inline function zero(Qt::qarray)

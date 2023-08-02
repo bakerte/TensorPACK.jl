@@ -362,6 +362,15 @@ end
     EExp = Meta.parse(output)
     return eval(EExp)
   end
+#=
+  macro makeQNs(name::Symbol,Types...)
+    # _generatecompositestring
+    sname = String(:name)
+    output = _generatecompositestring(sname,Types...)
+    EExp = Meta.parse(output)
+    return eval(EExp)
+  end
+  =#
   export @makeQNs
 
   """

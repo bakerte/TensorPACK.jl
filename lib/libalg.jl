@@ -192,6 +192,15 @@ for (gemm, elty) in
         libmult!(transA, transB, alpha, A.T, B.T, beta, newC,m,ka,kb,n)
         return newC
     end
+    
+    function libmult(transA::AbstractChar, transB::AbstractChar, A::Diagonal{$elty},B::Diagonal{$elty},m::Integer,ka::Integer,kb::Integer,n::Integer)
+        if m > 1
+          newC = Diagonal([A.T[w]*B.T[w] for w = 1:length(A)])
+        else
+          newC = dot(A,B,Lfct=transA == 'C' ? adjoint : identity,Rfct = transB == 'C' ? adjoint : identity)
+        end
+        return newC
+    end
   end
 end
 

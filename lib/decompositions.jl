@@ -221,71 +221,8 @@ and define functions as `LinearAlgebra.svd` to use functions from that package.
 function svd(AA::Array{W,G};cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,a::Integer = size(AA,1),b::Integer=size(AA,2),
               minm::Integer=2,nozeros::Bool=true,power::Number=2,effZero::Real=defzero,keepdeg::Bool=false,inplace::Bool=false,
               decomposer::Function=libsvd) where {W <: Number, G}
-#=
-#    test(a*b,length(AA),"not matching sizes for svd")
-
-    U,D,Vt = decomposer(AA,a,b)
-    m_intervals,sizeD,truncerr,sumD = truncate(D,m=m,minm=minm,mag=mag,cutoff=cutoff,effZero=effZero,nozeros=nozeros,power=power,keepdeg=keepdeg)
-
-    Utrunc,Dtrunc,Vtrunc = U,D,Vt
-
-    interval = m_intervals[1]
-    thism = length(interval)
-    if thism < minm && m > minm
-
-      maxm = max(m,minm)
-
-      Utrunc = Array{eltype(U),2}(undef,a,maxm)
-      @inbounds @simd for z = 1:length(U)
-        Utrunc[z] = U[z]
-      end
-      @inbounds @simd for z = length(U)+1:length(Utrunc)
-        Utrunc[z] = 0
-      end
-
-      Dtrunc = Array{eltype(D),1}(undef,maxm)
-      @inbounds @simd for z = 1:size(D,1)
-        Dtrunc[z] = D[z]
-      end
-      @inbounds @simd for z = size(D,1)+1:maxm
-        Dtrunc[z] = 0
-      end
-
-      Vtrunc = Array{eltype(Vt),2}(undef,maxm,b)
-      for y = 1:b
-        thisind = sizeD*(y-1)
-        thisotherind = maxm*(y-1)
-        @inbounds @simd for x = 1:sizeD
-          Vtrunc[x + thisotherind] = Vt[x + thisind]
-        end
-        @inbounds @simd for x = sizeD+1:maxm
-          Vtrunc[x + thisotherind] = 0
-        end
-      end
-
-    elseif thism < sizeD
-
-#      U = reshape!(U,a,sizeD)
-      Vt = reshape!(Vt,sizeD,b)
-
-#      Utrunc = U[:,interval]
-#      Dtrunc = D[interval]
-      Vtrunc = Vt[interval,:]
-
-      Dtrunc = D
-      for w = length(D):-1:length(interval)+1
-        pop!(Dtrunc)
-        for x = 1:a
-          pop!(U)
-        end
-      end
-      Utrunc = reshape!(U,a,length(interval))
-#      Utrunc = U
-    end
-
-    return Utrunc,Diagonal(Dtrunc),Vtrunc,truncerr,sumD
-    =#
     U,D,V,truncerr,sumD = svd(tens(AA),power=power,cutoff=cutoff,m=m,mag=mag,minm=minm,nozeros=nozeros,effZero=effZero,keepdeg=keepdeg,a=a,b=b,decomposer=decomposer)
+
     return makeArray(U),D,makeArray(V),truncerr,sumD
 end
 export svd
@@ -296,12 +233,13 @@ function svd(AA::tens{W};power::Number=2,cutoff::Float64 = 0.,
           a::Integer = size(AA,1),b::Integer=size(AA,2),inplace::Bool=false) where W <: Number
 
   U,D,Vt = decomposer(AA.T,a,b)
+
   m_intervals,sizeD,truncerr,sumD = truncate(D,m=m,minm=minm,mag=mag,cutoff=cutoff,effZero=effZero,nozeros=nozeros,power=power,keepdeg=keepdeg)
 
   interval = m_intervals[1]
   thism = length(interval)
-  if thism < minm && m > minm
 
+  if thism < minm #&& m > minm
     maxm = max(m,minm)
 
     Utrunc = Array{eltype(U),1}(undef,a*maxm)
@@ -332,10 +270,10 @@ function svd(AA::tens{W};power::Number=2,cutoff::Float64 = 0.,
       end
     end
 
-    Utrunc,Dtrunc,Vtrunc = tens([a,length(D)],Utrunc),Dtrunc,tens([length(D),b],Vtrunc)
+    Utrunc = tens([a,length(Dtrunc)],Utrunc)
+    Vtrunc = tens([length(Dtrunc),b],Vtrunc)
 
   elseif thism < sizeD
-
     Vtrunc = tens([length(D),b],Vt)
     Vtrunc = Vtrunc[interval,:]
 

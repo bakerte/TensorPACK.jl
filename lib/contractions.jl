@@ -209,8 +209,6 @@ function maincontractor!(conjA::Bool,conjB::Bool,A::densTensType,iA::intvecType,
   Aremain = ndims(A)-length(iA)
   Bremain = ndims(B)-length(iB)
 
-#  AAsizes = Array{intType,1}(undef,Aremain+Bremain)
-
   Lsize,innersizeL = getsizes(A,iA)
   Rsize,innersizeR = getsizes(B,iB)
 
@@ -250,7 +248,6 @@ function maincontractor!(conjA::Bool,conjB::Bool,A::densTensType,iA::intvecType,
     end
     out = libmult(transA,transB,type_alpha,mulA,mulB,Lsize,innersizeL,innersizeR,Rsize)
   end
-
   return AAsizes,out
 end
 
@@ -261,10 +258,14 @@ Contraction function (`alpha`*`A`*`B`+`beta`*`Z`) and can conjugate A (`conjA`) 
 """
 function maincontractor(conjA::Bool,conjB::Bool,A::densTensType,iA::intvecType,B::densTensType,iB::intvecType,Z::TensType...;alpha::Number=1,beta::Number=1)
   AAsizes,out = maincontractor!(conjA,conjB,A,iA,B,iB,Z...,alpha=alpha,beta=beta)
-  if typeof(A) <: denstens || typeof(B) <: denstens
-    outTens = tens(AAsizes,out)
+  if typeof(out) <: Number
+    outTens = out
   else
-    outTens = reshape!(out,AAsizes)
+    if typeof(A) <: denstens || typeof(B) <: denstens
+      outTens = tens(AAsizes,out)
+    else
+      outTens = reshape!(out,AAsizes)
+    end
   end
   return outTens
 end
@@ -554,11 +555,11 @@ function contract(A::Union{TensType,LinearAlgebra.Diagonal{W, Vector{W}}},iA::in
 end
 =#
 
-function contract(A::Diagonal{W},iA::intvecType,B::densTensType,iB::intvecType,Z::densTensType...;alpha::Number=eltype(A)(1),beta::Number=eltype(A)(1)) where W <: Number
+function contract(A::Diagonal{W},iA::intvecType,B::G,iB::intvecType,Z::R...;alpha::Number=eltype(A)(1),beta::Number=eltype(A)(1)) where {W <: Number, G <: Union{AbstractArray,tens}, R <: Union{AbstractArray,tens}}
   return diagcontract!(A,convIn(iA),B,convIn(iB),Z...,alpha=alpha,beta=beta,inplace=false)
 end
 
-function contract(A::densTensType,iA::intvecType,B::Diagonal{W},iB::intvecType,Z::densTensType...;alpha::Number=eltype(A)(1),beta::Number=eltype(A)(1)) where W <: Number
+function contract(A::G,iA::intvecType,B::Diagonal{W},iB::intvecType,Z::R...;alpha::Number=eltype(A)(1),beta::Number=eltype(A)(1))  where {W <: Number, G <: Union{AbstractArray,tens}, R <: Union{AbstractArray,tens}}
   return diagcontract!(A,convIn(iA),B,convIn(iB),Z...,alpha=alpha,beta=beta,inplace=false)
 end
 

@@ -311,6 +311,23 @@ function zeros(R::DataType,A::tens{W}) where W <: Number
   return tens{R}(zeros(R,size(A)))
 end
 
+import Base.ones
+function ones(A::AbstractArray{W,N}) where {W <: Number, N}
+  return ones(W,size(A))
+end
+
+function ones(A::tens{W}) where W <: Number
+  return tens{W}(ones(W,size(A)))
+end
+
+function ones(R::DataType,A::Union{AbstractArray{W,N},Array{W,N}}) where {W <: Number, N}
+  return ones(R,size(A))
+end
+
+function ones(R::DataType,A::tens{W}) where W <: Number
+  return tens{R}(ones(R,size(A)))
+end
+
 import Base.zero
 """
   G = zero(A)
@@ -575,6 +592,16 @@ function checkType(A::tens{W},B::diagonal{G}) where {W <: Number, G <: Number}
   else
     outType = typeof(eltype(A)(1)*eltype(B)(1))
     mA,mB = tens{outType}(A),diagonal{outType}(B.T)
+  end
+  return mA,mB
+end
+
+function checkType(A::diagonal{W},B::diagonal{G}) where {W <: Number, G <: Number}
+  if W == G
+    mA,mB = A,B
+  else
+    outType = typeof(eltype(A)(1)*eltype(B)(1))
+    mA,mB = diagonal{outType}(A),diagonal{outType}(B.T)
   end
   return mA,mB
 end
@@ -933,7 +960,7 @@ Number of dimensions (rank) `G` of a `denstens` (identical usage to `Array` `ndi
 See also: [`denstens`](@ref) [`Array`](@ref)
 """
 function ndims(A::denstens)
-  return length(A.size)
+  return length(size(A))
 end
 
 import Base.lastindex
@@ -1635,9 +1662,13 @@ function invmat!(M::AbstractArray{W,2};zeronum::Float64=1E-16) where  W <: Numbe
   return inv(M)
 end
 
-function invmat!(M::Diagonal{W};zeronum::Float64=1E-16) where W <: Number
+function invmat!(M::Diagonal{W};zeronum::Float64=1E-12) where W <: Number
   for w = 1:length(M)
-    M[w] = 1/M[w]
+    if abs(M[w]) > zeronum
+      M[w] = 1/M[w]
+    else
+      M[w] = 0.
+    end
   end
   return M
 end
@@ -2331,6 +2362,7 @@ function println(A::denstens;show::Integer = 4)
   nothing
 end
 
+import Base.display
 function display(A::denstens)
   display(makeArray(A))
   nothing

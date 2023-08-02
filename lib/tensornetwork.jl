@@ -4,7 +4,7 @@
 #                              v1.0
 #
 #########################################################################
-# Made by Thomas E. Baker (2020)
+# Made by Thomas E. Baker and Kiana Gallagher (2020)
 # See accompanying license with this program
 # This code is native to the julia programming language (v1.1.1+)
 #
@@ -153,8 +153,20 @@ function getindex(Qts::TNnetwork,i::Integer)
   return Qts.net[i]
 end
 
+"""
+  getindex(A,i)
+
+For a `nametens` with input `dtens` `A`, returns either the values (`i=0`) or derivatives (`i=1`)
+
+See also: [`nametens`](@ref) [`dtens`](@ref)
+"""
 function getindex(Qts::nametens,i::Integer)
-  return Qts.N[i]
+  if typeof(Qts.N) <: dtens
+    out = nametens(Qts.N[i+1],Qts.names)
+  else
+    out = Qts.N[i]
+  end
+  return out
 end
 
 function getindex(Qts::directedtens,i::Integer)
@@ -170,6 +182,8 @@ import ..Base.length
 function length(Qts::TNnetwork)
   return length(Qts.net)
 end
+
+### not commented above here...needed?
 
 function contractinds(A::nametens,B::nametens;check::Bool=false)
   pairs = Array{Bool,2}(undef,length(A.names),length(B.names))
@@ -339,7 +353,7 @@ concatenates string `a` with integer `b` after converting integer to a string
 function *(a::String,b::Integer)
   return a*string(b)
 end
-
+#=
 import Base.permutedims
 """
     permtuedims(A,order)
@@ -390,6 +404,7 @@ function permutedims!(B::TNobj,order::Array{W,1}) where W <: Integer
 
   return B
 end
+=#
 
 """
     matchnames(AA,order,q)
@@ -460,8 +475,8 @@ Takes `svd` of `A` according to `order` and returns U*sqrt(D),sqrt(D)*V
 See also: [`svd`](@ref)
 """
 function symsvd(AA::TNobj,order::Array{Array{B,1},1};mag::Number = 0.,power::Integer=2,
-                cutoff::Number = 0.,m::Integer = 0,name::String="svdind",rightadd::String="L",
-                leftadd::String="R") where B <: Union{Any,String}
+                cutoff::Number = 0.,m::Integer = 0,name::String="svdind",
+                leftadd::String="L",rightadd::String="R") where B <: Union{Any,String}
 
   U,D,V,truncerr,mag = svd(AA,order,power=power,mag=mag,cutoff=cutoff,m=m,name=name,leftadd=leftadd,rightadd=rightadd)
   S1 = sqrt!(D)
@@ -491,6 +506,111 @@ function eigen(AA::nametens,order::Array{Array{B,1},1};mag::Number = 0.,cutoff::
   TNobjD = nametens(D,[leftname,rightname])
   TNobjU = nametens(U,vcat(AA.names[left],[leftname]))
   return TNobjD,TNobjU,truncerr,newmag
+end
+
+"""
+    qr(A,order[,mag=,cutoff=,m=,name=,leftadd=])
+
+Generates QR decomposition of named tensor `A` according to `order`; same output as regular eigenvalue but with named tensors
+
+Note: `mag`, `cutoff`, and `m` are not functional
+
+# Naming created index:
++ the index to the left of `D` is `vcat(name,leftadd)`
+"""
+function qr(AA::nametens,order::Array{Array{B,1},1};mag::Number = 0.,cutoff::Number = 0.,
+  m::Integer = 0,name::String="qrind",leftadd::String="L") where B <: Union{Any,String}
+
+  left = matchnames(AA,order[1])
+  right = matchnames(AA,order[2])
+  neworder = [left,right]
+  leftname = name*leftadd
+
+  Q,R = qr(AA.N,neworder)
+
+  TNobjQ = nametens(Q,vcat(AA.names[left]...,[leftname]))
+  TNobjR = nametens(R,[leftname,AA.names[right]...])
+
+  return TNobjQ,TNobjR
+end
+#=
+"""
+    ql(A,order[,mag=,cutoff=,m=,name=,leftadd=])
+
+Generates QL decomposition of named tensor `A` according to `order`; same output as regular eigenvalue but with named tensors
+
+Note: `mag`, `cutoff`, and `m` are not functional
+
+# Naming created index:
++ the index to the left of `D` is `vcat(name,leftadd)`
+"""
+function ql(AA::nametens,order::Array{Array{B,1},1};mag::Number = 0.,cutoff::Number = 0.,
+  m::Integer = 0,name::String="qlind",leftadd::String="L") where B <: Union{Any,String}
+
+  left = matchnames(AA,order[1])
+  right = matchnames(AA,order[2])
+  neworder = [left,right]
+  leftname = name*leftadd
+
+  Q,R = ql(AA.N,neworder)
+
+  TNobjQ = nametens(Q,vcat(AA.names[left]...,[leftname]))
+  TNobjR = nametens(R,[leftname,AA.names[right]...])
+
+  return TNobjQ,TNobjR
+end
+
+"""
+    rq(A,order[,mag=,cutoff=,m=,name=,leftadd=])
+
+Generates RQ decomposition of named tensor `A` according to `order`; same output as regular eigenvalue but with named tensors
+
+Note: `mag`, `cutoff`, and `m` are not functional
+
+# Naming created index:
++ the index to the left of `D` is `vcat(name,leftadd)`
+"""
+function rq(AA::nametens,order::Array{Array{B,1},1};mag::Number = 0.,cutoff::Number = 0.,
+  m::Integer = 0,name::String="rqind",leftadd::String="L") where B <: Union{Any,String}
+
+  left = matchnames(AA,order[1])
+  right = matchnames(AA,order[2])
+  neworder = [left,right]
+  leftname = name*leftadd
+
+  Q,R = rq(AA.N,neworder)
+
+  TNobjQ = nametens(Q,vcat(AA.names[left]...,[leftname]))
+  TNobjR = nametens(R,[leftname,AA.names[right]...])
+
+  return TNobjQ,TNobjR
+end
+=#
+
+"""
+    lq(A,order[,mag=,cutoff=,m=,name=,leftadd=])
+
+Generates LQ decomposition of named tensor `A` according to `order`; same output as regular eigenvalue but with named tensors
+
+Note: `mag`, `cutoff`, and `m` are not functional
+
+# Naming created index:
++ the index to the left of `D` is `vcat(name,leftadd)`
+"""
+function lq(AA::nametens,order::Array{Array{B,1},1};mag::Number = 0.,cutoff::Number = 0.,
+  m::Integer = 0,name::String="lqind",leftadd::String="L") where B <: Union{Any,String}
+
+  left = matchnames(AA,order[1])
+  right = matchnames(AA,order[2])
+  neworder = [left,right]
+  leftname = name*leftadd
+
+  Q,R = lq(AA.N,neworder)
+
+  TNobjQ = nametens(Q,vcat(AA.names[left],[leftname]...))
+  TNobjR = nametens(R,[leftname,AA.names[right]...])
+
+  return TNobjQ,TNobjR
 end
 
 """
@@ -1055,27 +1175,41 @@ export joinTens
 
 
 
- #
- # Kiana
- # 
- struct Indices
+#
+# Kiana
+# 
+"""
+  Indices
+
+Names of indices on each site (`.names`) and dimensions of each site (`.dimensions`). Stores meta-data for contraction cost estimation in automatic contraction
+"""
+struct Indices
 	names::Vector{String}
 	dimensions::Vector{Int64}
 end
 
+"""
+  effective_rank(T)
 
-function get_weight(tensor::nametens{tens{W}, String}) where W <: Number #stable2
-	sum = 0
-	for dim in tensor.N.size
-		if dim != 1
-			sum +=1 
+Obtains the rank of a `nametens` object (does not count indices with dimension of 1)
+"""
+function get_weight(tensor::nametens{tens{W}, String}) where W <: Number 
+	nrank = 0
+	# does not consider dimension of value 1 to contribute to the rank
+	for i in tensor.N.size
+		if i != 1
+			nrank +=1 
 		end
 	end
-	return sum
+	return nrank
 end
 
+"""
+  find_start(G)
 
-function find_start(graph::Vector{nametens{tens{W}, String}})::nametens{tens{W}, String} where W <: Number #stable2
+Finds the starting tensor to contract onto from a graph `G` (input a as a vector for ease in other functions)
+"""
+function find_start(graph::Vector{nametens{tens{W}, String}}) where W <: Number
 	start = graph[1]
 	min_num_ind = get_weight(start)
 	min_cost = get_cost(start.N.size)
@@ -1100,24 +1234,35 @@ function find_start(graph::Vector{nametens{tens{W}, String}})::nametens{tens{W},
 	return start
 end
 
+"""
+  
 
-function connecting_edges(graph::Vector{nametens{tens{W}, String}})::Dict{String, Vector{nametens{tens{W}, String}}} where W <: Number #stable2
+Returns a dictionary where the edges are they keys and the values are the tensors connected to the vertices
+"""
+function connecting_edges(graph::Vector{nametens{tens{W}, String}}) where W <: Number
 	shared_edges = Dict{String, Vector{nametens{tens{W}, String}}}()
 
 	for tensor in graph
 		for edge in tensor.names
 			if edge in keys(shared_edges)
-				push!(shared_edges[edge], tensor) # possible ways to make this more efficient???
+				shared_edges[edge][2] = tensor
 			else
-				shared_edges[edge] = [tensor]
+				shared_edges[edge] = Vector{nametens{tens{Float64}, String}}(undef, 2)
+				shared_edges[edge][1] = tensor
+				shared_edges[edge][2] = tensor
 			end
 		end
 	end
+
 	return shared_edges
 end
 
+"""
+  common_info(S,T)
 
-function common_info(temp_start::Indices, right_tensor::nametens{tens{W}, String}) where W <: Number  #stable2
+Returns the number of edges in common and the product of the dimensions of the common vertices of `Indices` `S` and for a named tensor `T`
+"""
+function common_info(temp_start::Indices, right_tensor::nametens{tens{W}, String}) where W <: Number  
 	num_common = 0
 	mult_commom = 1
 
@@ -1127,11 +1272,16 @@ function common_info(temp_start::Indices, right_tensor::nametens{tens{W}, String
 			mult_commom *= temp_start.dimensions[pos]
 		end
 	end
+
 	return (num_common, mult_commom)
 end
 
+"""
+  get_cost(E)
 
-function get_cost(edges::Vector{Int64})::Int64 #stable2
+Returns the product of all the dimensions of a tensor for given edges `E` (Vector)
+"""
+function get_cost(edges::Vector{Int64})::Int64 
 	cost = 1
 	for edge_dim in edges
 		cost *= edge_dim
@@ -1139,19 +1289,24 @@ function get_cost(edges::Vector{Int64})::Int64 #stable2
 	return cost
 end 
 
+"""
+  find_next(S,T,E)
 
-function find_next(temp_start::Indices, start::nametens{tens{W}, String}, shared_edges::Dict{String, Vector{nametens{tens{W}, String}}})::Tuple{nametens{tens{W}, String}, Int64} where W <: Number #stable2
+Finds the next tensor to contract onto the current tensor given `Indices` `S`, `nametens` `T`, and shared edges (Dictionary) `shared_edges`
+"""
+function find_next(temp_start::Indices, start::nametens{tens{W}, String}, shared_edges::Dict{String, Vector{nametens{tens{W}, String}}}) where W <: Number 
 	new_edges = -1
 	next = start
 	min_cost = -1
 	max_common = 0
 
 	for edge in temp_start.names
-		if haskey(shared_edges, edge)
-			if length(shared_edges[edge]) != 0
+		if (length(shared_edges[edge])>0)
+			if (length(shared_edges[edge])==1)||(shared_edges[edge][1] != shared_edges[edge][2])
+
 				right_tensor = shared_edges[edge][1]
 
-				common_details = common_info(temp_start, right_tensor) # consider returing the names of the indices they have in common
+				common_details = common_info(temp_start, right_tensor)
 
 				num_common = common_details[1]
 				added_edges = get_weight(right_tensor)-num_common
@@ -1191,13 +1346,16 @@ function find_next(temp_start::Indices, start::nametens{tens{W}, String}, shared
 	return (next, max_common)
 end
 
+"""
+  update_temp(left,right,max_common)
 
-# tried to use vcat but it still takes 1 alloc for each vcat, so it is still 2 alloc to run the algorithm.
-function update_temp(left::Indices, right::Indices, max_common::Int64) #stable2
+Updates the temp starting tensor to include the next contracted tensor for left `Indices` `left`, right `Indices` `right`, and `max_common` which is the number of edges in common between the two vertices
+"""
+function update_temp(left::Indices, right::Indices, max_common::Int64) 
 	new_length = (length(left.names)+length(right.names))-(2*max_common)
 
-	new_names = Vector{String}(undef, new_length) # takes 1 alloc
-	new_dimensions = Vector{Int64}(undef, new_length) # takes 1 alloc 
+	new_names = Vector{String}(undef, new_length) 
+	new_dimensions = Vector{Int64}(undef, new_length) 
 
 	num_updated = 1
 	for pos in 1:length(left.names)
@@ -1217,37 +1375,47 @@ function update_temp(left::Indices, right::Indices, max_common::Int64) #stable2
 			num_updated += 1
 		end
 	end
+
+
 	return Indices(new_names, new_dimensions)
 end
 
+"""
+  update_edges(next,shared_edges)
 
-function update_edges(next::nametens{tens{W}, String}, shared_edges::Dict{String, Vector{nametens{tens{W}, String}}})::Dict{String, Vector{nametens{tens{W}, String}}} where W <: Number #stable2
+Removes value in dictionary `shared_edges` in order to grab the first index of the resulting dictionary in a subsequent step (removing costs no extra allocations). `next` is an input tensor that is to be removed.
+"""
+function update_edges(next::nametens{tens{W}, String}, shared_edges::Dict{String, Vector{nametens{tens{W}, String}}}) where W <: Number 
 	for edge in next.names
 		adjacent = shared_edges[edge]
-		location = findfirst(==(next), adjacent)
-		deleteat!(adjacent, location)
+
+		if (length(adjacent)==2)&&(adjacent[1] != adjacent[2])
+			location = findfirst(==(next), adjacent)
+			deleteat!(adjacent, location)
+
+		elseif (length(adjacent)==1)
+			location = findfirst(==(next), adjacent)
+			deleteat!(adjacent, location)
+
+		end
+
 	end
 	return shared_edges
 end
 
+"""
+  permute(edges,order)
 
-# only takes one allocation
-function permute(edges::Indices, position) #stable2
+Finds the cost of any permutations according to `order`
+"""
+function permute(edges::Indices, position::Array{W,1}) where W <: Integer
 	cost = 1
-#=
-	for (pos, edge) in enumerate(common_edges)
-		index = findfirst(==(edge), edges.names)
-		position[pos] = index
-
-	end
-=#
 	sort!(position)
 
 	if !(length(edges.names) in position) && !(1 in position)
 		for edge_dim in edges.dimensions
 			cost *= edge_dim
 		end
-		# weight = cost÷length(edges.names)
 		return cost,position
 	else
 		for pos in range(2, length(position))
@@ -1255,21 +1423,20 @@ function permute(edges::Indices, position) #stable2
 				for edge_dim in edges.dimensions
 					cost *= edge_dim
 				end
-				# weight = cost÷length(edges.names)
 				return cost,position
 			end
 		end
 	end
-	return 0,position # returning a tuple versus  A, B seems to make no difference in terms of alloc
+	return 0,position 
 end
 
-
-function find_common_edges(left_edges::Vector{String}, right_edges::Vector{String}, num_common::Int64) #stable2
+# finds the names and dimensions of common edges between two tensors
+function find_common_edges(left_edges::Vector{String}, right_edges::Vector{String}, num_common::Int64) 
 	pos_left = Array{intType,1}(undef,num_common)
 	pos_right = Array{intType,1}(undef,num_common)
 	val = 1
 	counter = 0
-	while val <= num_common #&& counter < length(left_edges)
+	while val <= num_common 
 		counter += 1
 		if left_edges[counter] in right_edges
 			pos_left[val] = counter
@@ -1280,8 +1447,12 @@ function find_common_edges(left_edges::Vector{String}, right_edges::Vector{Strin
 	return pos_left, pos_right
 end
 
+"""
+  check_permute(left,right,left_order)
 
-function order(left::Indices, right::Indices, left_order::Vector{Int64}) #stable2
+Checks if a tensor needs to be permuted from input `Indices` `left` and `right` according to order of the `left` indices `left_order`
+"""
+function order(left::Indices, right::Indices, left_order::Vector{Int64})
 	last_pos = -1
 	cost = 1
 
@@ -1308,8 +1479,12 @@ function order(left::Indices, right::Indices, left_order::Vector{Int64}) #stable
 	return 0
 end
 
+"""
+  permute_cost(left,right,pos_left,pos_right)
 
-function permute_cost(left::Indices, right::Indices, pos_left::Vector{Int64}, pos_right::Vector{Int64}) #stable2
+Returns the total cost of any permutations from input `Indices` `left` and `right` according to order of the `left` indices with positions `pos_left` and `right` indices with positions `pos_right`
+"""
+function permute_cost(left::Indices, right::Indices, pos_left::Vector{Int64}, pos_right::Vector{Int64}) 
 
 	costA,posA = permute(left, pos_left)
 	costB,posB = permute(right, pos_right)
@@ -1324,9 +1499,12 @@ function permute_cost(left::Indices, right::Indices, pos_left::Vector{Int64}, po
 	end
 end
 
+"""
+  best_order(next_tensors,num_connecting,temp_start)
 
-
-function best_order(next_tensors::Vector{nametens{tens{W}, String}}, num_connecting::Vector{Int64}, temp_start::Indices) where W <: Number #stable2
+Finds the best order to contract tensors to reduce the cost of permutations. `next_tensors` share an index with the (meta-data for) a `nametens` `temp_start`. `num_connecting` is the number of edges connecting to `temp_start`
+"""
+function best_order(next_tensors::Vector{nametens{tens{W}, String}}, num_connecting::Vector{Int64}, temp_start::Indices) where W <: Number 
 
 	temp_next = Indices(next_tensors[1].names, next_tensors[1].N.size)
 
@@ -1334,30 +1512,30 @@ function best_order(next_tensors::Vector{nametens{tens{W}, String}}, num_connect
 	right = best_order_helper(next_tensors, num_connecting, temp_start, 0, "", "right", 1)
 
 	if left[1]<=right[1]
-		return left[2]
-
-	else 
-		return right[2]
-
+		out = left[2]
+	else
+		out = right[2]
 	end
-
+  return out
 end
 
-#THIS FUNCITON IS VERY EXPENSIVE
-#new idea: don't check all the different combinations, just look left and right and make a decision on the added cost
-# it will NOT pick the best but hopefully it will pick a "good" choice anyways
-function best_order_helper(next_tensors::Vector{nametens{tens{W}, String}}, num_connecting::Vector{Int64}, temp_start::Indices, cost::Int64, order::String, side::String, depth::Int64) where W <: Number #stable2
+"""
+  best_order_helper(next_tensors,num_connecting,temp_start,cost,order,side,depth)
+
+Finds the best order to contract tensors of a given network input `next_tensors`. `next_tensors` share an index with the (meta-data for) a `nametens` `temp_start`. `num_connecting` is the number of edges connecting to `temp_start`. `cost` is the cost, `order` is the order of the tensors to be contracted (left or right), `side` is to signal whether to check the left or the right side in the contraction, `depth` is how many tensors deep we search to find the best contraction order.
+"""
+function best_order_helper(next_tensors::Vector{nametens{tens{W}, String}}, num_connecting::Vector{Int64}, temp_start::Indices, cost::Int64, order::String, side::String, depth::Int64) where W <: Number 
 
 	if length(order) == length(next_tensors)
 		return (cost, order)
 
 	elseif (side == "left")
 		temp_next = Indices(next_tensors[depth].names, next_tensors[depth].N.size)
-		pos_left,pos_right = find_common_edges(temp_next.names, temp_start.names, num_connecting[depth]) #takes (1 allocation: 64 bytes)
+		pos_left,pos_right = find_common_edges(temp_next.names, temp_start.names, num_connecting[depth])
 
-		cost += permute_cost(temp_next, temp_start, pos_left,pos_right) #takes 0.000001 seconds (4 allocations: 320 bytes)
+		cost += permute_cost(temp_next, temp_start, pos_left,pos_right)
 
-		left = update_temp(temp_next, temp_start, num_connecting[depth]) #takes 0.000002 seconds (2 allocations: 208-224 bytes)
+		left = update_temp(temp_next, temp_start, num_connecting[depth])
 		order = order*"L"
 		depth += 1
 
@@ -1392,24 +1570,29 @@ function best_order_helper(next_tensors::Vector{nametens{tens{W}, String}}, num_
 	end
 end
 
-function contract!(graph::network) #stable2
+"""
+  contract(graph)
+
+Contracts a tensor network into one tensor for an input `network`
+"""
+function contract(graph::network)
 	graph = graph.net
 	contract_around = false
 
-	start = find_start(graph) #takes 0 alloc
-	
-	location = findfirst(==(start), graph) #takes 0 alloc
-	deleteat!(graph, location) #takes 0 alloc
+  shared_edges = connecting_edges(graph)
 
-  shared_edges = connecting_edges(graph) #takes 1.01 k allocations: 93.688 KiB
+	start = find_start(graph) 
+	shared_edges = update_edges(start, shared_edges)
+	location = findfirst(==(start), graph) 
+	deleteat!(graph, location) 
 	
-  initial_start = Indices(start.names, start.N.size)
+  	initial_start = Indices(start.names, start.N.size)
 
 	future = 3
-	next_tensors = Vector{nametens{tens{Float64}, String}}(undef, future) #takes (1 allocation: 80 bytes)
-	num_connecting = Vector{Int64}(undef, future) #takes (1 allocation: 80 bytes)
+	next_tensors = Vector{nametens{tens{Float64}, String}}(undef, future) 
+	num_connecting = Vector{Int64}(undef, future) 
 
-	while (length(graph)>0)
+	while (length(graph) > 0)
 		temp_start = Indices(start.names, start.N.size)
 		future = 3
 
@@ -1420,23 +1603,28 @@ function contract!(graph::network) #stable2
 
 		end
 
-		while (length(graph)>0)&&(future>0) #the time of the algorithm seems to jump around a bit.. possible type instability?..
+		while (length(graph)>0)&&(future>0)
 
-			if (contract_around) # we have contracted around the starting tensor so we can follow the alogorihtm as expected
-				next_details = find_next(temp_start, start, shared_edges) #takes 0 alloc cause this to return the common edges?...
+			if (contract_around)
+
+				next_details = find_next(temp_start, start, shared_edges) 
 				next = next_details[1]
 
-				temp_next = Indices(next.names, next.N.size)
-				shared_edges = update_edges(next, shared_edges) #takes 0 alloc
+				if next==start
+					error("The given network is disjoint")
 
-				next_tensors[length(next_tensors)-future+1] = next #create a nicer looking index system?...
+				end
+
+				temp_next = Indices(next.names, next.N.size)
+				shared_edges = update_edges(next, shared_edges)
+
+				next_tensors[length(next_tensors)-future+1] = next
 				num_connecting[length(next_tensors)-future+1] = next_details[2]
 
 				location = findfirst(==(next), graph)
 				deleteat!(graph, location)
 
-				# this is semi expensive, takes about 600 alloc for the whole program (2*300 tensors)
-				temp_start = update_temp(temp_start, temp_next, next_details[2]) #takes 2 allocations: 208-224 bytes
+				temp_start = update_temp(temp_start, temp_next, next_details[2]) 
 				future -= 1
 
 			else
@@ -1447,17 +1635,18 @@ function contract!(graph::network) #stable2
 					contract_around = true
 
 				else
-
 					temp_next = Indices(next.names, next.N.size)
 					shared_edges = update_edges(next, shared_edges)
 
-					next_tensors[length(next_tensors)-future+1] = next #create a nicer looking index system?...
-					num_connecting[length(next_tensors)-future+1] = next_details[2]
+					num_common = common_info(temp_start, next)[1]
+
+					next_tensors[length(next_tensors)-future+1] = next 
+					num_connecting[length(next_tensors)-future+1] = num_common 
 
 					location = findfirst(==(next), graph)
 					deleteat!(graph, location)
 
-					temp_start = update_temp(temp_start, temp_next, next_details[2])
+					temp_start = update_temp(temp_start, temp_next, num_common) 
 					future -= 1
 
 				end
@@ -1466,11 +1655,8 @@ function contract!(graph::network) #stable2
 		end
 
 		temp_start = Indices(start.names, start.N.size)
-		#THIS IS VERY EXPENSIVE (112*(300 tensors/3))
-		answer = best_order(next_tensors, num_connecting, temp_start) #takes 0.000032 seconds (112 allocations: 7.953 KiB)
+		answer = best_order(next_tensors, num_connecting, temp_start) 
 
-		#THIS IS VERY EXPENSIVE (163*(300 tensors/3))
-		#takes about 163 alloc for each time this for loop is done
 		for pos in 1:length(answer)
 			if answer[pos] == 'L'
 				start = next_tensors[pos]*start
@@ -1478,8 +1664,6 @@ function contract!(graph::network) #stable2
 				start = start*next_tensors[pos]
 			end
 		end
-
-		#IN TOTAL THE 2 MOST EXPENSIVE PARTS TAKE ABOUT 27,500 ALLOC OUT OF 30,915 ALLOC (about 88.95%)
 	end
 	return start
 end
