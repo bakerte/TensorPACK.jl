@@ -46,12 +46,51 @@ testval &= isapprox(makeArray(E.N),makeArray(A))
 fulltest &= testfct(testval,"nametens(tens,string)")
 
 println()
-#=
-X = MPS(2,10)
 
-Y = nameMPS(X)
-Z = conj(Y)
+A = rand(20,3,8,10)
+
+B = makeArray(A)
+C = nametens(B,["c$i" for i = 1:ndims(B)])
+
+U,D,V = svd(C,[["c1","c2"],["c3","c4"]])
+
+checkC = U*D*V
+testval = isapprox(norm(checkC),norm(C))
+fulltest &= testfct(testval,"svd(tens,Array{Array})")
+
+println()
+
+U,V = qr(C,[["c1","c2"],["c3","c4"]])
+
+checkC = U*V
+testval = isapprox(norm(checkC),norm(C))
+fulltest &= testfct(testval,"qr(tens,Array{Array})")
+#=
+println()
+
+println(C)
+
+U,V = rq(C,[["c1","c2"],["c3","c4"]])
+
+checkC = U*V
+testval = isapprox(norm(checkC),norm(C))
+fulltest &= testfct(testval,"rq(tens,Array{Array})")
+
+println()
+
+U,V = ql(C,[["c1","c2"],["c3","c4"]])
+
+checkC = U*V
+testval = isapprox(norm(checkC),norm(C))
+fulltest &= testfct(testval,"ql(tens,Array{Array})")
 =#
+println()
+
+U,V = lq(C,[["c1","c2"],["c3","c4"]])
+
+checkC = U*V
+testval = isapprox(norm(checkC),norm(C))
+fulltest &= testfct(testval,"lq(tens,Array{Array})")
 
 println()
 
@@ -62,5 +101,3 @@ testval = isapprox((D*D)[1],contract(B))
 fulltest &= testfct(testval,"*(nametens,nametens)")
 
 println()
-
-

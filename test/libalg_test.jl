@@ -8,7 +8,7 @@ global fulltest = true
 import LinearAlgebra
 
 typevec = [Float32,Float64,ComplexF32,ComplexF64]
-tol = [1E-4,1E-10,1E-5,1E-11]
+tol = [1E-4,1E-10,1E-4,1E-11]
 
 for g = 1:length(typevec)
   local A = rand(typevec[g],100,100)

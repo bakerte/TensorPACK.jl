@@ -3,7 +3,7 @@ println("#            +--------------+")
 println("#>-----------|  svdtest.jl  |-----------<")
 println("#            +--------------+")
 
-#using BenchmarkTools
+using BenchmarkTools
 
 @makeQNs "spin" U1
 QS = 2
@@ -40,12 +40,12 @@ end
 rA = reshape!(A,prod(size(A)[Linds]),prod(size(A)[Rinds]))
 
 @time U,D,V = svd(rA)
-@time svd(rA)
+@btime svd(rA)
 println()
 println("...now truncating svd")
 @time U,D,V = svd(rA,m=40)
-@time U,D,V = svd(rA,m=40)
+@btime U,D,V = svd(rA,m=40)
 
 #U,D,V = svd(A,[Linds,Rinds])
-#@time svd(A,[Linds,Rinds])
+#@btime svd(A,[Linds,Rinds])
 

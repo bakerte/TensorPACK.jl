@@ -13,6 +13,7 @@ println("Array size (rank $ndim): ",Asize)
 
 B = tA = tens(A)
 
+
 sizetest = (B.size...,) == Asize
 fulltest &= testfct(sizetest,"denstens .size test")
 normtest = isapprox(norm(B.T),norm(A))
@@ -645,45 +646,45 @@ fulltest &= testfct(testval,"unreshape!(tens,Vector)")
 
 println()
 
-order = [1,4,3,2]
-B = permutedims!(copy(tA),order)
-testval = isapprox(sum([size(B,i) - size(tA,order[i]) for i = 1:length(order)]),0) && isapprox(norm(tA),norm(B))
+permorder = [1,4,3,2]
+B = permutedims!(copy(tA),permorder)
+testval = isapprox(sum([size(B,i) - size(tA,permorder[i]) for i = 1:length(permorder)]),0) && isapprox(norm(tA),norm(B))
 fulltest &= testfct(testval,"permutedims!(tens,Vector)")
 
-B = permutedims!(copy(tA),(order...,))
-testval = isapprox(sum([size(B,i) - size(tA,order[i]) for i = 1:length(order)]),0) && isapprox(norm(tA),norm(B))
+B = permutedims!(copy(tA),(permorder...,))
+testval = isapprox(sum([size(B,i) - size(tA,permorder[i]) for i = 1:length(permorder)]),0) && isapprox(norm(tA),norm(B))
 fulltest &= testfct(testval,"permutedims!(tens,Tuple)")
 
 C = Diagonal(rand(10))
 
-order = [2,1]
-B = permutedims!(copy(C),order)
-testval = isapprox(sum([size(B,i) - size(C,order[i]) for i = 1:length(order)]),0) && isapprox(norm(C),norm(B))
+permorder = [2,1]
+B = permutedims!(copy(C),permorder)
+testval = isapprox(sum([size(B,i) - size(C,permorder[i]) for i = 1:length(permorder)]),0) && isapprox(norm(C),norm(B))
 fulltest &= testfct(testval,"permutedims!(Diagonal,Vector)")
 
-B = permutedims!(copy(C),(order...,))
-testval = isapprox(sum([size(B,i) - size(C,order[i]) for i = 1:length(order)]),0) && isapprox(norm(C),norm(B))
+B = permutedims!(copy(C),(permorder...,))
+testval = isapprox(sum([size(B,i) - size(C,permorder[i]) for i = 1:length(permorder)]),0) && isapprox(norm(C),norm(B))
 fulltest &= testfct(testval,"permutedims!(Diagonal,Tuple)")
 
 
-order = [1,4,3,2]
-B = permutedims(copy(tA),order)
-testval = isapprox(sum([size(B,i) - size(tA,order[i]) for i = 1:length(order)]),0) && isapprox(norm(tA),norm(B))
+permorder = [1,4,3,2]
+B = permutedims(copy(tA),permorder)
+testval = isapprox(sum([size(B,i) - size(tA,permorder[i]) for i = 1:length(permorder)]),0) && isapprox(norm(tA),norm(B))
 fulltest &= testfct(testval,"permutedims(tens,Vector)")
 
-B = permutedims(copy(tA),(order...,))
-testval = isapprox(sum([size(B,i) - size(tA,order[i]) for i = 1:length(order)]),0) && isapprox(norm(tA),norm(B))
+B = permutedims(copy(tA),(permorder...,))
+testval = isapprox(sum([size(B,i) - size(tA,permorder[i]) for i = 1:length(permorder)]),0) && isapprox(norm(tA),norm(B))
 fulltest &= testfct(testval,"permutedims(tens,Tuple)")
 
 C = Diagonal(rand(10))
 
-order = [2,1]
-B = permutedims(copy(C),order)
-testval = isapprox(sum([size(B,i) - size(C,order[i]) for i = 1:length(order)]),0) && isapprox(norm(C),norm(B))
+permorder = [2,1]
+B = permutedims(copy(C),permorder)
+testval = isapprox(sum([size(B,i) - size(C,permorder[i]) for i = 1:length(permorder)]),0) && isapprox(norm(C),norm(B))
 fulltest &= testfct(testval,"permutedims(Diagonal,Vector)")
 
-B = permutedims(copy(C),(order...,))
-testval = isapprox(sum([size(B,i) - size(C,order[i]) for i = 1:length(order)]),0) && isapprox(norm(C),norm(B))
+B = permutedims(copy(C),(permorder...,))
+testval = isapprox(sum([size(B,i) - size(C,permorder[i]) for i = 1:length(permorder)]),0) && isapprox(norm(C),norm(B))
 fulltest &= testfct(testval,"permutedims(Diagonal,Tuple)")
 
 println()

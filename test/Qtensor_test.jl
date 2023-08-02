@@ -496,10 +496,10 @@ println()
 
 B = rand(Int64,3,10)
 C = rand(Int64,3)
-order = [1,3,2]
+permorder = [1,3,2]
 
-TENPACK.innerloadpos!(4,3,C,order,B)
-testval = C == B[order,4]
+TENPACK.innerloadpos!(4,3,C,permorder,B)
+testval = C == B[permorder,4]
 fulltest &= testfct(testval,"innerloadpos!(int,int,vec,vec,Matrix)")
 
 println()
