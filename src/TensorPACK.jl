@@ -70,6 +70,7 @@ libpath = libdir*"/../lib/"
 #Linear algebra routines
 
 include(libpath*"tensor.jl")
+include(libpath*"autodiff.jl")
 include(libpath*"libalg.jl")
 
 
