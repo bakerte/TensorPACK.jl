@@ -162,7 +162,7 @@ See also: [`nametens`](@ref) [`dtens`](@ref)
 """
 function getindex(Qts::nametens,i::Integer)
   if typeof(Qts.N) <: dtens
-    out = nametens(Qts.N[i+1],Qts.names)
+    out = nametens(Qts.N[i],Qts.names)
   else
     out = Qts.N[i]
   end

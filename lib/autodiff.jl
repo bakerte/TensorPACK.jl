@@ -483,6 +483,7 @@ end
 
 
 function hadamardprod(F::Qtens{W,Q},S::Qtens{R,Q}) where {W <: Number, R <: Number, Q <: Qnum}
+  newF = changeblock(F,S.currblock)
   return error("HELP!")
 end
 
@@ -538,7 +539,7 @@ rA = reshape(A[1],a,b)
   SUdAVV = contract(SUdAV,ndims(SUdAV),V,1,SUdA,alpha=-1)
   dV += SUdAVV#contract(SUdAV,ndims(SUdAV),V,1) #SUdA
 
-dD = Diagonal([Lterm[w,w] for w = 1:size(Lterm,1)])
+  dD = Diagonal([Lterm[w,w] for w = 1:size(Lterm,1)])
 
   return dtens(U,dU),dtens(D,dD),dtens(V,dV),truncerr,sumD
   #can reassemble dA = dU*dD*dVt...in principle
