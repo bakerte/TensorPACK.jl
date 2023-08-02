@@ -57,7 +57,6 @@ Initializes the `dualnum` type with value `val` and a gradient `grad`
 function dualnum(val::W, grad::W) where W <: Number
   return dualnum(val, grad=grad)
 end
-export dualnum
 
 import Base.zero
 """
@@ -599,4 +598,8 @@ function reshape(A::dtens,order)
   A[0] = reshape!(A[0],order)
   A[1] = reshape!(copy(A[1]),order)
   return A
+end
+
+function copy(A::dtens)
+  return dtens(copy(A[0]),copy(A[1]))
 end
