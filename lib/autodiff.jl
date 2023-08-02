@@ -58,16 +58,6 @@ function dualnum(val::W, grad::W) where W <: Number
   return dualnum(val, grad=grad)
 end
 
-import Base.zero
-"""
-  zero(x)
-
-Creates the zero value for a given `dualnum`, `x`
-"""
-function zero(x::dualnum{W}) where W <: Number
-  return dualnum{W}(W(0),W(1))
-end
-
 """
   dualnum(W)
 
@@ -77,6 +67,16 @@ function dualnum(W::DataType)
   return dualnum{W}(W(0),W(1))
 end
 export dualnum
+
+import Base.zero
+"""
+  zero(x)
+
+Creates the zero value for a given `dualnum`, `x`
+"""
+function zero(x::dualnum{W}) where W <: Number
+  return dualnum{W}(W(0),W(1))
+end
 
 ############
 # Addition #
