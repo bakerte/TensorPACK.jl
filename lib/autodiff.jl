@@ -45,8 +45,8 @@ end
 
 Initializes the `dualnum` type with value `val` and a gradient `grad` (default value 1)
 """
-function dualnum(val::W;grad::W=W(1)) where W <: Number
-  return dualnum{W}(val, grad)
+function dualnum(val::W) where W <: Number
+  return dualnum{W}(val, W(1)
 end
 
 """
@@ -55,7 +55,7 @@ end
 Initializes the `dualnum` type with value `val` and a gradient `grad`
 """
 function dualnum(val::W, grad::W) where W <: Number
-  return dualnum(val, grad=grad)
+  return dualnum{W}(val, grad)
 end
 
 """
