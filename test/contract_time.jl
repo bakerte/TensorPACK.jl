@@ -36,8 +36,8 @@ for w in numdims
   local Ltup = ntuple(i->i+S,S)
   local Rtup = ntuple(i->i,S)
   
-  @time C = contract($A,$Ltup,$B,$Rtup)
-  @time C = contract($A,$Rtup,$B,$Ltup)
+  @time C = contract(A,Ltup,B,Rtup)
+  @time C = contract(A,Rtup,B,Ltup)
   println()
 end
 
