@@ -39,6 +39,8 @@ mutable struct nametens{W,B} <: TNobj where {W <: TensType, B <: Union{Any,Strin
   names::Array{B,1}
 end
 
+const nameTens = nametens
+
 """
     nametens(Qt,namez)
 
@@ -118,7 +120,10 @@ Generates a network of TNobjs that stores more than one named tensor
 """
 mutable struct network{W} <: TNnetwork where W  <: TNobj
   net::Array{W,1}
+  adj::Dict{}
 end
+
+
 
 """
     network(Qts)
@@ -126,7 +131,17 @@ end
 constructor to generates a network of TNobjs that stores a vector of named tensors `Qts`
 """
 function network(Qts::Array{W,1}) where W  <: TNobj
-  return network{W}(Qts)
+  adj = connecting_edges(Qts)
+  return network{W}(Qts,adj)
+end
+
+function network(Qts::Array{Any,1};type::DataType=typeof(Qts[1]))
+  altQts = Array{type,1}(undef,length(Qts))  
+  for w = 1:length(Qts)
+    altQts[w] = Qts[w]
+  end
+  adj = connecting_edges(altQts)
+  return network{type}(altQts,adj)
 end
 
 """
@@ -1185,7 +1200,7 @@ Names of indices on each site (`.names`) and dimensions of each site (`.dimensio
 """
 struct Indices
 	names::Vector{String}
-	dimensions::Vector{Int64}
+	dimensions::Vector{intType}
 end
 
 """
@@ -1193,7 +1208,7 @@ end
 
 Obtains the rank of a `nametens` object (does not count indices with dimension of 1)
 """
-function get_weight(tensor::nametens{tens{W}, String}) where W <: Number 
+function get_weight(tensor::nameTens)
 	nrank = 0
 	# does not consider dimension of value 1 to contribute to the rank
 	for i in tensor.N.size
@@ -1209,7 +1224,7 @@ end
 
 Finds the starting tensor to contract onto from a graph `G` (input a as a vector for ease in other functions)
 """
-function find_start(graph::Vector{nametens{tens{W}, String}}) where W <: Number
+function find_start(graph::Vector{W}) where W <: nameTens
 	start = graph[1]
 	min_num_ind = get_weight(start)
 	min_cost = get_cost(start.N.size)
@@ -1239,15 +1254,15 @@ end
 
 Returns a dictionary where the edges are they keys and the values are the tensors connected to the vertices
 """
-function connecting_edges(graph::Vector{nametens{tens{W}, String}}) where W <: Number
-	shared_edges = Dict{String, Vector{nametens{tens{W}, String}}}()
+function connecting_edges(graph::Vector{W}) where W <: nameTens
+	shared_edges = Dict{String, Vector{W}}()
 
 	for tensor in graph
 		for edge in tensor.names
 			if edge in keys(shared_edges)
 				shared_edges[edge][2] = tensor
 			else
-				shared_edges[edge] = Vector{nametens{tens{Float64}, String}}(undef, 2)
+				shared_edges[edge] = Vector{nametens{W, String}}(undef, 2)
 				shared_edges[edge][1] = tensor
 				shared_edges[edge][2] = tensor
 			end
@@ -1256,13 +1271,14 @@ function connecting_edges(graph::Vector{nametens{tens{W}, String}}) where W <: N
 
 	return shared_edges
 end
+export connecting_edges
 
 """
   common_info(S,T)
 
 Returns the number of edges in common and the product of the dimensions of the common vertices of `Indices` `S` and for a named tensor `T`
 """
-function common_info(temp_start::Indices, right_tensor::nametens{tens{W}, String}) where W <: Number  
+function common_info(temp_start::Indices, right_tensor::nametens)
 	num_common = 0
 	mult_commom = 1
 
@@ -1281,7 +1297,7 @@ end
 
 Returns the product of all the dimensions of a tensor for given edges `E` (Vector)
 """
-function get_cost(edges::Vector{Int64})::Int64 
+function get_cost(edges::Vector{W}) where W <: intType 
 	cost = 1
 	for edge_dim in edges
 		cost *= edge_dim
@@ -1294,7 +1310,7 @@ end
 
 Finds the next tensor to contract onto the current tensor given `Indices` `S`, `nametens` `T`, and shared edges (Dictionary) `shared_edges`
 """
-function find_next(temp_start::Indices, start::nametens{tens{W}, String}, shared_edges::Dict{String, Vector{nametens{tens{W}, String}}}) where W <: Number 
+function find_next(temp_start::Indices, start::W, shared_edges::Dict{String, Vector{W}}) where W <: nametens 
 	new_edges = -1
 	next = start
 	min_cost = -1
@@ -1351,7 +1367,7 @@ end
 
 Updates the temp starting tensor to include the next contracted tensor for left `Indices` `left`, right `Indices` `right`, and `max_common` which is the number of edges in common between the two vertices
 """
-function update_temp(left::Indices, right::Indices, max_common::Int64) 
+function update_temp(left::Indices, right::Indices, max_common::intType) 
 	new_length = (length(left.names)+length(right.names))-(2*max_common)
 
 	new_names = Vector{String}(undef, new_length) 
@@ -1385,7 +1401,7 @@ end
 
 Removes value in dictionary `shared_edges` in order to grab the first index of the resulting dictionary in a subsequent step (removing costs no extra allocations). `next` is an input tensor that is to be removed.
 """
-function update_edges(next::nametens{tens{W}, String}, shared_edges::Dict{String, Vector{nametens{tens{W}, String}}}) where W <: Number 
+function update_edges(next::W, shared_edges::Dict{String, Vector{W}}) where W <: nametens 
 	for edge in next.names
 		adjacent = shared_edges[edge]
 
@@ -1431,7 +1447,7 @@ function permute(edges::Indices, position::Array{W,1}) where W <: Integer
 end
 
 # finds the names and dimensions of common edges between two tensors
-function find_common_edges(left_edges::Vector{String}, right_edges::Vector{String}, num_common::Int64) 
+function find_common_edges(left_edges::Vector{String}, right_edges::Vector{String}, num_common::R) where R <: Integer
 	pos_left = Array{intType,1}(undef,num_common)
 	pos_right = Array{intType,1}(undef,num_common)
 	val = 1
@@ -1452,7 +1468,7 @@ end
 
 Checks if a tensor needs to be permuted from input `Indices` `left` and `right` according to order of the `left` indices `left_order`
 """
-function order(left::Indices, right::Indices, left_order::Vector{Int64})
+function order(left::Indices, right::Indices, left_order::Vector{R}) where R <: Integer
 	last_pos = -1
 	cost = 1
 
@@ -1484,7 +1500,7 @@ end
 
 Returns the total cost of any permutations from input `Indices` `left` and `right` according to order of the `left` indices with positions `pos_left` and `right` indices with positions `pos_right`
 """
-function permute_cost(left::Indices, right::Indices, pos_left::Vector{Int64}, pos_right::Vector{Int64}) 
+function permute_cost(left::Indices, right::Indices, pos_left::Vector{R}, pos_right::Vector{R}) where R <: Integer
 
 	costA,posA = permute(left, pos_left)
 	costB,posB = permute(right, pos_right)
@@ -1504,7 +1520,7 @@ end
 
 Finds the best order to contract tensors to reduce the cost of permutations. `next_tensors` share an index with the (meta-data for) a `nametens` `temp_start`. `num_connecting` is the number of edges connecting to `temp_start`
 """
-function best_order(next_tensors::Vector{nametens{tens{W}, String}}, num_connecting::Vector{Int64}, temp_start::Indices) where W <: Number 
+function best_order(next_tensors::Vector{W}, num_connecting::Vector{R}, temp_start::Indices) where {W <: nametens, R <: Integer} 
 
 	temp_next = Indices(next_tensors[1].names, next_tensors[1].N.size)
 
@@ -1524,7 +1540,7 @@ end
 
 Finds the best order to contract tensors of a given network input `next_tensors`. `next_tensors` share an index with the (meta-data for) a `nametens` `temp_start`. `num_connecting` is the number of edges connecting to `temp_start`. `cost` is the cost, `order` is the order of the tensors to be contracted (left or right), `side` is to signal whether to check the left or the right side in the contraction, `depth` is how many tensors deep we search to find the best contraction order.
 """
-function best_order_helper(next_tensors::Vector{nametens{tens{W}, String}}, num_connecting::Vector{Int64}, temp_start::Indices, cost::Int64, order::String, side::String, depth::Int64) where W <: Number 
+function best_order_helper(next_tensors::Vector{W}, num_connecting::Vector{R}, temp_start::Indices, cost::R, order::String, side::String, depth::R) where {W <: nametens, R <: Integer}
 
 	if length(order) == length(next_tensors)
 		return (cost, order)
@@ -1575,11 +1591,11 @@ end
 
 Contracts a tensor network into one tensor for an input `network`
 """
-function contract(graph::network)
+function contract(graph::network;future::Integer = 3)
+  shared_edges = graph.adj
 	graph = graph.net
 	contract_around = false
 
-  shared_edges = connecting_edges(graph)
 
 	start = find_start(graph) 
 	shared_edges = update_edges(start, shared_edges)
@@ -1588,9 +1604,9 @@ function contract(graph::network)
 	
   	initial_start = Indices(start.names, start.N.size)
 
-	future = 3
-	next_tensors = Vector{nametens{tens{Float64}, String}}(undef, future) 
-	num_connecting = Vector{Int64}(undef, future) 
+#  W = 
+	next_tensors = Vector{nametens}(undef, future) 
+	num_connecting = Vector{intType}(undef, future) 
 
 	while (length(graph) > 0)
 		temp_start = Indices(start.names, start.N.size)
@@ -1598,8 +1614,8 @@ function contract(graph::network)
 
 		if (length(graph)<future)
 			future = length(graph)
-			next_tensors = Vector{nametens{tens{Float64}, String}}(undef, length(graph))
-			num_connecting = Vector{Int64}(undef, length(graph))
+			next_tensors = Vector{typeof(graph[1])}(undef, length(graph))
+			num_connecting = Vector{intType}(undef, length(graph))
 
 		end
 

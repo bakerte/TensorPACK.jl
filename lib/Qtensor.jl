@@ -200,12 +200,12 @@ end
 
 Proposes a block structure that makes the matrix equivalent approximate equal in both number of rows and columns
 """
-@inline function equalblocks(A::Array{Array{Q,1},1}) where Q <: Qnum
+function equalblocks(A::Array{Array{Q,1},1}) where Q <: Qnum
   sizes = ntuple(q->length(A[q]),length(A))
   return equalblocks(sizes)
 end
 
-@inline function equalblocks(sizes::Tuple)
+function equalblocks(sizes::Tuple)
   row = sizes[1]
   column = prod(sizes) ÷ row
   i = 1
@@ -217,7 +217,7 @@ end
   return ([w for w = 1:i],[w for w = i+1:length(sizes)])
 end
 
-@inline function equalblocks(A::qarray)
+function equalblocks(A::qarray)
   Rsize = A.size
   sizes = ntuple(q->prod(w->length(A.QnumMat[w]),Rsize[q]),length(Rsize))
   return equalblocks(sizes)
@@ -230,11 +230,11 @@ Returns `Qnum` associated with the `q`th value of the `QnumMat` (vectors of inte
 
 See also: [`Qnum`](@ref)
 """
-@inline function recoverQNs(q::Integer,QnumMat::Array{Array{intType,1},1},QnumSum::Array{Array{Q,1},1}) where Q <: Qnum
+function recoverQNs(q::Integer,QnumMat::Array{Array{intType,1},1},QnumSum::Array{Array{Q,1},1}) where Q <: Qnum
   return [getQnum(q,i,QnumMat,QnumSum) for i = 1:length(QnumMat[q])]
 end
 
-@inline function recoverQNs(q::Integer,Qt::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+function recoverQNs(q::Integer,Qt::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   return recoverQNs(q,Qt.QnumMat,Qt.QnumSum)
 end
 export recoverQNs
@@ -246,7 +246,7 @@ Converts the quantum number entries `QnumSum` and `QnumMat` the full format
 
 See also: [`Qnum`](@ref) [`intType`](@ref)
 """
-@inline function fullQnumMat(QnumMat::Array{Array{intType,1},1},QnumSum::Array{Array{Q,1},1}) where Q <: Qnum
+function fullQnumMat(QnumMat::Array{Array{intType,1},1},QnumSum::Array{Array{Q,1},1}) where Q <: Qnum
   finalQnumMat = [recoverQNs(q,QnumMat,QnumSum) for q = 1:length(QnumMat)]
   return finalQnumMat
 end
@@ -258,7 +258,7 @@ Converts the quantum number entries `QnumSum` and `QnumMat` of `Qtens` `A` into 
 
 See also: [`Qnum`](@ref) [`intType`](@ref)
 """
-@inline function fullQnumMat(Qt::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+function fullQnumMat(Qt::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   return fullQnumMat(Qt.QnumMat,Qt.QnumSum)
 end
 export fullQnumMat
@@ -284,7 +284,7 @@ end
 
 Creates a dense `operator` as a Qtensor with quantum numbers `QnumMat` on each index (`Array{Array{Q,1},1}`) according to arrow convention `Arrows` and all elements equal to `zero` are not included (default 0)
 """
-@inline function Qtens(Op::R,Qlabels::Array{Array{Q,1},1},Arrows::U...;zero::Number=0.,currblock::currblockTypes=([i for i = 1:ndims(Op)-1],[ndims(Op)]),datatype::DataType=eltype(Op)) where {Q <: Qnum, R <: densTensType, U <: Union{Bool,Array{Bool,1}}}
+function Qtens(Op::R,Qlabels::Array{Array{Q,1},1},Arrows::U...;zero::Number=0.,currblock::currblockTypes=([i for i = 1:ndims(Op)-1],[ndims(Op)]),datatype::DataType=eltype(Op)) where {Q <: Qnum, R <: densTensType, U <: Union{Bool,Array{Bool,1}}}
   theseArrows = typeof(Arrows) <: Bool ? Arrows : (Arrows[1]...,)
   newQnumMat = [theseArrows[q] ? Qlabels[q] : inv.(Qlabels[q]) for q = 1:length(Qlabels)]
   return Qtens(Op,newQnumMat;zero=zero,currblock=currblock,datatype=datatype)
@@ -295,7 +295,7 @@ end
 
 Creates set of dense `operator`s as a Qtensor with quantum numbers `QnumMat` on each index (`Array{Array{Q,1},1}`) according to arrow convention `Arrows` and all elements equal to `zero` are not included (default 0)
 """
-@inline function Qtens(Qlabels::Array{Array{Q,1},1},Op...;zero::Number=0.,currblock::currblockTypes=([i for i = 1:ndims(Op[1])-1],[ndims(Op[1])])) where Q <: Qnum
+function Qtens(Qlabels::Array{Array{Q,1},1},Op...;zero::Number=0.,currblock::currblockTypes=([i for i = 1:ndims(Op[1])-1],[ndims(Op[1])])) where Q <: Qnum
   if length(Op) > 1
     out = ntuple(w->Qtens(Op[w],Qlabels,zero=zero,currblock=currblock),length(Op))
   else
@@ -395,7 +395,7 @@ Creates a dense `operator` as a Qtensor with quantum numbers `Qlabels` common to
 
 See also: [`densTensType`](@ref)
 """
-@inline function Qtens(operator::Union{tens{W},Array{W,N}},Qlabels::Array{Q,1},arrows::U;zero::Number=0.,currblock::currblockTypes=([i for i = 1:ndims(Op)-1],[ndims(Op)]),datatype::DataType=eltype(Op),blockfct::Function=undefMat) where {Q <: Qnum, U <: Union{Bool,Array{Bool,1}}, W <: Number, N}
+function Qtens(operator::Union{tens{W},Array{W,N}},Qlabels::Array{Q,1},arrows::U;zero::Number=0.,currblock::currblockTypes=([i for i = 1:ndims(Op)-1],[ndims(Op)]),datatype::DataType=eltype(Op),blockfct::Function=undefMat) where {Q <: Qnum, U <: Union{Bool,Array{Bool,1}}, W <: Number, N}
   newQlabels = Array{Q,1}[arrows[a] ? Qlabels[a] : inv.(Qlabels[a]) for a = 1:length(arrows)]
   return Qtens(operator,newQlabels,zero=zero,currblock=currblock,datatype=datatype,blockfct=blockfct)
 end
@@ -405,7 +405,7 @@ end
 
 `A` is a Qtensor; makes shell of a `A` with only meta-data (empty blocks); used mainly for copies
 """
-@inline function Qtens(A::Qtens{W,Q};zero::Number=0.,currblock::currblockTypes=A.currblock,datatype::DataType=eltype(A),blockfct::Function=undefMat) where {W <: Number, Q <: Qnum}
+function Qtens(A::Qtens{W,Q};zero::Number=0.,currblock::currblockTypes=A.currblock,datatype::DataType=eltype(A),blockfct::Function=undefMat) where {W <: Number, Q <: Qnum}
   newQlabels = fullQnumMat(A)
   return Qtens(newQlabels,#=zero=zero,=#currblock=currblock,datatype=datatype,blockfct=blockfct,flux=A.flux)
 end
@@ -418,16 +418,16 @@ import Base.rand
 
 generates a random tensor from inputting another tensor (rank-2) or from quantum number labels; can assign `arrows` for Qtensors if alternate arrow convention is requested
 """
-@inline function rand(Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};datatype::DataType=Float64,flux::Q=Q()) where Q <: Qnum
+function rand(Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};datatype::DataType=Float64,flux::Q=Q()) where Q <: Qnum
   newQlabels = Array{Q,1}[arrows[a] ? Qlabels[a] : inv.(Qlabels[a]) for a = 1:length(arrows)]
   return Qtens(newQlabels,datatype=datatype,flux=flux,blockfct=rand)
 end
 
-@inline function rand(datatype::DataType,Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels)) where Q <: Qnum
+function rand(datatype::DataType,Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels)) where Q <: Qnum
   return Qtens(Qlabels,datatype=datatype,flux=flux,currblock=currblock,blockfct=rand)
 end
 
-@inline function rand(Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels),datatype::DataType=Float64) where Q <: Qnum
+function rand(Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels),datatype::DataType=Float64) where Q <: Qnum
   return Qtens(Qlabels,datatype=datatype,flux=flux,currblock=currblock,blockfct=rand)
 end
 #=
@@ -437,12 +437,12 @@ end
 Creates a random tensor `B` of the same type as `B`
 """
 =#
-@inline function rand(currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+function rand(currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   Qlabels = fullQnumMat(currQtens)
   return Qtens(Qlabels,datatype=W,currblock=currQtens.currblock,flux=currQtens.flux,blockfct=rand)
 end
 
-@inline function rand(datatype::DataType,currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+function rand(datatype::DataType,currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   Qlabels = fullQnumMat(currQtens)
   return Qtens(Qlabels,datatype=datatype,currblock=currQtens.currblock,flux=currQtens.flux,blockfct=rand)
 end
@@ -455,7 +455,7 @@ end
 
 Generates the base size of `A` no matter how it was reshaped
 """
-@inline function basesize(Qtensor::qarray)
+function basesize(Qtensor::qarray)
   return ntuple(i->length(Qtensor.QnumMat[i]),length(Qtensor.QnumMat))
 end
 
@@ -464,7 +464,7 @@ end
 
 Generates the base size of quantum number labels `A` (vector of a vector of `Qnum`)
 """
-@inline function basesize(Qlabels::Array{Array{Q,1},1}) where Q <: Union{Qnum,Integer}
+function basesize(Qlabels::Array{Array{Q,1},1}) where Q <: Union{Qnum,Integer}
   return ntuple(i->length(Qlabels[i]),length(Qlabels))
 end
 export basesize
@@ -475,36 +475,36 @@ export basesize
 
 Finds the number of dimensions of the base quantum number tensor `A` no matter how it was reshaped
 """
-@inline function basedims(Qtensor::qarray)
+function basedims(Qtensor::qarray)
   return length(Qtensor.QnumMat)
 end
 
-@inline function basedims(A::denstens)
+function basedims(A::denstens)
   return ndims(A)
 end
 
 
 
 import Base.zeros
-@inline function zeros(Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};datatype::DataType=Float64,flux::Q=Q()) where Q <: Qnum
+function zeros(Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};datatype::DataType=Float64,flux::Q=Q()) where Q <: Qnum
   newQlabels = Array{Q,1}[arrows[a] ? Qlabels[a] : inv.(Qlabels[a]) for a = 1:length(arrows)]
   return Qtens(newQlabels,datatype=datatype,flux=flux,blockfct=zeros)
 end
 
-@inline function zeros(Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels),datatype::DataType=Float64) where Q <: Qnum
+function zeros(Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels),datatype::DataType=Float64) where Q <: Qnum
   return Qtens(Qlabels,datatype=datatype,flux=flux,currblock=currblock,blockfct=zeros)
 end
 
-@inline function zeros(datatype::DataType,Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels)) where Q <: Qnum
+function zeros(datatype::DataType,Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels)) where Q <: Qnum
   return Qtens(Qlabels,datatype=datatype,flux=flux,currblock=currblock,blockfct=zeros)
 end
 
-@inline function zeros(currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+function zeros(currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   Qlabels = fullQnumMat(currQtens)
   return Qtens(Qlabels,datatype=W,currblock=currQtens.currblock,flux=currQtens.flux,blockfct=zeros)
 end
 
-@inline function zeros(datatype::DataType,currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+function zeros(datatype::DataType,currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   Qlabels = fullQnumMat(currQtens)
   return Qtens(Qlabels,datatype=datatype,currblock=currQtens.currblock,flux=currQtens.flux,blockfct=zeros)
 end
@@ -512,25 +512,25 @@ end
 
 
 import Base.ones
-@inline function ones(Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};datatype::DataType=Float64,flux::Q=Q()) where Q <: Qnum
+function ones(Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};datatype::DataType=Float64,flux::Q=Q()) where Q <: Qnum
   newQlabels = Array{Q,1}[arrows[a] ? Qlabels[a] : inv.(Qlabels[a]) for a = 1:length(arrows)]
   return Qtens(newQlabels,datatype=datatype,flux=flux,blockfct=ones)
 end
 
-@inline function ones(Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels),datatype::DataType=Float64) where Q <: Qnum
+function ones(Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels),datatype::DataType=Float64) where Q <: Qnum
   return Qtens(Qlabels,datatype=datatype,flux=flux,currblock=currblock,blockfct=ones)
 end
 
-@inline function ones(datatype::DataType,Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels)) where Q <: Qnum
+function ones(datatype::DataType,Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels)) where Q <: Qnum
   return Qtens(Qlabels,datatype=datatype,flux=flux,currblock=currblock,blockfct=ones)
 end
 
-@inline function ones(currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+function ones(currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   Qlabels = fullQnumMat(currQtens)
   return Qtens(Qlabels,datatype=W,currblock=currQtens.currblock,flux=currQtens.flux,blockfct=ones)
 end
 
-@inline function ones(datatype::DataType,currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+function ones(datatype::DataType,currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   Qlabels = fullQnumMat(currQtens)
   return Qtens(Qlabels,datatype=datatype,currblock=currQtens.currblock,flux=currQtens.flux,blockfct=ones)
 end
@@ -539,7 +539,7 @@ end
 
 import Base.zero
   """Like the default function zero(t::Array), return an object with the same properties containing only zeros."""
-  @inline function zero(Qt::qarray)
+  function zero(Qt::qarray)
   return zeros(Qt)
 end
 
@@ -549,7 +549,7 @@ end
 
 Default initializer to an empty tensor with type `Z` and quantum number `Q`
 """
-@inline function Qtens{Z,Q}() where {Z <: Number,Q <: Qnum}
+function Qtens{Z,Q}() where {Z <: Number,Q <: Qnum}
   return zeros(Z,[[Q()]])
 end
 
@@ -659,7 +659,7 @@ end
 
 Populates `Lindexes` with values from a vector corresponding to indexes `Linds`. `nszies` is a vector of booleans corresponding to values that are non-zero values in the values. `Lbigtosub` is a vector of the row and column of the dense matrix-equivalent for each row of the quantum number block. `leftQNs` is the quantum numbers (integers corresponding to a vector of `Qnum`s) along that side. Generates the `.ind` field for a Qtensor.
 """
-@inline function loadindex(nonzero_sizes::Array{Bool,1},Linds::intType,Lsizes::Array{intType,1},Lindexes::Array{Array{intType,2},1},
+function loadindex(nonzero_sizes::Array{Bool,1},Linds::intType,Lsizes::Array{intType,1},Lindexes::Array{Array{intType,2},1},
                            leftQNs::Array{intType,1},Lbigtosub::Array{intType,1},rows::Array{intType,1})
   Lpos = makepos(Linds)
   @inbounds for y = 1:length(Lbigtosub)
@@ -849,7 +849,7 @@ function changeblock(Qt::Qtens{W,Q},newblock::Array{Array{P,1},1};zeroblocks::Bo
   return changeblock(Qt,(newblock[1],newblock[2]),zeroblocks=zeroblocks)
 end
 
-const parallel_trigger = 2000 #set as of DMRjulia v0.8.6
+const parallel_trigger = 10_000 #set as of DMRjulia v0.8.6
 
 function changeblock(Qt::Qtens{W,Q},newblock::NTuple{2,Array{P,1}};minelements::Integer=parallel_trigger,zeroblocks::Bool=false) where {W <: Number, Q <: Qnum, P <: Integer}
   if Qt.currblock == newblock
@@ -924,7 +924,7 @@ export changeblock
 
 
 
-@inline function AAzeropos2ind(currpos::Array{X,1},S::NTuple{P,X},selector::NTuple{G,X}) where X <: Integer where G where P
+function AAzeropos2ind(currpos::Array{X,1},S::NTuple{P,X},selector::NTuple{G,X}) where X <: Integer where G where P
   x = 0
   @inbounds @simd for i = G:-1:1
     x *= S[selector[i]]
@@ -933,14 +933,14 @@ export changeblock
   return x+1
 end
 
-@inline function innerloadpos!(y::P,Rorigsize::P,thispos::Array{P,1},thiscurrblock_two::Array{P,1},thisind_two::Array{P,2}) where P <: Integer
+function innerloadpos!(y::P,Rorigsize::P,thispos::Array{P,1},thiscurrblock_two::Array{P,1},thisind_two::Array{P,2}) where P <: Integer
   @inbounds @simd for i = 1:Rorigsize
     thispos[thiscurrblock_two[i]] = thisind_two[i,y]
   end
   nothing
 end
 
-@inline function innerloop(x::S,y::S,newblocks::Array{Array{W,2},1},inputval::W,leftQNs::Array{S,1},LRpos::Bool,basesize::NTuple{P,S},thispos::Array{S,1},#thisthread::S,
+function innerloop(x::S,y::S,newblocks::Array{Array{W,2},1},inputval::W,leftQNs::Array{S,1},LRpos::Bool,basesize::NTuple{P,S},thispos::Array{S,1},#thisthread::S,
           thisind_one::Array{S,2},thisind_one_sizetwo::S,Linds::NTuple{Z,S},Lbigtosub::Array{S,1},
           Rinds::NTuple{G,S},Rbigtosub::Array{S,1}) where {P, Z, G, W <: Number, S <: Integer}
 
@@ -955,7 +955,7 @@ end
   nothing
 end
 
-@inline function doubleloop_right(newblocks::Array{Array{W,2},1},thisTens::Array{W,2},leftQNs::Array{S,1},LRpos::Bool,basesize::NTuple{P,S},posvecs::Array{Array{S,1},1},
+function doubleloop_right(newblocks::Array{Array{W,2},1},thisTens::Array{W,2},leftQNs::Array{S,1},LRpos::Bool,basesize::NTuple{P,S},posvecs::Array{Array{S,1},1},
                           thisind_one::Array{S,2},thisind_one_sizetwo::S,Lorigsize::S,thiscurrblock_one::Array{S,1},Linds::NTuple{Z,S},Lbigtosub::Array{S,1},
                           thisind_two::Array{S,2},thisind_two_sizetwo::S,Rorigsize::S,thiscurrblock_two::Array{S,1},Rinds::NTuple{G,S},Rbigtosub::Array{S,1}) where {P, Z, G, W <: Number, S <: Integer}
   Threads.@threads :static for x = 1:thisind_one_sizetwo
@@ -975,7 +975,7 @@ end
   nothing
 end
 
-@inline function doubleloop_left(newblocks::Array{Array{W,2},1},thisTens::Array{W,2},leftQNs::Array{S,1},LRpos::Bool,basesize::NTuple{P,S},posvecs::Array{Array{S,1},1},
+function doubleloop_left(newblocks::Array{Array{W,2},1},thisTens::Array{W,2},leftQNs::Array{S,1},LRpos::Bool,basesize::NTuple{P,S},posvecs::Array{Array{S,1},1},
                           thisind_one::Array{S,2},thisind_one_sizetwo::S,Lorigsize::S,thiscurrblock_one::Array{S,1},Linds::NTuple{Z,S},Lbigtosub::Array{S,1},
                           thisind_two::Array{S,2},thisind_two_sizetwo::S,Rorigsize::S,thiscurrblock_two::Array{S,1},Rinds::NTuple{G,S},Rbigtosub::Array{S,1}) where {P, Z, G, W <: Number, S <: Integer}
   Threads.@threads :static for y = 1:thisind_two_sizetwo
@@ -995,7 +995,7 @@ end
   nothing
 end
 
-@inline function doubleloop_reg(newblocks::Array{Array{W,2},1},thisTens::Array{W,2},leftQNs::Array{S,1},LRpos::Bool,basesize::NTuple{P,S},posvec::Array{S,1},
+function doubleloop_reg(newblocks::Array{Array{W,2},1},thisTens::Array{W,2},leftQNs::Array{S,1},LRpos::Bool,basesize::NTuple{P,S},posvec::Array{S,1},
                           thisind_one::Array{S,2},thisind_one_sizetwo::S,Lorigsize::S,thiscurrblock_one::Array{S,1},Linds::NTuple{Z,S},Lbigtosub::Array{S,1},
                           thisind_two::Array{S,2},thisind_two_sizetwo::S,Rorigsize::S,thiscurrblock_two::Array{S,1},Rinds::NTuple{G,S},Rbigtosub::Array{S,1}) where {P, Z, G, W <: Number, S <: Integer}
   for x = 1:thisind_one_sizetwo
@@ -1012,9 +1012,8 @@ end
   nothing
 end
 
-@inline function reblock!(newblocks::Array{Array{W,2},1},Qt::Qtens{W,Q},leftQNs::Array{S,1},LR::Bool,
+function reblock!(newblocks::Array{Array{W,2},1},Qt::Qtens{W,Q},leftQNs::Array{S,1},LR::Bool,
                           Linds::Array{S,1},Rinds::Array{S,1},Lbigtosub::Array{S,1},Rbigtosub::Array{S,1};minelements::Integer=parallel_trigger) where {W <: Number, Q <: Qnum, S <: Integer}
-
   thiscurrblock_one = Qt.currblock[1]
   thiscurrblock_two = Qt.currblock[2]
 
@@ -1062,7 +1061,7 @@ end
   nothing
 end
 
-@inline function checkzeroblocks!(newblocks::Array{Array{W,2},1},keepblocks::Array{Bool,1}) where W <: Number
+function checkzeroblocks!(newblocks::Array{Array{W,2},1},keepblocks::Array{Bool,1}) where W <: Number
   if length(newblocks) > 1
     @inbounds for q = 1:length(keepblocks)
       if keepblocks[q]
@@ -1083,7 +1082,7 @@ end
 ####################################################
 
 
-@inline function countload(A::Array{W,1},B::Array{W,1}) where W 
+function countload(A::Array{W,1},B::Array{W,1}) where W 
   loadvec = Array{W,1}(undef,length(A)+length(B))
   counter = 0
   @inbounds @simd for k = 1:length(A)
@@ -1205,15 +1204,15 @@ If the Qtensor size is (10,1,2) and we want to reshape in to a (10,2) tensor, th
 
 See also: [`reshape!`](@ref)
 """
-@inline function reshape(Qt::Qtens{W,Q}, S::Integer...;merge::Bool=false) where {W <: Number, Q <: Qnum}
+function reshape(Qt::Qtens{W,Q}, S::Integer...;merge::Bool=false) where {W <: Number, Q <: Qnum}
   return reshape!(copy(Qt),S...,merge=merge)
 end
 
-@inline function reshape(Qt::Qtens{W,Q}, newQsize::Array{Array{P,1},1};merge::Bool=false) where {W <: Number, Q <: Qnum, P <: Integer}
+function reshape(Qt::Qtens{W,Q}, newQsize::Array{Array{P,1},1};merge::Bool=false) where {W <: Number, Q <: Qnum, P <: Integer}
   return reshape!(copy(Qt), newQsize...,merge=merge)
 end
 
-@inline function reshape(Qt::Qtens{W,Q}, newQsize::Array{P,1}...;merge::Bool=false) where {W <: Number, Q <: Qnum, P <: Integer}
+function reshape(Qt::Qtens{W,Q}, newQsize::Array{P,1}...;merge::Bool=false) where {W <: Number, Q <: Qnum, P <: Integer}
   return reshape!(copy(Qt), newQsize...,merge=merge)
 end
 
@@ -1231,12 +1230,12 @@ function (reshape(Qt::Array{W,N}, newQsize::Array{Array{P,1},1};merge::Bool=fals
   return reshape(copy(Qt), M...)
 end
 
-@inline function getQnum(a::Integer,b::Integer,QnumMat::Array{Array{P,1},1},QnumSum::Array{Array{Q,1},1}) where {Q <: Qnum, P <: intType}
+function getQnum(a::Integer,b::Integer,QnumMat::Array{Array{P,1},1},QnumSum::Array{Array{Q,1},1}) where {Q <: Qnum, P <: intType}
   Qnumber = QnumMat[a][b]
   return QnumSum[a][Qnumber]
 end
 
-@inline function getQnum(a::Integer,b::Integer,Qt::Qtens{W,Q}) where {Q <: Qnum, W <: Number}
+function getQnum(a::Integer,b::Integer,Qt::Qtens{W,Q}) where {Q <: Qnum, W <: Number}
   return getQnum(a,b,Qt.QnumMat,Qt.QnumSum)
 end
 export getQnum
@@ -1452,7 +1451,7 @@ function lastindex(Qtens::qarray, i::Integer)
   return Qtens.size[i]
 end
 
-@inline function genQNs(conjvar::Bool,A::Qtens{W,Q},Aind::intType) where {W <: Number, Q <: Qnum}
+function genQNs(conjvar::Bool,A::Qtens{W,Q},Aind::intType) where {W <: Number, Q <: Qnum}
   LQNs = Array{Q,1}(undef,length(A.Qblocksum))
   if conjvar
     @inbounds @simd for q = 1:length(A.Qblocksum)
@@ -1508,7 +1507,7 @@ function matchblocks(LQNs::Array{Q,1},RQNs::Array{Q,1};matchQN::Q=Q()) where Q <
   return outAorder
 end
 
-@inline function loadtup!(Aorder::Array{NTuple{2,intType},1},q::intType,k::intType,newblock::intType)
+function loadtup!(Aorder::Array{NTuple{2,intType},1},q::intType,k::intType,newblock::intType)
   Aorder[q] = (k,newblock)
   nothing
 end
@@ -2174,7 +2173,7 @@ function evaluate_keep(C::qarray,q::Integer,Linds::Array{P,1},ap::Array{K,1},row
   return keeprows
 end
 
-@inline function truncate_replace_inds(C::qarray,q::Integer,rowcol::Integer,Lkeepinds::Array{P,1},
+function truncate_replace_inds(C::qarray,q::Integer,rowcol::Integer,Lkeepinds::Array{P,1},
                                 keepbool::Array{Bool,1},kept_unitranges::Array{K,1},keeprows::Array{Bool,1}) where {P <: Integer, K <: genColType}
 
   thisindmat = C.ind[q][rowcol][keepbool,keeprows]
@@ -2609,7 +2608,7 @@ end
 
 
 
-@inline function AAind2zeropos(vec::Array{X,1},S::NTuple{P,X}) where X <: Integer where P
+function AAind2zeropos(vec::Array{X,1},S::NTuple{P,X}) where X <: Integer where P
   currpos = Array{X,2}(undef,P,length(vec))
   @inbounds for k = 1:length(vec)
     currpos[1,k] = vec[k]-1
@@ -3102,7 +3101,7 @@ function makedens(QtensA::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   return tens{W}(G)
 end
 
-@inline function makedens(Qt::Array)
+function makedens(Qt::Array)
   return tens(Qt)
 end
 

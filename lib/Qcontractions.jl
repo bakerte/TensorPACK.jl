@@ -148,14 +148,14 @@ function checkblocks(Aqind::intType,Bqind::intType,A::Qtens{W,Q},B::Qtens{R,Q},i
   return mulblockA,mulblockB
 end
 
-@inline function genblockinds(offset::intType,firstblock::Array{intType,1})
+ function genblockinds(offset::intType,firstblock::Array{intType,1})
   @inbounds @simd for w = 1:length(firstblock)
     firstblock[w] = offset + w
   end
   nothing
 end
 
-@inline function loadnewsize(newsize::Array{Array{intType,1},1})
+ function loadnewsize(newsize::Array{Array{intType,1},1})
   counter = 0
   for w = 1:length(newsize)
     @inbounds @simd for a = 1:length(newsize[w])
@@ -166,28 +166,28 @@ end
   nothing
 end
 
-@inline function loadarraynewsize(newsize::Array{Array{intType,1},1},offset::intType,notconA::Array{intType,1},QtensA::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+ function loadarraynewsize(newsize::Array{Array{intType,1},1},offset::intType,notconA::Array{intType,1},QtensA::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   @inbounds for w = 1:length(notconA)
     newsize[w+offset] = Array{intType,1}(undef,length(QtensA.size[notconA[w]]))
   end
   nothing
 end
 
-@inline function loadnewQnumMat(newQnumMat::Array{Array{intType,1},1},offset::Integer,notconA::Array{intType,1},A::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+ function loadnewQnumMat(newQnumMat::Array{Array{intType,1},1},offset::Integer,notconA::Array{intType,1},A::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   @inbounds @simd for q = 1:length(notconA)
     newQnumMat[q+offset] = A.QnumMat[notconA[q]]
   end
   nothing
 end
 
-@inline function loadnewQnumSum(newQnumMat::Array{Array{Q,1},1},offset::Integer,notconA::Array{intType,1},A::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+ function loadnewQnumSum(newQnumMat::Array{Array{Q,1},1},offset::Integer,notconA::Array{intType,1},A::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   @inbounds @simd for q = 1:length(notconA)
     newQnumMat[q+offset] = A.QnumSum[notconA[q]]
   end
   nothing
 end
 
-@inline function loadnewQnumSum_inv(newQnumMat::Array{Array{Q,1},1},offset::Integer,notconA::Array{intType,1},A::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+ function loadnewQnumSum_inv(newQnumMat::Array{Array{Q,1},1},offset::Integer,notconA::Array{intType,1},A::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   @inbounds @simd for q = 1:length(notconA)
     newQnumMat[q+offset] = inv.(A.QnumSum[notconA[q]])
   end

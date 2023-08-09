@@ -4,7 +4,7 @@
 #                              v0.8
 #
 #########################################################################
-# Made by Thomas E. Baker and Aaron Dayton (2020)
+# Made by Thomas E. Baker and Aaron Dayton and Matthew R.G. Forbes (2020)
 # See accompanying license with this program
 # This code is native to the julia programming language (v1.5.4+)
 #

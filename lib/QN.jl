@@ -60,17 +60,17 @@ using ..tensor
     return !(a>b)
   end
 
-  @inline function isless(a::T,b::T)::Bool where {T<:Qnum}
+   function isless(a::T,b::T)::Bool where {T<:Qnum}
     return a<b
   end
-  @inline function isgreater(a::T,b::T)::Bool where {T<:Qnum}
+   function isgreater(a::T,b::T)::Bool where {T<:Qnum}
     return a>b
   end
-  @inline function isequal(a::T,b::T)::Bool where {T<:Qnum}
+   function isequal(a::T,b::T)::Bool where {T<:Qnum}
     return a==b
   end
 
-  @inline function parity(a::T) where {T <: fermionQnum}
+   function parity(a::T) where {T <: fermionQnum}
 	return a.parity.val & 1
   end
   export parity
@@ -111,11 +111,11 @@ using ..tensor
     val::intType
   end
 
-  @inline function U1()::U1
+   function U1()::U1
     return U1(0)
   end
 
-  @inline function U1(a::U1)::U1
+   function U1(a::U1)::U1
     return U1(a.val)
   end
   export U1
@@ -131,7 +131,7 @@ using ..tensor
   end
 #=
   import Base.copy
-  @inline function copy(a::U1)::U1
+   function copy(a::U1)::U1
     return U1(a.val)
   end
 =#
@@ -162,21 +162,21 @@ using ..tensor
     return U1(c)
   end
 #=
-  @inline function inv!(a::U1)::U1
+   function inv!(a::U1)::U1
 	a.val *=-1;
 	a
 #   nothing
   end
 =#
 #=
-  @inline function hash(a::U1)::number
+   function hash(a::U1)::number
     return a.val
   end
   =#
 #  export inv!
 
 
-@inline function inv(a::U1)
+ function inv(a::U1)
   return -a
 end
 export inv
@@ -216,10 +216,10 @@ export inv
     =#
   end
 
-  @inline function Zn{N}(a::Zn{N})::Zn{N} where{N}
+   function Zn{N}(a::Zn{N})::Zn{N} where{N}
     return Zn{N}(a.val)
   end
-  @inline function Zn{N}()::Zn{N} where {N}
+   function Zn{N}()::Zn{N} where {N}
     return Zn{N}(0)
   end
   export Zn
@@ -250,7 +250,7 @@ export inv
   end
 =#
 #=
-  @inline function copy(a::Zn{N})::Zn{N} where{N}
+   function copy(a::Zn{N})::Zn{N} where{N}
     return Zn{N}(a.val)
   end
 =#
@@ -270,7 +270,7 @@ export inv
   end
 #  export add!
 #=
-  @inline function inv(a::Zn{N})::Zn{N} where{N}
+   function inv(a::Zn{N})::Zn{N} where{N}
 #    if a.val == 0 #The neutral element is always its own inverse.
 #      return Zn{N}()
 #    end
@@ -290,7 +290,7 @@ export inv
     return Zn{N}(c)
   end
   #=
-  @inline function inv!(a::Zn{N})::Zn{N}  where{N}
+   function inv!(a::Zn{N})::Zn{N}  where{N}
     if a.val != 0 #The neutral element is always its own inverse.
       a.val = (N-a.val);
 	end
@@ -313,7 +313,7 @@ export inv
   # 	Content::tuple{TT...}
   # end
 
-@inline function inv(a::Zn{N}) where N
+ function inv(a::Zn{N}) where N
   c = N-a.val
   if c < 0
     c += N
@@ -444,20 +444,20 @@ end
     funminus = "Base.@pure function -(a::$name,b::$name...)::$name\n	return $name("
     fungreater = "Base.@pure function >(a::$name,b::$name)::Bool\n\t"
     funequal = "Base.@pure function ==(a::$name,b::$name)::Bool\n"
-    funinv = "@inline function inv(a::$name)::$name\n	return $name("
+    funinv = " function inv(a::$name)::$name\n	return $name("
 #    funinv! ="function inv!(a::$name)::$name\n"
 #    funadd! ="function add!(a::$name,b::$name)::$name\n"
-    funNeut = "@inline function $name()\n	return $name("
+    funNeut = " function $name()\n	return $name("
 #    funpropercopy = "function copy(a::$name)\n        $name("
 #    funcopy = "function copy!(a::$name,b::$name)\n for w = 1:$(length(valfield))\n"
 #    funcinv = "function copyinv!(a::$name,b::$name)::$name\n"
 #    funaddinv = "function addinv!(a::$name,b::$name)::$name\n"
-    funsize = "@inline function length(Q::$name)\n\t return $(length(valfield))\nend"
-    fungetindex = "@inline function getindex(a::$name,i::Integer)\n        if i == 1"
+    funsize = " function length(Q::$name)\n\t return $(length(valfield))\nend"
+    fungetindex = " function getindex(a::$name,i::Integer)\n        if i == 1"
 #    funsetindex = "function setindex!(a::$name,b::Integer,i::Integer)\n        if i == 1"
     constructname = "$name("
     constructbody = "new("
-    copyconst = "@inline function $name(a::$name)\n\t$name("
+    copyconst = " function $name(a::$name)\n\t$name("
     counter = 2
 
 #    funcopy = "$(funcopy) \ta[w] = b[w]\n"

@@ -644,7 +644,7 @@ export makepos!
 
 Increments a vector (but no entry over `sizes`) by one step.  Will change contents of `pos`.
 """
-@inline function position_incrementer!(pos::Array{G,1},sizes::Union{Array{G,1},Tuple{G,Vararg{G}}}) where G <: intType
+ function position_incrementer!(pos::Array{G,1},sizes::Union{Array{G,1},Tuple{G,Vararg{G}}}) where G <: intType
   w = 1
   @inbounds pos[w] += 1
   @inbounds while w < length(sizes) && pos[w] > sizes[w]
@@ -670,7 +670,7 @@ Converts `x[index]` to a position stored in `currpos` (parallelized) with tensor
 
 See also: [`pos2ind`](@ref) [`pos2ind!`](@ref)
 """
-@inline function ind2pos!(currpos::Array{Array{X,1},1},k::X,x::Array{X,1},index::X,S::Union{NTuple{N,X},Array{X,1}}) where {X <: Integer, N}
+ function ind2pos!(currpos::Array{Array{X,1},1},k::X,x::Array{X,1},index::X,S::Union{NTuple{N,X},Array{X,1}}) where {X <: Integer, N}
   currpos[k][1] = x[index]-1
   @inbounds @simd for j = 1:length(S)-1
     val = currpos[k][j]
@@ -688,7 +688,7 @@ Generates an index `G` from an input position `currpos` (tuple) with tensor size
 
 See also: [`pos2ind!`](@ref)
 """
-@inline function pos2ind(currpos::NTuple{G,P},S::NTuple{G,P}) where {G, P <: Integer}
+ function pos2ind(currpos::NTuple{G,P},S::NTuple{G,P}) where {G, P <: Integer}
   x = 0
   @inbounds @simd for i = G:-1:2
     x += currpos[i]-1
@@ -698,7 +698,7 @@ See also: [`pos2ind!`](@ref)
   return x
 end
 
-@inline function pos2ind(currpos::Array{P,1},S::NTuple{G,P}) where {G, P <: Integer}
+ function pos2ind(currpos::Array{P,1},S::NTuple{G,P}) where {G, P <: Integer}
   x = 0
   @inbounds @simd for i = G:-1:2
     x += currpos[i]-1
@@ -709,7 +709,7 @@ end
 end
 
 
-@inline function pos2ind(currpos::NTuple{N,P},S::Array{P,1}) where {N, P <: Integer}
+ function pos2ind(currpos::NTuple{N,P},S::Array{P,1}) where {N, P <: Integer}
   x = 0
   @inbounds @simd for i = N:-1:2
     x += currpos[i]-1
@@ -727,7 +727,7 @@ Generates an index in element `j` of input storage array `x` from an input posit
 
 See also: [`pos2ind`](@ref)
 """
-@inline function pos2ind!(x::Array{X,1},j::Integer,currpos::Union{Array{X,1},NTuple{N,intType}},S::NTuple{N,intType}) where {N, X <: Integer}
+ function pos2ind!(x::Array{X,1},j::Integer,currpos::Union{Array{X,1},NTuple{N,intType}},S::NTuple{N,intType}) where {N, X <: Integer}
   @inbounds val = currpos[end]
   @inbounds @simd for i = N-1:-1:1
     val -= 1
@@ -1251,12 +1251,12 @@ function setindex!(B::tens{W},A::W,a::Integer,b::Integer...) where W <: Number
   nothing
 end
 
-@inline function setindex!(B::tens{W},A::W,a::Integer) where W <: Number
+ function setindex!(B::tens{W},A::W,a::Integer) where W <: Number
   @inbounds B.T[a] = A
   nothing
 end
 
-@inline function setindex!(B::diagonal{W},A::W,a::Integer) where W <: Number
+ function setindex!(B::diagonal{W},A::W,a::Integer) where W <: Number
   @inbounds B.T[a] = A
   nothing
 end
@@ -2373,7 +2373,7 @@ end
 
 Generates a matrix of size `(x,y)` with element type `outtype`.
 """
-@inline function undefMat(outtype::DataType,x::Integer,y::Integer)
+ function undefMat(outtype::DataType,x::Integer,y::Integer)
   return Array{outtype,2}(undef,x,y)
 end
 export undefMat

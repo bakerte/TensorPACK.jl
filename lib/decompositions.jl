@@ -218,19 +218,19 @@ import LinearAlgebra
 and define functions as `LinearAlgebra.svd` to use functions from that package.
 
 """
-function svd(AA::Array{W,G};cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,a::Integer = size(AA,1),b::Integer=size(AA,2),
+function svd(AA::AbstractArray;cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,a::Integer = size(AA,1),b::Integer=size(AA,2),
               minm::Integer=2,nozeros::Bool=true,power::Number=2,effZero::Real=defzero,keepdeg::Bool=false,inplace::Bool=false,
-              decomposer::Function=libsvd) where {W <: Number, G}
+              decomposer::Function=libsvd) #where {W <: Number, G}
     U,D,V,truncerr,sumD = svd(tens(AA),power=power,cutoff=cutoff,m=m,mag=mag,minm=minm,nozeros=nozeros,effZero=effZero,keepdeg=keepdeg,a=a,b=b,decomposer=decomposer)
 
     return makeArray(U),D,makeArray(V),truncerr,sumD
 end
 export svd
 
-function svd(AA::tens{W};power::Number=2,cutoff::Float64 = 0.,
+function svd(AA::denstens;power::Number=2,cutoff::Float64 = 0.,
           m::Integer = 0,mag::Float64=0.,minm::Integer=2,nozeros::Bool=true,
           effZero::Number=defzero,keepdeg::Bool=false,decomposer::Function=libsvd,
-          a::Integer = size(AA,1),b::Integer=size(AA,2),inplace::Bool=false) where W <: Number
+          a::Integer = size(AA,1),b::Integer=size(AA,2),inplace::Bool=false)
 
   U,D,Vt = decomposer(AA.T,a,b)
 
@@ -277,6 +277,8 @@ function svd(AA::tens{W};power::Number=2,cutoff::Float64 = 0.,
     Vtrunc = tens([length(D),b],Vt)
     Vtrunc = Vtrunc[interval,:]
 
+#    Dtrunc = D[1:length(interval)]
+#    U = U[:,interval]
     Dtrunc = D
     for w = length(D):-1:length(interval)+1
       pop!(Dtrunc)
@@ -285,7 +287,6 @@ function svd(AA::tens{W};power::Number=2,cutoff::Float64 = 0.,
       end
     end
     Utrunc = tens([a,length(interval)],U)
-#      Utrunc = U
   else
     Utrunc,Dtrunc,Vtrunc = tens([a,length(D)],U),D,tens([length(D),b],Vt)
   end
