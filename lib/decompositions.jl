@@ -240,32 +240,32 @@ function svd(AA::denstens;power::Number=2,cutoff::Float64 = 0.,
   thism = length(interval)
 
   if thism < minm #&& m > minm
-    maxm = max(m,minm)
+    maxm = minm
 
     Utrunc = Array{eltype(U),1}(undef,a*maxm)
-    @inbounds @simd for z = 1:length(U)
+    @inbounds @simd for z = 1:a*thism
       Utrunc[z] = U[z]
     end
-    @inbounds @simd for z = length(U)+1:length(Utrunc)
+    @inbounds @simd for z = a*thism+1:length(Utrunc)
       Utrunc[z] = 0
     end
 
     Dtrunc = Array{eltype(D),1}(undef,maxm)
-    @inbounds @simd for z = 1:size(D,1)
+    @inbounds @simd for z = 1:thism
       Dtrunc[z] = D[z]
     end
-    @inbounds @simd for z = size(D,1)+1:maxm
+    @inbounds @simd for z = thism+1:maxm
       Dtrunc[z] = 0
     end
 
     Vtrunc = Array{eltype(Vt),1}(undef,maxm*b)
     for y = 1:b
-      thisind = sizeD*(y-1)
+      thisind = maxm*(y-1)
       thisotherind = maxm*(y-1)
-      @inbounds @simd for x = 1:sizeD
+      @inbounds @simd for x = 1:thism
         Vtrunc[x + thisotherind] = Vt[x + thisind]
       end
-      @inbounds @simd for x = sizeD+1:maxm
+      @inbounds @simd for x = thism+1:maxm
         Vtrunc[x + thisotherind] = 0
       end
     end
