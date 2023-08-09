@@ -78,7 +78,6 @@ include(libpath*"Qtensor.jl")
 
 
 include(libpath*"contractions.jl")
-include(libpath*"strassen.jl")
 
 
 include(libpath*"decompositions.jl")
