@@ -31,11 +31,11 @@ println()
 println("input tests; default input auto-pass, tens(Array), by this point")
 
 B = tens(type=ComplexF64)
-loadtest1 = B.size == [0] && B.T == Array{ComplexF64,1}(undef,0)
+loadtest1 = B.size == (0,) && B.T == Array{ComplexF64,1}(undef,0)
 fulltest &= testfct(loadtest1,"tens(;type=)")
 
 B = tens(ComplexF64)
-loadtest2 = B.size == [0] && B.T == Array{ComplexF64,1}(undef,0)
+loadtest2 = B.size == (0,) && B.T == Array{ComplexF64,1}(undef,0)
 fulltest &= testfct(loadtest2,"tens(type)")
 
 
@@ -44,11 +44,11 @@ size_vec = rand(ndim)
 C = LinearAlgebra.Diagonal(size_vec)
 B = tens(ComplexF64,C)
 
-testval = B.size == [ndim,ndim] && isapprox(B.T,reshape(Array(C),ndim^2))
+testval = B.size == (ndim,ndim) && isapprox(B.T,reshape(Array(C),ndim^2))
 fulltest &= testfct(testval,"tens(Type,AbstractArray)")
 
 B = tens(C)
-testval = B.size == [ndim,ndim] && isapprox(B.T,reshape(Array(C),ndim^2))
+testval = B.size == (ndim,ndim) && isapprox(B.T,reshape(Array(C),ndim^2))
 fulltest &= testfct(testval,"tens(AbstractArray)")
 
 B = tens(ComplexF64,A)
