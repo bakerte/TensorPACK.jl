@@ -368,7 +368,7 @@ concatenates string `a` with integer `b` after converting integer to a string
 function *(a::String,b::Integer)
   return a*string(b)
 end
-#=
+
 import Base.permutedims
 """
     permtuedims(A,order)
@@ -388,38 +388,25 @@ end
 """
     permtuedims!(A,order)
 
-Permutes named tensor `A` according to `order` (ex: [[1,2],[3,4]] or [["a","b"],["c","d"]])
+Permutes named tensor `A` according to `order` (ex: ["a","d","c","b"])
 
 See also: [`permutedims`](@ref)
 """
 function permutedims!(A::TNobj,order::Array{W,1}) where W <: String
-  newnumberorder = intType[]
-  for i = 1:size(order,1)
-    for j = 1:size(A.names,1)
-      if order[i] == A.names[j]
-        push!(newnumberorder,j)
-        continue
-      end
+  for w = 1:length(order)
+    checkname = false
+    x = 0
+    while !checkname && x < length(A.names)
+      x += 1
+      checkname = order[w] == A.names[x]
+    end
+    if !checkname
+      error("name not found on tensor that was requested to permute...make input names to permutedims match input tensor")
     end
   end
-  return permutedims!(A,newnumberorder)
+  A.names = order
+  return A
 end
-
-function permutedims!(B::TNobj,order::Array{W,1}) where W <: Integer
-
-  A = typeof(B) <: nametens ? B : B.T
-
-  A.N = permutedims!(A.N,order)
-  A.names = A.names[order]
-#    A.arrows = A.arrows[order]
-
-  if typeof(B) <: directedtens
-    B.T = A
-  end
-
-  return B
-end
-=#
 
 """
     matchnames(AA,order,q)
@@ -464,7 +451,7 @@ Generates SVD of named tensor `A` according to `order`; same output as regular S
 """
 function svd(AA::nametens,order::Array{Array{B,1},1};mag::Number = 0.,cutoff::Number = 0.,
               m::Integer = 0,power::Integer=2,name::String="svdind",leftadd::String="L",
-              rightadd::String="R",nozeros::Bool=false) where B <: Union{Any,String}
+              rightadd::String="R",nozeros::Bool=true) where B <: Union{Any,String}
 
   left = matchnames(AA,order[1])
   right = matchnames(AA,order[2])
