@@ -1698,7 +1698,7 @@ function tensorcombination!(M::Qtens{W,Q};alpha::NTuple{N,W}=(W(1),),fct::Functi
   return M
 end
 
-function tensorcombination!(alpha::NTuple{N,W},M::Qtens{W,Q}...;fct::Function=*) where {Q <: Qnum, W <: Number, N}
+function tensorcombination!(alpha::NTuple{N,S},M::Qtens{W,Q}...;fct::Function=*) where {Q <: Qnum, W <: Number, N, S <: Number}
   return tensorcombination!(M...,alpha=alpha,fct=fct)
 end
 

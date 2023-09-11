@@ -1640,12 +1640,12 @@ end
 
 function libqr(A::tens{W},a::Integer,b::Integer;m::Integer=min(a,b)) where W <: Number
   Q,R = libqr!(copy(A.T),a,b,m=m)
-  return tens{W}([a,m],Q),tens{W}([m,b],R)
+  return tens{W}((a,m),Q),tens{W}((m,b),R)
 end
 
 function libqr!(A::tens{W},a::Integer,b::Integer;m::Integer=min(a,b)) where W <: Number
   Q,R = libqr!(A.T,a,b,m=m)
-  return tens{W}([a,m],Q),tens{W}([m,b],R)
+  return tens{W}((a,m),Q),tens{W}((m,b),R)
 end
 
 function libLowerHessenberg!(A::Array{W,P};a::Integer=size(A,1),b::Integer=size(A,2),tau::Array{W,1}=Array{W,1}(undef,min(a,b)),m::Integer=length(tau)) where {W <: Number, P}
@@ -1693,12 +1693,12 @@ end
 
 function liblq(A::tens{W},a::Integer,b::Integer;m::Integer=min(a,b)) where W <: Number
   L,Q = liblq!(copy(A.T),a,b,m=m)
-  return tens{W}([a,m],L),tens{W}([m,b],Q)
+  return tens{W}((a,m),L),tens{W}((m,b),Q)
 end
 
 function liblq!(A::tens{W},a::Integer,b::Integer;m::Integer=min(a,b)) where W <: Number
   L,Q = liblq!(A.T,a,b,m=m)
-  return tens{W}([a,m],L),tens{W}([m,b],Q)
+  return tens{W}((a,m),L),tens{W}((m,b),Q)
 end
 
 #         +---------------+

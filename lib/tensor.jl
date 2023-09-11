@@ -106,7 +106,7 @@ Regular tensor type; defined as `tens{W}` for W <: Number
 + `T::Array{W,1}`: tensor reshaped into a vector
 """
 mutable struct tens{W <: Number} <: denstens
-  size::Array{intType,1} #Tuple #Tuple{intType,Vararg{intType}}
+  size::Tuple{intType,Vararg{intType}} #Array{intType,1} #Tuple #Tuple{intType,Vararg{intType}}
   T::Array{W,1}
 end
 
@@ -141,7 +141,7 @@ export Diagonal
 Initializes an empty tensor `G` with no indices
 """
 function tens(;type::DataType=Float64)
-  return tens{type}(intType[0],type[])
+  return tens{type}((intType(0),),type[])
 end
 
 """
@@ -150,7 +150,7 @@ end
 Initializes an empty tensor `G` with no indices of data-type `type`
 """
 function tens(type::DataType)
-  return tens{type}(intType[0],type[])
+  return tens{type}((intType(0),),type[])
 end
 
 """
@@ -203,11 +203,12 @@ See also: [`denstens`](@ref)
 """
 function tens(G::DataType,P::AbstractArray{W,N}) where W <: Number where N
   rP = reshape(Array(P),prod(size(P)))
-  return tens{G}([size(P,w) for w = 1:N],rP)
+  Psize = ntuple(w->size(P,w),N) #[size(P,w) for w = 1:N]
+  return tens{G}(Psize,rP)
 end
 
 function tens(G::DataType,P::Array{W,N}) where W <: Number where N
-  sizeP = [size(P,w) for w = 1:N]
+  sizeP = ntuple(w->size(P,w),N)
   #sizeP = ntuple(w->size(P,w),ndims(P)) #size of P to a vector
   vecP = reshape(P,prod(sizeP))
   if G != eltype(P) #converts types if they do not match
@@ -374,9 +375,9 @@ function makeIdarray(W::DataType,ldim::Integer,rdim::Integer;addone::Bool=false,
 end
 
 """
-    G = makeId(W,ldim[,addone=false,addRightDim=false])
+    G = makeId([W,]ldim[,addone=false,addRightDim=false])
 
-Generates an identity tensor (`denstens` of output type `W`, `G`) that contracts to the identity operator (rank-2) when applied on another tensor traces out that a pair of indices of equal dimension. Parameter `ldim` denotes the size of the index to contract over, `addone` if `true` leaves two indices of size 1 on indices 1 and 4 (rank-4 tensor). Option `addRightDim` adds one index of size 1 on the third index (rank-3).
+Generates an identity tensor (`denstens` of output type `W` [default Float64], `G`) that contracts to the identity operator (rank-2) when applied on another tensor traces out that a pair of indices of equal dimension. Parameter `ldim` denotes the size of the index to contract over, `addone` if `true` leaves two indices of size 1 on indices 1 and 4 (rank-4 tensor). Option `addRightDim` adds one index of size 1 on the third index (rank-3).
 
 See also: [`denstens`](@ref)
 """
@@ -384,8 +385,24 @@ function makeId(W::DataType,ldim::Integer;addone::Bool=false,addRightDim::Bool=f
   return tens(makeIdarray(W,ldim,ldim;addone=addone,addRightDim=addRightDim))
 end
 
+
+"""
+    G = makeId([W,]ldim,rdim[,addone=false,addRightDim=false])
+
+Generates an identity tensor (`denstens` of output type `W` [default Float64], `G`) that contracts to the identity operator (rank-2) when applied on another tensor traces out that a pair of indices of equal dimension. Parameter `ldim` x `rdim` denotes the size of the index to contract over, `addone` if `true` leaves two indices of size 1 on indices 1 and 4 (rank-4 tensor). Option `addRightDim` adds one index of size 1 on the third index (rank-3).
+
+See also: [`denstens`](@ref)
+"""
 function makeId(W::DataType,ldim::Integer,rdim::Integer;addone::Bool=false,addRightDim::Bool=false,loadleft::Bool=true)
   return tens(makeIdarray(W,ldim,rdim;addone=addone,addRightDim=addRightDim))
+end
+
+function makeId(ldim::Integer;addone::Bool=false,addRightDim::Bool=false)
+  return tens(makeIdarray(Float64,ldim,ldim;addone=addone,addRightDim=addRightDim))
+end
+
+function makeId(ldim::Integer,rdim::Integer;addone::Bool=false,addRightDim::Bool=false,loadleft::Bool=true)
+  return tens(makeIdarray(Float64,ldim,rdim;addone=addone,addRightDim=addRightDim))
 end
 
 """
@@ -1396,7 +1413,10 @@ function tensorcombination!(alpha::NTuple{R,W},M::LinearAlgebra.Diagonal{W,Vecto
 end
 =#
 
-function (tensorcombination!(alpha::NTuple{R,W},M::P...;fct::Function=*) where P <: Union{tens{W},Array{W,G},Diagonal{W}}) where {R, G, W <: Number}
+function (tensorcombination!(alpha::NTuple{R,S},M::P...;fct::Function=*) where P <: Union{tens{W},Array{W,G},Diagonal{W}}) where {R, G, W <: Number, S <: Number}
+  if W != S
+    alpha = ntuple(w->convert(W,alpha[w]),length(alpha))
+  end
   out = tensorcombination!(M...,alpha=alpha,fct=fct)
   return out
 end
@@ -1823,7 +1843,8 @@ function reshape!(M::tens{W}, S::NTuple{N,intType};merge::Bool=false) where {N, 
     newsize[w] = S[w]
   end
   =#
-  return reshape!(M,[S[w] for w = 1:N])
+  M.size = S #newsize
+  return M#tens(S,M.T)
 #  return M#tens(S,M.T)
 end
 
@@ -1832,16 +1853,15 @@ function reshape!(M::tens{W}, S::intType...;merge::Bool=false) where W <: Number
 end
 
 function reshape!(M::tens{W}, S::Array{intType,1};merge::Bool=false) where W <: Number
-  M.size = S #newsize
-  return M#tens(S,M.T)
+  return reshape(M,S...)
 end
 
 function reshape!(M::Array{W,P}, S::NTuple{N,intType};merge::Bool=false) where {N,P, W <: Number}
-  return reshape(M,S)
+  return reshape!(M,S...)
 end
 
 function reshape!(M::Array{W,P}, S::intType...;merge::Bool=false) where {P,W <: Number}
-  return reshape(M,S)
+  return reshape(M,S...)
 end
 
 function reshape!(M::Array{W,P}, S::Array{intType,1};merge::Bool=false) where {P,W <: Number}
@@ -2060,7 +2080,7 @@ function permutedims!(P::Array{W,R},A::Union{Array{W,R},tens{W}},iA::NTuple{G,in
     end
 
     if notfirst
-      foreZ = notfirst ? newvec[d1-1] : 0
+      foreZ = newvec[d1-1]
       @inbounds @simd for w = d1-2:-1:1
         foreZ -= 1
         foreZ *= newsizes[w]
@@ -2103,7 +2123,7 @@ function permutedims(A::tens{W},iA::NTuple{G,intType}) where {W <: Number, G}
 
     permutedims!(P,A.T,iA,Asizes,newsizes)
 
-    vecnewsizes = [newsizes[w] for w = 1:G]#ntuple(w->newsizes[w],G)
+    vecnewsizes = ntuple(w->newsizes[w],G) #[newsizes[w] for w = 1:G]#
     out = tens{W}(vecnewsizes,P)
   end
   return out
@@ -2130,11 +2150,14 @@ function joinindex!(bareinds::intvecType,A::Union{tens{W},Array{W,N}},B::Union{t
     end
   else
     =#
+    #=
     finalsize = Array{intType,1}(undef,nA)#ntuple(w-> w in inds ? size(A,w) + size(B,w) : size(A,w),nA)
     for w = 1:nA
       finalsize[w] = w in inds ? size(A,w) + size(B,w) : size(A,w)
     end
+    =#
 #  end
+  finalsize = ntuple(w-> w in inds ? size(A,w) + size(B,w) : size(A,w),nA)
 
   Asize = size(A)
   Bsize = size(B)

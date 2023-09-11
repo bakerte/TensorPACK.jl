@@ -240,7 +240,7 @@ function svd(AA::denstens;power::Number=2,cutoff::Float64 = 0.,
   thism = length(interval)
 
   if thism < minm #&& m > minm
-    maxm = max(1,min(m,minm))
+    maxm = max(1,minm)
 
     Utrunc = Array{eltype(U),1}(undef,a*maxm)
     @inbounds @simd for z = 1:a*thism
@@ -270,11 +270,11 @@ function svd(AA::denstens;power::Number=2,cutoff::Float64 = 0.,
       end
     end
 
-    Utrunc = tens([a,length(Dtrunc)],Utrunc)
-    Vtrunc = tens([length(Dtrunc),b],Vtrunc)
+    Utrunc = tens((a,length(Dtrunc)),Utrunc)
+    Vtrunc = tens((length(Dtrunc),b),Vtrunc)
 
   elseif thism < sizeD
-    Vtrunc = tens([length(D),b],Vt)
+    Vtrunc = tens((length(D),b),Vt)
     Vtrunc = Vtrunc[interval,:]
 
 #    Dtrunc = D[1:length(interval)]
@@ -286,9 +286,9 @@ function svd(AA::denstens;power::Number=2,cutoff::Float64 = 0.,
         pop!(U)
       end
     end
-    Utrunc = tens([a,length(interval)],U)
+    Utrunc = tens((a,length(interval)),U)
   else
-    Utrunc,Dtrunc,Vtrunc = tens([a,length(D)],U),D,tens([length(D),b],Vt)
+    Utrunc,Dtrunc,Vtrunc = tens((a,length(D)),U),D,tens((length(D),b),Vt)
   end
 
   return Utrunc,Diagonal(Dtrunc),Vtrunc,truncerr,sumD

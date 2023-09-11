@@ -103,6 +103,7 @@ end
 Converts input tensor `A` to its matrix equivalent with left indices contained in `Lvec` and right indices contained in `Rvec` and whether to conjugate (`conjvar`)
 """
 function prepareT(A::densTensType,Lvec::Union{Array{intType,1},NTuple{K,intType}},Rvec::Union{Array{intType,1},NTuple{P,intType}},conjvar::Bool) where {K,P}
+
   newdimsA = Array{intType,1}(undef,ndims(A))
   counter = 0
   @inbounds @simd for w = 1:length(Lvec)
@@ -193,13 +194,12 @@ end
 
 Contraction function (`alpha`*`A`*`B`+`beta`*`Z`) and can conjugate A (`conjA`) or B (`conjB`). Does not construct return tensor, just outputs a vector.
 """
-function maincontractor!(conjA::Bool,conjB::Bool,A::densTensType,iA::intvecType,B::densTensType,iB::intvecType,Z::TensType...;alpha::Number=1,beta::Number=1)
-
+function maincontractor!(conjA::Bool,conjB::Bool,A::densTensType,iA::intvecType,B::densTensType,iB::intvecType,Z::densTensType...;alpha::Number=1,beta::Number=1)
+  
 #  testval = prod(w->size(A,iA[w]),1:length(iA))==prod(w->size(B,iB[w]),1:length(iB))
 #  @test(testval,"not matching sizes for input tensors to contraction")
 #a,b = prod(w->size(A,iA[w]),1:length(iA)),prod(w->size(B,iB[w]),1:length(iB))
 #test(a,b,"not matching sizes for input tensors to contraction")
-
   AnopermL,AnopermR = permq(A,iA)
   BnopermL,BnopermR = permq(B,iB)
 
@@ -212,7 +212,7 @@ function maincontractor!(conjA::Bool,conjB::Bool,A::densTensType,iA::intvecType,
   Lsize,innersizeL = getsizes(A,iA)
   Rsize,innersizeR = getsizes(B,iB)
 
-  AAsizes = Aremain == 0 && Bremain == 0 ? intType[0] : intType[makesize(w,A,iA,B,iB) for w = 1:Aremain+Bremain]
+  AAsizes = Aremain == 0 && Bremain == 0 ? (intType(0),) : ntuple(w->makesize(w,A,iA,B,iB),Aremain+Bremain) #intType[0] : intType[makesize(w,A,iA,B,iB) for w = 1:Aremain+Bremain]
 
   if Aperm && Bperm
     mulA = conjA && eltype(A) <: Complex && !AnopermL ? conj(A) : A
@@ -333,6 +333,9 @@ function *(X::densTensType,Y::densTensType)
     m = ndims(X) == 1 ? 1 : prod(w->size(X,w),1:ndims(X)-1)
     k = size(X,ndims(X))
     n = ndims(Y) < 2 ? 1 : prod(w->size(Y,w),2:ndims(Y))
+
+    X,Y = checkType(X,Y)
+
     out = libmult('N','N',X,Y,m,k,k,n)
 
     A,B = X,Y
@@ -340,7 +343,7 @@ function *(X::densTensType,Y::densTensType)
     iB = (1,)
     Aremain = ndims(A)-1
     Bremain = ndims(B)-1
-    AAsizes = [makesize(w,A,iA,B,iB) for w = 1:Aremain+Bremain]#ntuple(w->makesize(w,A,iA,B,iB),Aremain+Bremain)
+    AAsizes = ntuple(w->makesize(w,A,iA,B,iB),Aremain+Bremain) #[makesize(w,A,iA,B,iB) for w = 1:Aremain+Bremain]#
     if typeof(X) <: denstens || typeof(Y) <: denstens
       finaltens = tens(AAsizes,out)
     else
