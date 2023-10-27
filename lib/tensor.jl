@@ -2327,6 +2327,7 @@ function directsum(A::TensType,B::TensType...;group::Array{W,1}=[1,2],fct::Funct
   end
   return out
 end
+export directsum
 
 """
   directsum!(A,B...[,group=[1,2]])
@@ -2338,6 +2339,7 @@ See also: [`joinindex`](@ref) [`joinindex!`](@ref) [`directsum!`](@ref)
 function directsum!(A::TensType,B::TensType...;group::Array{W,1}=[1,2],fct::Function=joinindex!) where W <: Integer
   return directsum!(A,B...,group=group,fct=fct)
 end
+export directsum!
 
 """
   showQtens(Qt[,show=])
@@ -2400,3 +2402,42 @@ Generates a matrix of size `(x,y)` with element type `outtype`.
   return Array{outtype,2}(undef,x,y)
 end
 export undefMat
+
+"""
+  eye([,d=2])
+
+creates an identity matrix of integer size `d`
+"""
+function eye(;d::intType=2)
+  return zeros(d,d)+LinearAlgebra.I
+end
+export eye
+
+"""
+  eye(d)
+
+creates an identity matrix of integer size `d`
+"""
+function eye(d::intType)
+  return zeros(d,d)+LinearAlgebra.I
+end
+
+import Base.minimum
+"""
+  minimum(T)
+
+Finds minimum of `tens` or `Qtens` type
+"""
+function minimum(A::tens)
+  return minimum(A.T)
+end
+
+import Base.maximum
+"""
+  maximum(T)
+
+Finds minimum of `tens` or `Qtens` type
+"""
+function maximum(A::tens)
+  return maximum(A.T)
+end

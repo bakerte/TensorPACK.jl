@@ -31,7 +31,12 @@ function krylov(invec::R...;Lenv::TensType=[0],Renv::TensType=[0],maxiter::intTy
   psi = invec[1]
   keepvec = Base.tail(invec)
 
-  psi = div!(psi,norm(psi))
+  normpsi = norm(psi)
+  if isapprox(normpsi,0)
+    error("Input vector for lanczos has a norm of zero. Can not complete Lanczos iterations")
+  end
+
+  psi = div!(psi,normpsi)
   prevpsi = psi
 
   convec = ntuple(w->w,ndims(psi))
@@ -47,13 +52,13 @@ function krylov(invec::R...;Lenv::TensType=[0],Renv::TensType=[0],maxiter::intTy
   while (n < maxiter || maxiter == 0) && n < mindim && betatest
     n += 1
 
-    if eigvecs
+#    if eigvecs
       if n > length(psisave)
         push!(psisave,psi)
       else
         psisave[n] = psi
       end
-    end
+#    end
 
     Hpsi = updatefct(Lenv,Renv,psi,keepvec)
 
@@ -86,8 +91,6 @@ function krylov(invec::R...;Lenv::TensType=[0],Renv::TensType=[0],maxiter::intTy
         beta[n] = betaval
       end
       psi = div!(Hpsi,betaval)
-
-#      println("step: $n ",alpha[n]," ",beta[n])
 
       if reorth
         rpsi = reshape(psi,size(psi)...,1)
@@ -179,7 +182,11 @@ function lanczos(invec::R...;Lenv::TensType=[0],Renv::TensType=[0],maxiter::intT
       end
     end
   else
-    retpsi = U
+    if p < length(psisave)
+      psisave = psisave[1:p]
+    end
+    retpsi = psisave
+#    retpsi = typeof(invec[1]) <: denstens ? tens(U) : U
   end
 
 #  println("Lanczos result:")

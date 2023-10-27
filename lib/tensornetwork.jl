@@ -679,6 +679,16 @@ function println(A::TNobj;show::Integer=10)
   nothing
 end
 
+import Base.minimum
+function minimum(A::nametens)
+  return minimum(A.N)
+end
+
+import Base.maximum
+function maximum(A::nametens)
+  return maximum(A.N)
+end
+
 import Base.size
 """
     size(A[,w=])
@@ -1077,6 +1087,10 @@ function rename!(A::nametens,inds::Array{Array{W,1},1}) where W <: Any
     end
   end
   nothing
+end
+
+function rename!(A::nametens,inds::Array{W,1}) where W <: Any
+  rename!(A,[inds])
 end
 #=            one = ["s1",["i1",false]]
           two = ["s2",["i2",false]]

@@ -195,6 +195,19 @@ end
 Contraction function (`alpha`*`A`*`B`+`beta`*`Z`) and can conjugate A (`conjA`) or B (`conjB`). Does not construct return tensor, just outputs a vector.
 """
 function maincontractor!(conjA::Bool,conjB::Bool,A::densTensType,iA::intvecType,B::densTensType,iB::intvecType,Z::densTensType...;alpha::Number=1,beta::Number=1)
+
+
+  if ndims(A) < maximum(iA)
+    error("too many indices input ",size(A)," for ",iA)
+  end
+
+  if ndims(B) < maximum(iB)
+    error("too many indices input ",size(B)," for ",iB)
+  end
+
+  if prod(w->size(A,iA[w]),1:length(iA)) != prod(w->size(B,iB[w]),1:length(iB))
+    error("not matching sizes for input tensors to contraction [A size ",size(A)," on indices ",iA," and B size ",size(B)," on ",iB,"]")
+  end
   
 #  testval = prod(w->size(A,iA[w]),1:length(iA))==prod(w->size(B,iB[w]),1:length(iB))
 #  @test(testval,"not matching sizes for input tensors to contraction")
