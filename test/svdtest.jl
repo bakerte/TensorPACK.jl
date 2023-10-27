@@ -39,13 +39,13 @@ end
 
 rA = reshape!(A,prod(size(A)[Linds]),prod(size(A)[Rinds]))
 
-@time U,D,V = svd(rA)
+U,D,V = svd(rA)
 @time svd(rA)
 println()
 println("...now truncating svd")
-@time U,D,V = svd(rA,m=40)
+U,D,V = svd(rA,m=40)
 @time U,D,V = svd(rA,m=40)
 
 #U,D,V = svd(A,[Linds,Rinds])
-#@time svd(A,[Linds,Rinds])
+#@btime svd(A,[Linds,Rinds])
 

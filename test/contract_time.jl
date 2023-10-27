@@ -35,9 +35,15 @@ for w in numdims
 
   local Ltup = ntuple(i->i+S,S)
   local Rtup = ntuple(i->i,S)
+
+  if d < 10
+    local C = contract(A,Ltup,B,Rtup)
+    local C = contract(A,Rtup,B,Ltup)
+  end
+
   
-  @time C = contract(A,Ltup,B,Rtup)
-  @time C = contract(A,Rtup,B,Ltup)
+  @time contract(A,Ltup,B,Rtup)
+  @time contract(A,Rtup,B,Ltup)
   println()
 end
 
@@ -62,7 +68,7 @@ B = deepcopy(A) #B = rand(QNs,Arrows)
 #checkflux(A)
 
 @time C = contract(A,[2],B,[1])
-@time C = contract(A,[2],B,[1])
+@btime C = contract(A,[2],B,[1])
 println()
 
 QNs = [chi,chi,chi,chi]
@@ -82,7 +88,7 @@ B = deepcopy(A)
 
 #H = rand(QNs,Arrows)
 @time C = contract(A,[3,4],B,[1,2])
-@time C = contract(A,[3,4],B,[1,2])
+@btime C = contract(A,[3,4],B,[1,2])
 
 println()
 
@@ -101,8 +107,8 @@ A = rand(QNs,Arrows)
 B = deepcopy(A)
 
 @time C = contract(A,[4,5,6],B,[1,2,3])
-@time C = contract(A,[4,5,6],B,[1,2,3])
-@time C = contract(B,[1,2,3],A,[4,5,6])
+@btime C = contract(A,[4,5,6],B,[1,2,3])
+@btime C = contract(B,[1,2,3],A,[4,5,6])
 println()
 
 QNs = [chi,chi,chi,chi,chi,chi,chi,chi]
@@ -120,8 +126,8 @@ A = rand(QNs,Arrows)
 B = deepcopy(A)
 
 @time C = contract(A,[5,6,7,8],B,[1,2,3,4])
-@time C = contract(A,[5,6,7,8],B,[1,2,3,4])
-@time C = contract(B,[1,2,3,4],A,[5,6,7,8])
+@btime C = contract(A,[5,6,7,8],B,[1,2,3,4])
+@btime C = contract(B,[1,2,3,4],A,[5,6,7,8])
 println()
 
 QNs = [chi,chi,chi,chi,chi,chi,chi,chi,chi,chi]
@@ -139,9 +145,9 @@ A = rand(QNs,Arrows)
 B = deepcopy(A)
 
 @time C = contract(A,[6,7,8,9,10],B,[1,2,3,4,5])
-@time C = contract(A,[6,7,8,9,10],B,[1,2,3,4,5])
+@btime C = contract(A,[6,7,8,9,10],B,[1,2,3,4,5])
 
-@time C = contract(B,[1,2,3,4,5],A,[6,7,8,9,10])
+@btime C = contract(B,[1,2,3,4,5],A,[6,7,8,9,10])
 println()
 
 QNs = [chi,chi,chi,chi,chi,chi,chi,chi,chi,chi,chi,chi]
@@ -159,9 +165,9 @@ A = rand(QNs,Arrows)
 B = deepcopy(A)
 
 @time C = contract(A,[7,8,9,10,11,12],B,[1,2,3,4,5,6])
-@time C = contract(A,[7,8,9,10,11,12],B,[1,2,3,4,5,6])
+@btime C = contract(A,[7,8,9,10,11,12],B,[1,2,3,4,5,6])
 
-@time C = contract(B,[1,2,3,4,5,6],A,[7,8,9,10,11,12])
+@btime C = contract(B,[1,2,3,4,5,6],A,[7,8,9,10,11,12])
 println()
 
 
@@ -180,7 +186,7 @@ A = rand(QNs,Arrows)
 B = deepcopy(A)
 
 @time C = contract(A,[8,9,10,11,12,13,14],B,[1,2,3,4,5,6,7])
-@time C = contract(A,[8,9,10,11,12,13,14],B,[1,2,3,4,5,6,7])
+@btime C = contract(A,[8,9,10,11,12,13,14],B,[1,2,3,4,5,6,7])
 println()
 
 #@time C = contract(B,[1,2,3,4,5,6,7],A,[8,9,10,11,12,13,14])

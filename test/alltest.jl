@@ -41,6 +41,7 @@ function testfct(test::Bool,message::String)
     "dense_contract_test.jl",
     "dense_decomposition_test.jl",
     "krylov_test.jl",
+    "strassen_test.jl",
 
     "autodiff_test.jl",
 
@@ -54,7 +55,7 @@ function testfct(test::Bool,message::String)
   
   See also: [`libdir`](@ref)
   """
-  function libtest(;tests::Array{String,1}=tests,dir::String=libdir,path::String=dir*"/../test/")
+  function libtest(;tests::Array{String,1}=tests,dir::String=libdir,path::String=dir*"/test/")
   
     fulltestrecord = Array{Bool,1}(undef,length(tests))
   

@@ -31,17 +31,14 @@ function test_autodiff()
   g = 49 # + 2im
   checkval = Babylonian(g)
 
-  p = init_dualnum(g, 1)
+  p = dualnum(g)
   val = Babylonian(p)
-
-  println(checkval," ",val)
 
   p * p
 
   B = p * ones(10,10)
 
   B * B
-
 
   sqrt(p)
 end
