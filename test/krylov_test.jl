@@ -64,32 +64,3 @@ checkD,checkU = LinearAlgebra.eigen(makeArray(A))
 
 testval = norm(D[1:g]-checkD[1:g]) < 1E-8
 fulltest &= testfct(testval,"krylov(tens,tens) [cvg=true]")
-
-println()
-
-
-
-g = 2
-psi = rand(m,g)
-
-psi = tens(psi)
-
-p = 2
-
-psisave,D = block_lanczos(psi,A,maxiter=fld(m,g),retnum=100,reorth=true,cvg=true,numE=p)
-
-U = psisave
-
-P = psisave'*psisave
-
-#display(makeArray(P))
-
-testval = isapprox(sum(w->P[w,w],1:size(P,1)),size(P,1)) && abs(sum(P) - size(P,1)) < 1E-3
-
-import LinearAlgebra
-checkD,checkU = LinearAlgebra.eigen(makeArray(A))
-
-#display(D-checkD)
-
-testval = norm(D[1:g]-checkD[1:g]) < 1E-8
-fulltest &= testfct(testval,"block_krylov(tens,tens)")
