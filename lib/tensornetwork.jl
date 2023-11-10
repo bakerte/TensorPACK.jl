@@ -710,7 +710,7 @@ function size(A::TNobj,w::String)
     p += 1
     condition = A.names[p] != w
   end
-  return size(A.N,w)
+  return size(A.N,p)
 end
 
 """
