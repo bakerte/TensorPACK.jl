@@ -1944,3 +1944,12 @@ function contract(tensors::Vector{nametens{tens{W}, String}}; greedy::Bool = len
 	return contract(graph, greedy = greedy, exclude = exclude)
 
 end
+
+function fullpsi(tensors::network)
+  ret = tensors[1]*tensors[2]
+  for w = 3:length(tensors)
+    ret *= tensors[w]
+  end
+  return ret.N.T
+end
+
