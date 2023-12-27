@@ -295,7 +295,7 @@ end
 Absolute value of a `dualnum`
 """
 abs(x::dualnum) = sqrt(abs2(x))
-
+#=
 """
   makeId(m)
 
@@ -304,7 +304,7 @@ Make identity of `dualnum`s of size `m`
 function makeId(m::Integer)
   return Diagonal(dualnum{W}[dualnum(W) for w = 1:m])
 end
-
+=
 function joindiag(nvars::Integer, args...)
   matr = args[1]
   for i in 1:length(args)-1
