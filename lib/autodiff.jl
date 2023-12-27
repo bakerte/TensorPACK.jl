@@ -4,7 +4,7 @@
 #                              v0.8
 #
 #########################################################################
-# Made by Thomas E. Baker and Aaron Dayton and Matthew R.G. Forbes (2020)
+# Made by Thomas E. Baker and Aaron Dayton (2020)
 # See accompanying license with this program
 # This code is native to the julia programming language (v1.5.4+)
 #
@@ -45,10 +45,10 @@ end
 
 Initializes the `dualnum` type with value `val` and a gradient `grad` (default value 1)
 """
-function dualnum(val::W) where W <: Number
-  return dualnum{W}(val, W(1))
+function dualnum(val::W; grad::W=1) where W <: Number
+  return dualnum{W}(val, grad)
 end
-
+#=
 """
   dualnum(val,grad)
 
@@ -57,7 +57,7 @@ Initializes the `dualnum` type with value `val` and a gradient `grad`
 function dualnum(val::W, grad::W) where W <: Number
   return dualnum{W}(val, grad)
 end
-
+=#
 """
   dualnum(W)
 
