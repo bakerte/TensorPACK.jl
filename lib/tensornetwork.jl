@@ -47,7 +47,7 @@ const nameTens = nametens
 constructor for named tensor from a tensor `Qt` and vector of index names `namez`
 """
 function nametens(Qt::TensType,namez::Array{B,1};regTens::Bool=false)::TNobj where B <: Union{Any,String}
-  newQt = !regTens && typeof(Qt) <: AbstractArray ? tens(Qt) : Qt
+  newQt = (regTens && typeof(Qt) <: AbstractArray) || typeof(Qt) <: qarray ? Qt : tens(Qt)
   return nametens{typeof(newQt),B}(newQt,namez)
 end
 
@@ -929,6 +929,12 @@ end
 Computes the trace of named tensor `A` over indices with 1) the same name and 2) opposite arrowss
 """
 function trace(B::TNobj)
+  if ndims(B) == 2
+    return trace(B.N,[1,2])
+  else
+    error("undefined trace of tensor with rank > 2")
+  end
+  #=
   A = typeof(B) <: nametens ? B : B.T
   vect = Array{intType,1}[]
   for w = 1:length(A.names)
@@ -943,6 +949,7 @@ function trace(B::TNobj)
     end
   end
   return trace(A.N,vect)
+  =#
 end
 
 """
@@ -950,16 +957,39 @@ end
 
 Computes the trace of named tensor `A` with specified `inds` (integers, symbols, or strings--ex: [[1,2],[3,4],[5,6]])
 """
-function trace(A::nametens,inds::Array{Array{W,1},1}) where W <: Union{Any,Integer}
+function trace(A::nametens,inds::Array{W,1}) where W <: Any
   if W <: Integer
-    return trace(A.N,inds)
+    error("Why are you putting integers to trace a nametens? Should it not be strings? Can extract unnamed tensor with A.N or similar")
+#    return trace(A.N,inds)
   else
-    vect = Array{intType,1}[zeros(intType,2) for i = 1:length(inds)]
-    for w = 1:length(A.names)
-      matchindex!(A,vect,inds,w,1)
-      matchindex!(A,vect,inds,w,2)
+
+    vect = Array{intType,1}(undef,2)
+    for a = 1:length(vect)
+      c = 1
+      while inds[a] != A.names[c]
+        c += 1
+      end
+      vect[a] = c
     end
-    return trace(A.N,vect)
+
+    B = trace(A.N,vect)
+
+    newnames = Array{eltype(A.names),1}(undef,length(A.names)-length(vect))
+    w = 0
+    counter = 0
+    while w < length(A.names) && counter < length(newnames)
+#    for w = 1:length(newnames)
+      w += 1
+      if !(w in vect)
+        counter += 1
+        newnames[counter] = A.names[w]
+      end
+    end
+#    newnames = setdiff(A.names,inds)
+
+#    println(newnames)
+
+    return nametens(B,newnames)
   end
 end
 
@@ -980,7 +1010,7 @@ function trace(A::TNobj,inds::Array{W,1}) where W <: Union{Any,Integer}
   return trace(A,[inds])
 end
 export trace
-
+#=
 """
     matchindex!(A,vect,inds,w,q)
 
@@ -992,30 +1022,70 @@ function matchindex!(A::nametens,vect::Array{Array{P,1},1},inds::Array{Array{W,1
   convInds!(A,inds,vect)
   nothing
 end
-
+=#
+#=
 """
     convInds!(A,inds,vect)
 
 converts named indices in `A` to integers; finds only indices specified in `inds` and returns `vect` with integers; does nothing if its only integers
 """
-function convInds!(A::nametens,inds::Array{Array{W,1},1},vect::Array{Array{P,1},1}) where {W <: Union{Any,Integer}, P <: Integer}
+function convInds!(A::nametens,inds::Array{W,1},vect::Array{P,1}) where {W <: Union{Any,Integer}, P <: Integer}
+
+  println(inds," ",vect)
+
+  for a = 1:length(vect)
+    #    for b = 1:length(vect[a])
+#        saveind = a > 1 ? vect[a-1] : 0
+        c = 1
+        while inds[a] != A.names[c] #&& saveind != c
+          c += 1
+        end
+#        for c = 1:length(A.names)
+#          if inds[a] == A.names[c] #&& saveind != c
+            vect[a] = c
+#            saveind = c
+#          end
+#        end
+    #    end
+      end
+#=
+  for a = 1:length(vect)
+    #    for b = 1:length(vect[a])
+#        saveind = a > 1 ? vect[a-1] : 0
+        c = 1
+        while inds[a] == A.names[c] #&& saveind != c
+          c += 1
+        end
+    #    for c = 1:length(A.names)
+#      if inds[a] == A.names[c] && saveind != c
+        vect[a] = c
+#        saveind = c
+#      end
+  end
+  =#
+  println(vect)
+
+
+  #=
   if W <: Integer
     return inds
   end
   for a = 1:length(vect)
-    for b = 1:length(vect[a])
-      saveind = b > 1 ? vect[a][b-1] : 0
-      for c = 1:length(A.names)
-        if inds[a][b] == A.names[c] && saveind != c
-          vect[a][b] = c
-          saveind = c
-        end
+#    for b = 1:length(vect[a])
+    saveind = a > 1 ? vect[a-1] : 0
+    for c = 1:length(A.names)
+      if inds[a] == A.names[c] && saveind != c
+        vect[a] = c
+        saveind = c
       end
     end
+#    end
   end
-  return vect
+  =#
+  nothing
+#  return vect
 end
-
+=#
 """
   swapname!(A,labels)
 
@@ -1203,7 +1273,7 @@ export joinTens
 Names of indices on each site (`.names`) and dimensions of each site (`.dimensions`). Stores meta-data for contraction cost estimation in automatic contraction
 """
 struct Indices
-	names::Vector{String}
+	names::Array{String,1}
 	dimensions::Tuple{intType,Vararg{intType}}
 end
 
@@ -1215,15 +1285,15 @@ end
 
 Returns a dictionary where the edges are they keys and the values are the tensors connected to the vertices
 """
-function connecting_edges(graph::Vector{nametens{tens{W}, String}}) where W <: Number
-	shared_edges = Dict{String, Vector{nametens{tens{W}, String}}}()
+function connecting_edges(graph::Array{nametens{W, String},1}) where W #<: TensType
+	shared_edges = Dict{String, Array{nametens{W, String},1}}()
 
 	for tensor in graph
 		for edge in tensor.names
 			if edge in keys(shared_edges)
 				shared_edges[edge][2] = tensor
 			else
-				shared_edges[edge] = Vector{nametens{tens{Float64}, String}}(undef, 2)
+				shared_edges[edge] = Array{nametens{W, String},1}(undef, 2)
 				shared_edges[edge][1] = tensor
 				shared_edges[edge][2] = tensor
 			end
@@ -1678,6 +1748,8 @@ function update_temp(left::Indices, right::Indices, max_common::Int64)
 		end
 	end
 
+  println(new_names)
+  println(new_dimensions)
 
 	return Indices(new_names, (new_dimensions...,))
 end
@@ -1912,9 +1984,7 @@ function contract!(graph::network; greedy::Bool = false, exclude::Vector{nameten
 	else
 		answer = local_contract(graph, exclude = exclude)
 	end
-
 	return answer
-
 end
 
 
@@ -1926,7 +1996,6 @@ function contract(graph::network; greedy::Bool = false, exclude::Vector{nametens
 	else
 		answer = local_contract(temp_graph, exclude  = exclude)
 	end
-
 	return answer
 
 end
@@ -1942,7 +2011,6 @@ end
 function contract(tensors::Vector{nametens{tens{W}, String}}; greedy::Bool = length(tensors) < greedy_cutoff, exclude::Vector{nametens{tens{W}, String}} = Vector{nametens{tens{Float64}, String}}(undef, 0)) where W <: Number
 	graph = network(tensors)
 	return contract(graph, greedy = greedy, exclude = exclude)
-
 end
 
 function fullpsi(tensors::network)
@@ -1953,3 +2021,20 @@ function fullpsi(tensors::network)
   return ret.N.T
 end
 
+
+function contract(graphs::network...)
+  return contract(network([graphs[w].net for w = 1:length(graphs)]...))
+end
+
+function *(graphs::network...)
+  contract(graphs...)
+end
+
+
+function contract(graphs::network,graph2::nametens)
+  return contract(network([graphs.net...,graph2]))
+end
+
+function *(graphs::network,graph2::nametens)
+  contract(graphs,graph2)
+end
