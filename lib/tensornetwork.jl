@@ -1748,9 +1748,6 @@ function update_temp(left::Indices, right::Indices, max_common::Int64)
 		end
 	end
 
-  println(new_names)
-  println(new_dimensions)
-
 	return Indices(new_names, (new_dimensions...,))
 end
 
