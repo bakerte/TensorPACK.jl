@@ -136,6 +136,16 @@ Diagonal = diagonal
 export Diagonal
 
 """
+   diagm
+
+Alias for `diagonal`
+
+See also: [`diagonal`](@ref)
+"""
+diagm = diagonal
+export diagm
+
+"""
     G = tens([type=Float64])
 
 Initializes an empty tensor `G` with no indices
@@ -2409,9 +2419,17 @@ export undefMat
 creates an identity matrix of integer size `d`
 """
 function eye(;d::intType=2)
-  return zeros(d,d)+LinearAlgebra.I
+  return eye(Float64,d) #zeros(d,d)+LinearAlgebra.I
 end
-export eye
+
+"""
+  eye(type[,d=2])
+
+creates an identity matrix of integer size `d` with type 'type'
+"""
+function eye(type::DataType;d::intType=2)
+  return eye(type,d) #zeros(d,d)+LinearAlgebra.I
+end
 
 """
   eye(d)
@@ -2419,8 +2437,18 @@ export eye
 creates an identity matrix of integer size `d`
 """
 function eye(d::intType)
-  return zeros(d,d)+LinearAlgebra.I
+  return eye(Float64,d) #zeros(d,d)+LinearAlgebra.I
 end
+
+"""
+  eye(type,d)
+
+creates an identity matrix of integer size `d` with type 'type'
+"""
+function eye(type::DataType,d::intType)
+  return diagonal(ones(type,d))
+end
+export eye
 
 import Base.minimum
 """

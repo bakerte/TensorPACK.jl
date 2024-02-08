@@ -47,7 +47,14 @@ const nameTens = nametens
 constructor for named tensor from a tensor `Qt` and vector of index names `namez`
 """
 function nametens(Qt::TensType,namez::Array{B,1};regTens::Bool=false)::TNobj where B <: Union{Any,String}
-  newQt = (regTens && typeof(Qt) <: AbstractArray) || typeof(Qt) <: qarray ? Qt : tens(Qt)
+  if regTens && typeof(Qt) <: AbstractArray
+    newQt = Qt
+  elseif typeof(Qt) <: diagonal
+    newQt = Qt
+  else
+    newQt = tens(Qt)
+  end
+#  newQt = (regTens && typeof(Qt) <: AbstractArray) || typeof(Qt) <: qarray ? Qt : tens(Qt)
   return nametens{typeof(newQt),B}(newQt,namez)
 end
 
@@ -1007,7 +1014,7 @@ end
 Computes the trace of named tensor `A` with specified `inds` (integers, symbols, or strings--ex: [1,2])
 """
 function trace(A::TNobj,inds::Array{W,1}) where W <: Union{Any,Integer}
-  return trace(A,[inds])
+  return trace(A,inds)
 end
 export trace
 #=
