@@ -689,7 +689,7 @@ export position_incrementer!
 Converts `x[index]` to a position stored in `currpos` (parallelized) with tensor size `S`
 
 #Arguments:
-+`currpos::Array{Z,1}`: input position
++`currpos::Array{Array{Z,1},1}`: input position
 +`k::Integer`: current thread for `currpos`
 +`x::Array{Y,1}`: vector of intput integers to convert
 +`index::Integer`: index of input position of `x`
@@ -698,14 +698,31 @@ Converts `x[index]` to a position stored in `currpos` (parallelized) with tensor
 See also: [`pos2ind`](@ref) [`pos2ind!`](@ref)
 """
  function ind2pos!(currpos::Array{Array{X,1},1},k::X,x::Array{X,1},index::X,S::Union{NTuple{N,X},Array{X,1}}) where {X <: Integer, N}
-  currpos[k][1] = x[index]-1
-  @inbounds @simd for j = 1:length(S)-1
-    val = currpos[k][j]
-    currpos[k][j+1] = fld(val,S[j])
-    currpos[k][j] = val % S[j] + 1
-  end
-  @inbounds currpos[k][size(S,1)] = currpos[k][size(S,1)] % S[size(S,1)] + 1
+  ind2pos!(currpos[k],x[index],S)
   nothing
+end
+
+"""
+    ind2pos!(currpos,k,x,index,S)
+
+Converts `x` to a position stored in `currpos` (parallelized) with tensor size `S`
+
+#Arguments:
++`currpos::Array{Z,1}`: input position vector
++`x::Y`: input index to convert
++`S::Array{W,1}`: size of tensor to convert from
+
+See also: [`pos2ind`](@ref) [`pos2ind!`](@ref)
+"""
+function ind2pos!(currpos::Array{X,1},x::X,S::Union{NTuple{N,X},Array{X,1}}) where {X <: Integer, N}
+ currpos[1] = x-1
+ @inbounds @simd for j = 1:length(S)-1
+   val = currpos[j]
+   currpos[j+1] = fld(val,S[j])
+   currpos[j] = val % S[j] + 1
+ end
+ @inbounds currpos[size(S,1)] = currpos[size(S,1)] % S[size(S,1)] + 1
+ nothing
 end
 
 """
@@ -1219,6 +1236,10 @@ end
 
 function searchindex(C::AbstractArray,a::Integer...)
   return searchindex(C,a)
+end
+
+function searchindex(C::LinearAlgebra.Diagonal,a::Integer,b::Integer)
+  return C[a,b]
 end
 
 function searchindex(C::Union{Array{W,N},Diagonal{W}},a::NTuple{N,intType}) where {W <: Number, N}
