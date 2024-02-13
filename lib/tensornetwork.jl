@@ -47,7 +47,7 @@ const nameTens = nametens
 constructor for named tensor from a tensor `Qt` and vector of index names `namez`
 """
 function nametens(Qt::TensType,namez::Array{B,1};regTens::Bool=false)::TNobj where B <: Union{Any,String}
-  if regTens && typeof(Qt) <: AbstractArray
+  if (regTens && typeof(Qt) <: AbstractArray) || typeof(Qt) <: qarray
     newQt = Qt
   elseif typeof(Qt) <: diagonal
     newQt = Qt
