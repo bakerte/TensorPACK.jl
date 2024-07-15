@@ -7,4 +7,4 @@ Troubleshooting: bakerte@uvic.ca
 
 As of `v0.6.0` there is now full documentation for all functions! Typing `?` followed by a function name will give documentation on most functions.
 
-We are currently beta-testing v1.0. Please feel free to send any critiques or comments so we can incorporate them before the initial launch.
+We are currently beta-testing `v1.0`. Please feel free to send any critiques or comments so we can incorporate them before the initial launch.
