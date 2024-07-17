@@ -111,7 +111,7 @@ for w = 1:length(files)
 end
 
 subdir = "methods/"
-files = ["rand.jl","zeros.jl","ones.jl","eye.jl","eltype.jl","size.jl","length.jl","conj.jl","copy.jl","setindex.jl","getindex.jl","reshape.jl","exp.jl","invmat.jl","sqrt.jl","positionindex.jl","tensor_ranges.jl","minmax.jl","transpose.jl","adjoint.jl","directsum.jl","checktype.jl","addmultsubdiv.jl","sum.jl","norm.jl","convIn.jl","permute.jl","tensorcombination.jl","display.jl","print.jl","nametens.jl","ndims.jl","dual.jl","rename.jl","swapname.jl","joinTens.jl","dualnum.jl","swapgate.jl","det.jl"]
+files = ["rand.jl","zeros.jl","ones.jl","eye.jl","eltype.jl","root.jl","size.jl","length.jl","conj.jl","copy.jl","setindex.jl","getindex.jl","reshape.jl","exp.jl","invmat.jl","sqrt.jl","positionindex.jl","tensor_ranges.jl","minmax.jl","transpose.jl","adjoint.jl","directsum.jl","checktype.jl","addmultsubdiv.jl","sum.jl","norm.jl","convIn.jl","permute.jl","tensorcombination.jl","display.jl","print.jl","nametens.jl","ndims.jl","dual.jl","rename.jl","swapname.jl","joinTens.jl","dualnum.jl","swapgate.jl","det.jl"]
 for w = 1:length(files)
    include(libpath*subdir*files[w])
 end
