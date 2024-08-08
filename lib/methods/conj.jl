@@ -232,7 +232,3 @@ function conj(x::dualnum)
   g = conj(x.grad)
   return dualnum(r, g)
 end
-
-
-conj!(x::dualnum) = conj(x)
-
