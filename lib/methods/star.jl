@@ -35,13 +35,6 @@ function *(x::dualnum, y::Number)
 end
 *(y::Number, x::dualnum) = x*y
 
-function *(A::dtens,B::dtens)
-  C = A[0]*B[0]
-  dC = A[0]*B[1] 
-  dC += A[1]*B[0]
-  return dtens(C,dC)
-end
-
 function *(A::Matrix{dualnum},B::dualnum)
   C = Array{dualnum,2}(undef,size(A,1),size(A,2))
   for y = 1:size(A,2)
