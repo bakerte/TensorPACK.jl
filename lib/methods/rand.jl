@@ -9,7 +9,7 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-import Base.rand
+
 """
     G = rand(A)
 
@@ -28,7 +28,6 @@ end
 
 
 
-import Base.rand
 """
     rand([DataType,]A[,arrows])
 

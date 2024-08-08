@@ -9,8 +9,8 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-import LinearAlgebra.size
-import Base.size
+
+
 """
   G = size(A)
 
@@ -45,7 +45,6 @@ end
 
 
 
-import Base.size
 """
     size(A[,w=])
 
@@ -69,7 +68,6 @@ function size(A::TNobj,w::String)
   return size(A.N,p)
 end
 
-import Base.size
 function size(A::dtens,i)
   return size(A[0],i)
 end
@@ -78,8 +76,6 @@ function size(A::dtens)
   return size(A[0])
 end
 
-import LinearAlgebra.size
-import Base.size
 """
     size(A[,i])
 

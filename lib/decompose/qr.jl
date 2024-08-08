@@ -138,7 +138,7 @@ The remaining outputs match `svd` and `eigen`
 
 See also: [`svd`](@ref) [`eigen`](@ref)
 """
-function qr(QtensA::Qtens{W,Q};a::Integer=1,b::Integer=1,leftflux::Bool=false,decomposer::Function=libqr) where {W <: Number, Q <: Qnum}
+function qr(QtensA::Qtens{W,Q};a::Integer=size(QtensA,1),b::Integer=size(QtensA,2),leftflux::Bool=false,decomposer::Function=libqr) where {W <: Number, Q <: Qnum}
   Rsize = QtensA.size
   Linds = Rsize[1]
   Rinds = Rsize[2]
@@ -221,6 +221,10 @@ function qr(QtensA::Qtens{W,Q};a::Integer=1,b::Integer=1,leftflux::Bool=false,de
 end
 export qr
 
+function libqr(QtensA::Qtens{W,Q},a::Integer,b::Integer) where {W <: Number, Q <: Qnum}
+  return qr(QtensA,a=a,b=b)
+end
+
 """
     Q,R,0.,1. = qr!(A[,decomposer=libqr!,a=size(A,1),b=size(A,2),leftflux=false])
 
@@ -244,6 +248,10 @@ function qr!(QtensA::Qtens{W,Q};leftflux::Bool=false,a::Integer=1,b::Integer=1,d
   return qr(QtensA,leftflux=leftflux,decomposer=decomposer,a=a,b=b)
 end
 export qr!
+
+function libqr!(QtensA::Qtens{W,Q},a::Integer,b::Integer) where {W <: Number, Q <: Qnum}
+  return qr(QtensA,a=a,b=b)
+end
 
 
 """

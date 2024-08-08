@@ -1,4 +1,4 @@
-import Base.length
+
 """
   G = length(M)
 
@@ -15,7 +15,6 @@ function length(H::bigvec)
 end
 
 
-import ..Base.length
 function length(Qts::TNnetwork)
   return length(Qts.net)
 end

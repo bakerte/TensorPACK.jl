@@ -168,12 +168,6 @@ function eye(A::Array{W,N},iA::Integer...) where {W <: Number,N}
 end
 export eye
 
-
-
-
-
-
-#  import ..tensor.makeId
 """
     eye(A,iA)
 

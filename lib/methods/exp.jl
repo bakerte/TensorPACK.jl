@@ -9,6 +9,7 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
+
 """
   exp!(A,prefactor)
 
@@ -56,7 +57,6 @@ function exp!(A::tens{W}) where W <: Number
 end
 export exp!
 
-import Base.exp
 function exp(A::Array{W,2},prefactor::Number) where W <: Number
 #  if W <: Real && typeof(prefactor) <: Real
     newexpA = copy(A)
@@ -152,7 +152,6 @@ function exp!(C::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   return exp!(C,W(1))
 end
 
-import Base.exp
 function exp(C::Qtens{W,Q},prefactor::Number) where {W <: Number, Q <: Qnum}
   A = changeblock(C,C.currblock)
 

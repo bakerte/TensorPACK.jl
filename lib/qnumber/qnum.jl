@@ -16,7 +16,7 @@ import Base.>=
 import Base.==
 import Base.!=
 import Base.<=
-import Base.+
+#import Base.+
 import Base.inv
 import Base.isequal
 import Base.isless

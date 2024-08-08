@@ -26,7 +26,6 @@ function sqrt!(M::diagonal{W}) where W <: Number
 end
 export sqrt!
 
-import Base.sqrt
 """
   G = sqrt(M)
 
@@ -42,7 +41,6 @@ function sqrt(M::diagonal{W}) where W <: Number
   return sqrt!(copy(M))
 end
 
-import Base.abs
 function abs(x::Number,a::Number)
   return abs(x)
 end
@@ -65,7 +63,6 @@ function sqrtabs!(M::diagonal{W}) where W <: Number
 end
 export sqrt!
 
-import Base.sqrt
 """
   G = sqrt(M)
 
@@ -83,7 +80,6 @@ function sqrtabs(M::diagonal{W}) where W <: Number
 end
 
 
-import Base.sqrt
 """
     sqrt(A)
 
@@ -96,7 +92,6 @@ function sqrt(A::TNobj;root::Number=0.5)
   return sqrt!(B,root=root)
 end
 
-#  import ..TENPACK.sqrt!
 """
     sqrt!(A)
 
@@ -134,3 +129,9 @@ function sqrtabs!(A::TNobj;root::Number=0.5)
   return A
 end
 
+"""
+  sqrt(x)
+
+Square-root of a `dualnum`
+"""
+sqrt(x::dualnum) = x^0.5

@@ -1,5 +1,4 @@
 
-import LinearAlgebra.norm
 """
   G = norm(A)
 
@@ -38,7 +37,6 @@ function norm(A::AbstractArray{W}) where W <: dualnum
   return Base.sqrt(total)
 end
 
-import LinearAlgebra.norm
 """
     norm(A)
 
@@ -48,3 +46,18 @@ function norm(QtensA::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   return real(metricdistance(QtensA,power=2,fct=abs))
 end
 export norm
+
+function norm!(M::TensType)
+  return div!(M,norm(M))
+end
+export norm!
+
+
+
+function norm(A::Vector{dualnum})
+  total = 0
+  for x in A
+    total += x.real^2
+  end
+  return Base.sqrt(total)
+end

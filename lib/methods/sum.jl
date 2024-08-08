@@ -1,4 +1,5 @@
-import Base.sum
+
+
 """
   G = sum(A)
 
@@ -33,7 +34,6 @@ function metricdistance(D::Qtens{W,Q};power::Number=1,fct::Function=identity) wh
   return powersums^(1/power)
 end
 
-import Base.sum
 """
     sum(A)
 

@@ -1708,6 +1708,8 @@ end
 #>--------|     library multiply     |---------<
 #         +--------------------------+
 
+const strassen_bool = true
+
 function libmult(transA::AbstractChar,transB::AbstractChar,A::TensType,B::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer)
   alpha = typeof(eltype(A)(1)*eltype(B)(1))(1)
   return libmult(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
@@ -1715,12 +1717,21 @@ end
 
 
 function libmult(transA::AbstractChar,transB::AbstractChar,alpha::Number,A::TensType,B::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer)
-  out = matmul(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
+  if strassen_bool
+    out = matmul(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
+  else
+    out = strassen(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
+  end
   return out
 end
 
 function libmult(transA::AbstractChar,transB::AbstractChar,alpha::Number,A::TensType,B::TensType,beta::Number,Z::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer)
-  out = matmul(transA,transB,alpha,A,B,beta,Z,Lsize,innersizeL,innersizeR,Rsize)
+  if strassen_bool
+    out = matmul(transA,transB,alpha,A,B,beta,Z,Lsize,innersizeL,innersizeR,Rsize)
+  else
+    out = strassen(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
+    tensorcombination!(out,Z,alpha=(typeof(beta)(1),beta))
+  end
   return out
 end
 

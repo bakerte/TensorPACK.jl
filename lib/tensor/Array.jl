@@ -9,7 +9,6 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-import Base.Array
 """
     G = Array(M)
 

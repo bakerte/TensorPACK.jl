@@ -10,9 +10,9 @@
 #
 
 """
-    root(fct,x0[,niter=1000,tol=1E-9,m=1,dstart=10_000])
+    a = root(fct,x0[,niter=1000,tol=1E-9,m=1,dstart=10_000])
 
-Newton's root finding method for an input function `fct` (evaluated on a position input only) and starting point `x0`; note that the function must allow for automatic differentiation allowed in the library to be used
+Newton's root finding method for an input function `fct` (evaluated on a position input only) and starting point `x0`; note that the function must allow for automatic differentiation allowed in the library to be used; outputs `a` the numerical estimate for the root
 
 #Inputs:
 + `fct`: Function to evaluate over

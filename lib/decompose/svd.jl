@@ -707,8 +707,11 @@ Generates svd decomposition of named tensor `A` according to `order`; same outpu
 function svd(AA::nametens,order::Array{Array{B,1},1};cutoff::Float64 = 0.,m::Integer = 0,minm::Integer=2,nozeros::Bool=true,power::Number=2,leftflux::Bool=false,mag::Float64=0.,
   effZero::Real=defzero,keepdeg::Bool=false,decomposer::Function=libsvd,name::String="svdind",leftadd::String="L",rightadd::String="R") where B <: String
 
-  left = matchnames(AA,order[1])
-  right = matchnames(AA,order[2])
+  lnames = findnames(AA,order[1])
+  left = matchnames(AA,lnames)
+
+  rnames = findnames(AA,order[2])
+  right = matchnames(AA,rnames)
 
   neworder = Array{intType,1}[left,right]
   leftname = name * leftadd
@@ -721,6 +724,28 @@ function svd(AA::nametens,order::Array{Array{B,1},1};cutoff::Float64 = 0.,m::Int
   TNobjV = nametens(V,vcat([rightname],AA.names[right]))
 
   return TNobjU,TNobjD,TNobjV,truncerr,newmag
+end
+
+
+"""
+    matchnames = findnames(A,names)
+
+Input a tensor with a .names field that finds all matching names on the tensor
+
+See also: [`nameTensType`](@ref) [`svd`](@ref)
+"""
+function findnames(P::nameTensType,names::Array{String,1})
+  matchnames = Array{String,1}(undef,0)
+  for w = 1:length(P.names)
+    p = 0
+    while p < length(names) && names[p+1] != P.names[w]
+      p += 1
+    end
+    if p < length(names)
+      push!(matchnames,names[p+1])
+    end
+  end
+  return matchnames
 end
 
 """
@@ -762,8 +787,11 @@ Generates svd decomposition of directed tensor `A` according to `order`; same ou
 function svd(AA::directedtens,order::Array{Array{B,1},1};cutoff::Float64 = 0.,m::Integer = 0,minm::Integer=2,nozeros::Bool=true,power::Number=2,leftflux::Bool=false,mag::Float64=0.,
   effZero::Real=defzero,keepdeg::Bool=false,decomposer::Function=libsvd,name::String="svdind",leftadd::String="L",rightadd::String="R") where B <: String
 
-  left = matchnames(AA,order[1])
-  right = matchnames(AA,order[2])
+  lnames = findnames(AA,order[1])
+  left = matchnames(AA,lnames)
+
+  rnames = findnames(AA,order[2])
+  right = matchnames(AA,rnames)
 
   neworder = Array{intType,1}[left,right]
   leftname = name * leftadd
@@ -789,7 +817,7 @@ function symsvd(AA::TNobj,order::Array{Array{B,1},1};cutoff::Float64 = 0.,m::Int
   effZero::Real=defzero,keepdeg::Bool=false,name::String="svdind",
                 leftadd::String="L",rightadd::String="R") where B <: String
 
-  U,D,V,truncerr,mag = svd(AA,order,power=power,mag=mag,cutoff=cutoff,m=m,minm=minm,nozeros=nozeros,leftflux=leftflux,keepdeg=keepdeg,decomposer=decomposer)
+  U,D,V,truncerr,mag = svd(AA,order,power=power,mag=mag,cutoff=cutoff,m=m,minm=minm,nozeros=nozeros,leftflux=leftflux,keepdeg=keepdeg,effZero=effZero,name=name,leftadd=leftadd,rightadd=rightadd)
   S1 = sqrt!(D)
   return U*S1,S1*V,truncerr,mag
 end

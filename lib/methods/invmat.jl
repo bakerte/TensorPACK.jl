@@ -19,7 +19,6 @@ function inverse_element(x::Number,zeronum::Real)
   return abs(x) > zeronum ? 1/x : 0.
 end
 =#
-#import Base.inv
 """
   G = invmat!(M[,zero=])
 
@@ -64,7 +63,6 @@ function invmat(M::AbstractMatrix;zeronum::Float64=1E-16)
   return invmat!(copy(M))#,zeronum=zeronum)
 end
 
-#  import .tensor.invmat!
 """
     invmat!(Qt[,zero=])
 

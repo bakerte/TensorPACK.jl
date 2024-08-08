@@ -9,7 +9,7 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-import Base.ones
+
 """
     G = zeros(A)
 
@@ -32,7 +32,6 @@ function ones(R::DataType,A::tens{W}) where W <: Number
 end
 
 
-import Base.ones
 function ones(Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};datatype::DataType=Float64,flux::Q=Q()) where Q <: Qnum
   newQlabels = Array{Q,1}[arrows[a] ? Qlabels[a] : inv.(Qlabels[a]) for a = 1:length(arrows)]
   return Qtens(newQlabels,datatype=datatype,flux=flux,blockfct=ones)

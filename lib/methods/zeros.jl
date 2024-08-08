@@ -9,7 +9,6 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-import Base.zeros
 """
     G = zeros(A)
 
@@ -31,7 +30,6 @@ function zeros(R::DataType,A::tens{W}) where W <: Number
   return tens{R}(zeros(R,size(A)))
 end
 
-import Base.zero
 """
   G = zero(A)
 
@@ -43,7 +41,6 @@ function zero(M::tens{W}) where W <: Number
   return tens{W}(zeros(W,size(M)))
 end
 
-import Base.zero
 """
   zero(x)
 
@@ -56,8 +53,6 @@ end
 
 
 
-
-import Base.zeros
 function zeros(Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};datatype::DataType=Float64,flux::Q=Q()) where Q <: Qnum
   newQlabels = Array{Q,1}[arrows[a] ? Qlabels[a] : inv.(Qlabels[a]) for a = 1:length(arrows)]
   return Qtens(newQlabels,datatype=datatype,flux=flux,blockfct=zeros)
@@ -81,7 +76,6 @@ function zeros(datatype::DataType,currQtens::Qtens{W,Q}) where {W <: Number, Q <
   return Qtens(Qlabels,datatype=datatype,currblock=currQtens.currblock,flux=currQtens.flux,blockfct=zeros)
 end
 
-import Base.zero
   """Like the default function zero(t::Array), return an object with the same properties containing only zeros."""
   function zero(Qt::qarray)
   return zeros(Qt)

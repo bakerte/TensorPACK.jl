@@ -1,4 +1,6 @@
-import Base.copy
+
+
+
 """
   G = copy(M)
 
@@ -32,7 +34,6 @@ function copy(names::String,X::bigvec;ext::String=file_extension,copyext::String
   return copy(names .* X.V,X,ext=ext,copyext=copyext)
 end
 
-import Base.copy
 """
     copy(A)
 
@@ -73,7 +74,6 @@ end
 
 
 
-import Base.copy!
 """
     copy!(Qt)
 
@@ -83,7 +83,6 @@ function copy!(Qt::Qtens{T,Q}) where {T <: Number, Q <: Qnum}
   return Qtens{T,Q}(Qt.size,Qt.T,Qt.ind,Qt.currblock,Qt.Qblocksum,Qt.QnumMat,Qt.QnumSum,Qt.flux)
 end
 
-import Base.copy
 """
     copy(Qt)
 

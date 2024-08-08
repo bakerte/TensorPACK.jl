@@ -1,50 +1,73 @@
-
-
-
+#########################################################################
 #
-# Kiana
+#           Tensor Linear Algebra Package (TENPACK)
+#                          v1.0
+#
+#########################################################################
+# Made by Thomas E. Baker and « les qubits volants » (2024)
+# See accompanying license with this program
+# This code is native to the julia programming language (v1.10.4+)
 #
 
 """
-  Indices
+    Indices
 
-Names of indices on each site (`.names`) and dimensions of each site (`.dimensions`). Stores meta-data for contraction cost estimation in automatic contraction
+Names of indices on each site (`.names`) and dimensions of each site (`.dimensions`). Stores meta-data for contraction cost estimation in automatic contraction.
+
+# Fields:
++ `names::Array{String,1}`: names of the indices of a tensor
++ `dimensions:NTuple{G,intType} where G`: dimension of the indices of a tensor
 """
 struct Indices
 	names::Array{String,1}
 	dimensions::NTuple{G,intType} where G
 end
 
-function contract!(graph::network; exclude::Vector{intType} = intType[])
-	shared_edges, num_connections = makeNeighbourTable(graph)
+"""
+    contract!(graph[,exclude=intType[]])
 
-	if length(graph) == 2
+Contracts a tensor network into a single tensor. The values in `exclude` are the index positions of tensors to not contract. 
+The algorithm will call either `greedy_contract` or `local_contract` depending on the network input.
+"""
+function contract!(graph::network; exclude::Vector{intType} = intType[])
+	shared_edges, num_connections = makeNeighbourTable(graph, exclude=exclude)
+	if ((num_connections+1) < (length(graph.net)-length(exclude)))
+		error("The given network is disjoint (note: will remain error message to indicate when graphs are disjoint; if intended then contract them individually, but this flag will remain to notify)")
+	elseif length(graph) == 2
 		answer = graph[1]*graph[2]
   elseif ((length(graph.net)-num_connections)==1) # checks if the graph is a forest
 		answer = greedy_contract(graph,shared_edges,exclude = exclude)
 	else
 		answer = local_contract(graph, shared_edges,exclude = exclude)
 	end
-
 	return answer
 end
 export contract!
 
-function contract(tensors::W...) where W <: TensType
-	return contract(network(tensors...))
-#	return contract!(temp_graph,exclude=exclude)
-end
+"""
+    contract!(graph[,exclude=intType[]])
 
-# the copy function seems to cause an issue...
-function contract(graph::network; exclude::Vector{intType} = intType[])
-	temp_graph = copy(graph)
-	return contract!(temp_graph,exclude=exclude)
-end
-
+Contracts a array of tensors into a single tensor. The values in `exclude` are the index positions of tensors to not contract. 
+The algorithm will call either `greedy_contract` or `local_contract` depending on the network input.
+"""
 function contract!(tensors::Vector{W}; exclude::Vector{intType} = intType[]) where W <: nametens
 	graph = network(tensors)
 	return contract!(graph, exclude = exclude)
+end
 
+"""
+    contract(graph,[,exclude=intType[]])
+
+Contracts a tensor network into a single tensor. The values in `exclude` are the index positions of tensors to not contract. 
+The algorithm will call either `greedy_contract` or `local_contract` depending on the network input.
+"""
+function contract(tensors::W...) where W <: TensType
+	return contract(network(tensors...))
+end
+
+function contract(graph::network; exclude::Vector{intType} = intType[])
+	temp_graph = copy(graph)
+	return contract!(temp_graph,exclude=exclude)
 end
 
 function contract(tensors::Vector{W}; exclude::Vector{intType} = intType[]) where W <: nametens
@@ -52,23 +75,24 @@ function contract(tensors::Vector{W}; exclude::Vector{intType} = intType[]) wher
 	return contract(graph, exclude = exclude)
 end
 
+
+"""
+    getnames(X)
+
+Gets the names of the indices of a `nametens` tensor.
+"""
 function getnames(X::TNobj)
   return X.names
 end
 
-#function getnames(X::nametens)
-#  return X.names
-#end
-
 # BOTH
 """
+    makeNeighbourTable(G,[,exclude=intType[]])
 
-  makeNeighbourTable(G)
-  
-
-Returns a dictionary where the edges are they keys and the values are the tensors connected to the vertices
+Returns a dictionary where the index names are they keys and the values are the tensors connected to the indices. 
+The values in `exclude` are the index positions of tensors to not include in the dictionary.
 """
-function makeNeighbourTable(graph::network)
+function makeNeighbourTable(graph::network; exclude::Vector{intType} = intType[])
   shared_edges = Dict{String, Array{intType,1}}() # this takes 4 allocations
   tensors = graph.net
   num_connections = 0
@@ -76,22 +100,24 @@ function makeNeighbourTable(graph::network)
   # iterates through each tensor in the network
   for pos in 1:length(tensors)
   	# this is a type instability!!! and changing the below line of current_tensor.names to tensors[pos].names is also unstable
-  	current_tensor = tensors[pos]
 
+  	if !(pos in exclude)
+	  	current_tensor = tensors[pos]
 
-  	# adds the names of the indices
-    for edge in getnames(current_tensor)
-    	# if the index is already in the dictionary then the tensor is connected to another tensor
-      if edge in keys(shared_edges)
-        shared_edges[edge][2] = pos
-        num_connections += 1
-        # if the index is not in the dictionary then the index is free or the corresponding connected tensor is later in the list
-      else
-        shared_edges[edge] = Array{intType,1}(undef, 2) # this takes 1 allocation
-        shared_edges[edge][1] = pos
-        shared_edges[edge][2] = pos
-      end
-    end
+	  	# adds the names of the indices
+	    for edge in getnames(current_tensor)
+	    	# if the index is already in the dictionary then the tensor is connected to another tensor
+	      if edge in keys(shared_edges)
+	        shared_edges[edge][2] = pos
+	        num_connections += 1
+	        # if the index is not in the dictionary then the index is free or the corresponding connected tensor is later in the list
+	      else
+	        shared_edges[edge] = Array{intType,1}(undef, 2) # this takes 1 allocation
+	        shared_edges[edge][1] = pos
+	        shared_edges[edge][2] = pos
+	      end
+	    end
+	  end
   end
   return (shared_edges,num_connections)
 end
@@ -100,7 +126,7 @@ end
 
 
 """
-  get_cost(E)
+    get_cost(E)
 
 Returns the product of all the dimensions of a tensor for given edges `E` (Vector)
 """
@@ -109,21 +135,20 @@ function get_cost(edges::NTuple{G,intType}) where G
 	for edge_dim in edges
 		cost *= edge_dim
 	end
-
 	return cost
 end 
 
 
 """
-  permute_cost(left,right,pos_left,pos_right)
+    permute_cost(left,right,pos_left,pos_right)
 
-Returns the total cost of any permutations from input `Indices` `left` and `right` according to order of the `left` indices with positions `pos_left` and `right` indices with positions `pos_right`
+Returns the total cost of any permutations due to contracting tensors. `left` and `right` correspond to the indices on the left and right tensors respectively.
+'pos_left' and 'pos_right' correspond to the position of the contracted indices on the left and right tensor.
 """
 function permute_cost(left::Indices, right::Indices, pos_left::Vector{intType}, pos_right::Vector{intType}) 
 
 	costA,posA = permute(left, pos_left)
 	costB,posB = permute(right, pos_right)
-
 
 	if !(costA==0)&&!(costB==0)
 		return costA+costB
@@ -136,9 +161,9 @@ end
 
 
 """
-  permute(edges,order)
+    permute(E,position)
 
-Finds the cost of any permutations according to `order`
+Finds the cost of the permutation for a tensor that is being contracted according to `position`. If no permutation is needed then 0 is returned.
 """
 function permute(edges::Indices, position::Array{W,1}) where W <: Integer
 	cost = 1
@@ -164,9 +189,10 @@ end
 
 
 """
-  check_permute(left,right,left_order)
+    check_permute(left,right,left_order)
 
-Checks if a tensor needs to be permuted from input `Indices` `left` and `right` according to order of the `left` indices `left_order`
+Checks if a tensor needs to be permuted from input `Indices`. `left` and `right` are the indices of the tensors to contract and `left_order`
+corresponds to the position of the contracted indices on the left tensor.
 """
 function check_permute(left::Indices, right::Indices, left_order::Vector{intType})
 	last_pos = -1
@@ -192,7 +218,7 @@ function check_permute(left::Indices, right::Indices, left_order::Vector{intType
 			last_pos = index
 		end
 	end
-	return 0
+	return 0 #if nothing in the loop
 end
 
 
@@ -200,9 +226,9 @@ end
 # LOCAL
 
 """
-  find_start(G)
+    find_start(G)
 
-Finds the starting tensor to contract onto from a graph `G` (input a as a vector for ease in other functions)
+Finds the starting tensor to contract onto from a graph `G`
 """
 function find_start(graph::network)
 	tensors = graph.net
@@ -239,9 +265,9 @@ end
 # The functions below are used in Permute_alg
 
 """
-  effective_rank(T)
+    effective_rank(dimensions)
 
-Obtains the rank of a `nametens` object (does not count indices with dimension of 1)
+Obtains the rank of a tensor(does not count indices with dimension of 1)
 """
 function effective_rank(dimensions::NTuple{G,intType}) where G
 	nrank = 0
@@ -256,35 +282,29 @@ end
 
 
 """
-  future_start (=3)
+    FUTURE_START (=3)
 
-how many tensors to look into future contractions
+How many tensors to look into future contractions for `local_contract`
 """
-const future_start = 3
+const FUTURE_START = 3
 
 """
-  contract(graph)
+    local_contract(graph,shared_edges,[,exclude=intType[]])
 
-Contracts a tensor network into one tensor for an input `network`
+Contracts a tensor network into a single tensor. The values in `exclude` are the index positions of tensors to not contract. 
 """
 function local_contract(graph::network, shared_edges::Dict{String, Vector{intType}}; exclude::Vector{intType} = intType[])
   num = length(graph)-length(exclude)
   contract_around = false # this should be false at the beginning of the algorithm
 
-  # graph = remove_exclude(graph,exclude,size)
-
-  # shared_edges, num_connections = makeNeighbourTable(graph) # the keys are the index names and the values are the position of the tensors with that index in the graph
-
   start_pos = find_start(graph) # returns the position of start
   shared_edges = update_edges(getnames(graph.net[start_pos]),start_pos,shared_edges)	
-  # # location = findfirst(==(start), graph) 
-  # # deleteat!(graph, location) 
   num -= 1
 
   start = graph.net[start_pos]
 
   initial_start = Indices(getnames(graph.net[start_pos]), size(graph.net[start_pos])) # need this
-  future = future_start # how many tensors we will contract later
+  future = FUTURE_START # how many tensors we will contract later
   next_tensors = Vector{intType}(undef, future) # the position of the tensors to contract next
   num_connecting = Vector{intType}(undef, future) # the number of connecting indices
 
@@ -293,7 +313,7 @@ function local_contract(graph::network, shared_edges::Dict{String, Vector{intTyp
 
   while (num > 0)
     temp_start = Indices(start_names, start_dimensions)
-    future = future_start
+    future = FUTURE_START
 
     if ((num)<future)
       future = num
@@ -308,33 +328,15 @@ function local_contract(graph::network, shared_edges::Dict{String, Vector{intTyp
 
         next_details = find_next(temp_start, start_pos, graph,shared_edges) 
         next_pos = next_details[1]
-
-        # # this means that the graph is disjoint
+        # this means that the network is disjoint
         if next_pos == start_pos
-        #   num_found = length(next_tensors)-future
-        #   if num_found > 0
-        #     next_tensors = next_tensors[1:num_found]
-        #     num_connecting = num_connecting[1:num_found]
-
-        #     temp_start = Indices(start.names, start.N.size)
-        #     answer = best_order(next_tensors, num_connecting, temp_start) 
-
-        #     start = contract_in_order(answer,start,next_tensors)
-        #   end
-
-        #   return start*local_contract(network(graph))
-          error("disjoint graph not supported currently")
+          error("The given network is disjoint")
         end
-
         temp_next = Indices(getnames(graph.net[next_pos]), size(graph.net[next_pos]))
         shared_edges = update_edges(getnames(graph.net[next_pos]),next_pos, shared_edges)
 
         next_tensors[length(next_tensors)-future+1] = next_pos
         num_connecting[length(next_tensors)-future+1] = next_details[2]
-
-        # causes the graph to be changed in place
-        # location = findfirst(==(next), graph)
-        # deleteat!(graph, location)
 
         temp_start = update_temp(temp_start, temp_next, next_details[2]) 
         future -= 1
@@ -354,11 +356,7 @@ function local_contract(graph::network, shared_edges::Dict{String, Vector{intTyp
           num_common = common_info(temp_start, next_pos,graph)[1]
 
           next_tensors[length(next_tensors)-future+1] = next_pos
-          num_connecting[length(next_tensors)-future+1] = num_common 
-
-        #   # this causes the graph to be changed in place
-        #   # location = findfirst(==(next), graph)
-        #   # deleteat!(graph, location)
+          num_connecting[length(next_tensors)-future+1] = num_common
 
           temp_start = update_temp(temp_start, temp_next, num_common)
           future -= 1
@@ -389,9 +387,9 @@ end
 
 
 """
-  find_next(S,T,E)
+    find_next(E,start_pos,G, shared_edges)
 
-Finds the next tensor to contract onto the current tensor given `Indices` `S`, `nametens` `T`, and shared edges (Dictionary) `shared_edges`
+Finds the next tensor to contract given `E`, the tensor located at `start_pos`, `G`, and shared edges (Dictionary) `shared_edges`
 """
 function find_next(temp_start::Indices, start_pos::intType, graph::network, shared_edges::Dict{String, Vector{intType}})
 	new_edges = -1
@@ -449,9 +447,9 @@ end
 
 
 """
-  common_info(S,T)
+    common_info(E,right_tensor_pos,G)
 
-Returns the number of edges in common and the product of the dimensions of the common vertices of `Indices` `S` and for a named tensor `T`
+Returns the number of edges in common and the product of the dimensions of the common vertices of `E` and the tensor found at position `right_tensor_pos`
 """
 function common_info(temp_start::Indices, right_tensor_pos::intType, graph::network)  
 	num_common = 0
@@ -471,9 +469,9 @@ end
 
 
 """
-  update_temp(left,right,max_common)
+    update_temp(left,right,max_common)
 
-Updates the temp starting tensor to include the next contracted tensor for left `Indices` `left`, right `Indices` `right`, and `max_common` which is the number of edges in common between the two vertices
+Updates the temp starting tensor to include the next contracted tensor for `left`, `right`, and `max_common` which is the number of edges in common between the two vertices
 """
 function update_temp(left::Indices, right::Indices, max_common::intType) 
 	new_length = (length(left.names)+length(right.names))-(2*max_common)
@@ -504,9 +502,10 @@ function update_temp(left::Indices, right::Indices, max_common::intType)
 end
 
 """
-  best_order(next_tensors,num_connecting,temp_start)
+    best_order(next_tensors,num_connecting,temp_start,G)
 
-Finds the best order to contract tensors to reduce the cost of permutations. `next_tensors` share an index with the (meta-data for) a `nametens` `temp_start`. `num_connecting` is the number of edges connecting to `temp_start`
+Finds the best order to contract tensors to reduce the cost of permutations. 
+`next_tensors` are the position of the tensors to contract next. `num_connecting` is the number of edges connecting to `temp_start`
 """
 function best_order(next_tensors::Vector{intType}, num_connecting::Vector{intType}, temp_start::Indices, graph::network)
 	temp = graph.net[next_tensors[1]]
@@ -525,9 +524,17 @@ end
 
 
 """
-  best_order_helper(next_tensors,num_connecting,temp_start,cost,order,side,depth)
+    best_order_helper(next_tensors,num_connecting,temp_start,cost,order,side,depth)
 
-Finds the best order to contract tensors of a given network input `next_tensors`. `next_tensors` share an index with the (meta-data for) a `nametens` `temp_start`. `num_connecting` is the number of edges connecting to `temp_start`. `cost` is the cost, `order` is the order of the tensors to be contracted (left or right), `side` is to signal whether to check the left or the right side in the contraction, `depth` is how many tensors deep we search to find the best contraction order.
+Finds the best order to contract tensors of a given network input `next_tensors` (vector of integers specifying the position in the network). 
+
+#Other inputs:
++ `next_tensors` are the position of the tensors to contract next. 
++ `num_connecting` is the number of edges connecting to `temp_start`. 
++ `cost` is the cost of contracting, 
++ `order` is the order of the tensors to be contracted (left or right), 
++ `side` is to signal whether to check the left or the right side in the contraction, 
++ `depth` is how many tensors deep we search to find the best contraction order.
 """
 function best_order_helper(next_tensors::Vector{intType}, num_connecting::Vector{intType}, temp_start::Indices, graph::network,cost::intType, order::String, side::String, depth::intType) 
 
@@ -578,6 +585,11 @@ function best_order_helper(next_tensors::Vector{intType}, num_connecting::Vector
 end
 
 # finds the names and dimensions of common edges between two tensors
+"""
+    find_common_edges(left_edges,right_edges,num_common)
+
+Finds the position of the indices for two tensors that are connected. `left_edges` are the names of the left edges, `right_edges` are the names of the right edges, and `num_common` is the number of common indices between the `left_edges` and the 	`right_edges`
+"""
 function find_common_edges(left_edges::Vector{String}, right_edges::Vector{String}, num_common::intType) 
 	pos_left = Array{intType,1}(undef,num_common)
 	pos_right = Array{intType,1}(undef,num_common)
@@ -596,9 +608,10 @@ function find_common_edges(left_edges::Vector{String}, right_edges::Vector{Strin
 end
 
 """
-  update_edges(next,shared_edges)
+    update_edges(next_names,next_pos,shared_edges)
 
-Removes value in dictionary `shared_edges` in order to grab the first index of the resulting dictionary in a subsequent step (removing costs no extra allocations). `next` is an input tensor that is to be removed.
+Removes value in dictionary `shared_edges` in order to grab the first index of the resulting dictionary in a subsequent step (removing costs no extra allocations). `next_pos` is the position of the input tensor that is to be removed.
+`next_names` are the names of the indices of the tensor to remove
 """
 function update_edges(next_names::Vector{String},next_pos::intType, shared_edges::Dict{String,Vector{intType}})
 	for edge in next_names
@@ -620,10 +633,16 @@ end
 
 
 # GLOBAL
+"""
+    greedy_contract(graph,shared_edges,[,exclude=intType[]])
+
+Contracts a tensor network into a single tensor. The values in `exclude` are the index positions of tensors to not contract. 
+"""
 function greedy_contract(graph::network, shared_edges::Dict{String, Vector{intType}}; exclude::Vector{intType} = intType[])
 
   num_tensors = length(graph.net)-length(exclude)
-  for i in 1:num_tensors-2
+
+  for i in 1:num_tensors-1
 
     shared_edges,num_connections = makeNeighbourTable(graph)
 
@@ -631,6 +650,12 @@ function greedy_contract(graph::network, shared_edges::Dict{String, Vector{intTy
 
     x = to_contract[1]
     y = to_contract[2]
+
+   	if to_contract==(-1,-1)
+   		error("The given network is disjoint")
+
+   	end
+
     new_tensor = graph.net[x]*graph.net[y]
 
     graph.net[x] = new_tensor
@@ -638,10 +663,14 @@ function greedy_contract(graph::network, shared_edges::Dict{String, Vector{intTy
 
   end
 
-  return graph.net[1]*graph.net[2]
+  return graph.net[1]
 end
 
+"""
+    lowest_cost(shared_edges, G)
 
+Find the least expensive contraction within a network `G`
+"""
 function lowest_cost(shared_edges::Dict{String, Vector{intType}},graph::network)
 	min_cost = -1
 	all_keys = keys(shared_edges)
@@ -662,7 +691,7 @@ function lowest_cost(shared_edges::Dict{String, Vector{intType}},graph::network)
 			num_common = val_common(left_details,right_details)
 			common_edges,left_pos,right_pos = find_common_edges(left_details, right_details,num_common)
 
-			basic_cost = (@time get_cost(left_details.dimensions) + get_cost(right_details.dimensions))÷prod(common_edges)
+			basic_cost = (get_cost(left_details.dimensions) + get_cost(right_details.dimensions))÷prod(common_edges)
 			cost_tot1 = basic_cost+permute_cost(left_details,right_details,left_pos,right_pos)
 			cost_tot2 = basic_cost+permute_cost(right_details,left_details,right_pos,left_pos)
 
@@ -684,7 +713,11 @@ function lowest_cost(shared_edges::Dict{String, Vector{intType}},graph::network)
 end
 
 
+"""
+    val_common(left_details,right_details)
 
+Returns the number of indices in common between `left_details` and `right_details`
+"""
 function val_common(left_details::Indices,right_details::Indices)
 	num = 0
 	for edge in left_details.names
@@ -696,9 +729,9 @@ function val_common(left_details::Indices,right_details::Indices)
 end
 
 """
-  find_common_edges(left_edges, right_edges, num_common)
+    find_common_edges(left_edges, right_edges, num_common)
 
-finds the names and dimensions of common edges between two tensors
+Finds the name of common indices, and the positions of the index on the right and left tensor.
 """
 function find_common_edges(left_edges::Indices, right_edges::Indices, num_common::intType) 
 	pos_left = Array{intType,1}(undef,num_common)
@@ -720,45 +753,3 @@ function find_common_edges(left_edges::Indices, right_edges::Indices, num_common
 
 	return name_common,pos_left, pos_right
 end
-
-#=
-function update_common_edges(shared_edges::Dict{String, Vector{intType}},old_left_pos::intType,old_right_pos::intType,result::Indices,left_tensor::Indices, right_tensor::Indices)
-	
-	for edge in left_tensor.names
-		position = shared_edges[edge]
-		pos1 = position[1]
-		pos2 = position[2]
-
-		if ((pos1==old_left_pos)&&(pos2==old_left_pos))||((pos1==old_right_pos)&&(pos2==old_right_pos))
-			position[1] = old_left_pos
-			position[2] = old_left_pos
-
-		elseif (pos1==old_left_pos)||(pos1==old_right_pos)
-			position[1] = old_left_pos
-		else
-			position[2] = old_left_pos
-
-		end
-	end
-
-	for edge in right_tensor.names
-		position = shared_edges[edge]
-		pos1 = position[1]
-		pos2 = position[2]
-
-		if ((pos1==old_left_pos)&&(pos2==old_left_pos))||((pos1==old_right_pos)&&(pos2==old_right_pos))
-			position[1] = old_left_pos
-			position[2] = old_left_pos
-
-		elseif (pos1==old_left_pos)||(pos1==old_right_pos)
-			position[1] = old_left_pos
-		else
-			position[2] = old_left_pos
-
-		end
-	end
-
-	return shared_edges
-
-end
-=#

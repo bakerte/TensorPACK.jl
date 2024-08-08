@@ -127,9 +127,13 @@ The remaining outputs match `svd` and `eigen`
 See also: [`svd`](@ref) [`eigen`](@ref)
 """
 function lq(QtensA::Qtens{W,Q};leftflux::Bool=false,a::Integer=1,b::Integer=1,decomposer::Function=liblq) where {W <: Number, Q <: Qnum}
-  return lq(QtensA,leftflux=leftflux,decomposer=decomposer,a=a,b=b)
+  return qr(QtensA,leftflux=leftflux,decomposer=decomposer,a=a,b=b)
 end
 export lq
+
+function liblq(QtensA::Qtens{W,Q},a::Integer,b::Integer) where {W <: Number, Q <: Qnum}
+  return qr(QtensA,a=a,b=b,decomposer=liblq)
+end
 
 """
     L,Q,0.,1. = lq!(A[,decomposer=liblq!,a=size(A,1),b=size(A,2),leftflux=false])
@@ -154,6 +158,10 @@ function lq!(QtensA::Qtens{W,Q};leftflux::Bool=false,a::Integer=1,b::Integer=1,d
   return qr(QtensA,leftflux=leftflux,decomposer=decomposer,a=a,b=b)
 end
 export lq!
+
+function liblq!(QtensA::Qtens{W,Q},a::Integer,b::Integer) where {W <: Number, Q <: Qnum}
+  return qr(QtensA,a=a,b=b,decomposer=liblq)
+end
 
 """
     L,Q,0.,1. = lq(A,order[,name="lqind",leftadd="L",leftflux=false,decomposer=liblq])

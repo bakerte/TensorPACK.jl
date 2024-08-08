@@ -306,7 +306,6 @@ function contractinds(A::directedtens,B::directedtens)
   return contractinds(A.T,B.T)
 end
 =#
-#  import ..Qtensor.*
 """
     Z = X*Y
 

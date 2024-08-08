@@ -9,7 +9,6 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-import LinearAlgebra.conj!
 """
   G = conj!(A)
 
@@ -24,7 +23,6 @@ function conj!(currtens::tens{W}) where W <: Number
   return currtens
 end
 
-import LinearAlgebra.conj
 """
   G = conj(A)
 
@@ -33,11 +31,11 @@ Conjugates a `denstens` by creating a copy `G`
 See also: [`conj`](@ref) [`denstens`](@ref)`
 """
 function conj(M::tens{W}) where W <: Number
-  if !(W <: Real)
+  if W <: Real
+    out = M
+  else
     newT = LinearAlgebra.conj(M.T)
     out = tens{W}(M.size,newT)
-  else
-    out = M
   end
   return out
 end
@@ -86,8 +84,11 @@ See also: [`conj`](@ref)
 """
 function conj!(A::nametens)
   conj!(A.N)
-  nothing
+  return A
 end
+
+
+
 
 #=
 function conj!(A::nametens)
@@ -106,7 +107,6 @@ function conj!(A::directedtens)
   nothing
 end
 =#
-import LinearAlgebra.conj
 """
     conj(A)
 
@@ -142,6 +142,7 @@ function conj!(A::directedtens)
   @inbounds @simd for w = 1:length(A.arrows)
     A.arrows[w] *= -1
   end
+  conj!(A.N)
   return A
 end
 
@@ -159,16 +160,11 @@ end
 function conj!(A::TNnetwork)
   B = dual!(A)
   @inbounds @simd for w = 1:length(B)
-    for x = 1:length(B[w].arrows)
-      B[w].arrows[x] *= -1
-    end
-    conj!(B[w].N)
-#      B[w].conj = !B[w].conj
+    conj!(B[w])
   end
   return B
 end
 
-import LinearAlgebra.conj
 """
     conj(A)
 
@@ -182,7 +178,6 @@ function conj(currQtens::qarray)
   return Qtens
 end
 
-import LinearAlgebra.conj!
 """
     conj!(A)
 
@@ -210,3 +205,34 @@ function conj!(currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   currQtens.flux = inv(currQtens.flux)
   return currQtens
 end
+
+
+"""
+  conj!(x)
+
+Conjugation (in-place) of a `dualnum`
+"""
+function conj!(x::dualnum{W}) where W <: Number
+  if W <: Complex
+    out = conj(x)
+  else
+    out = x
+  end
+  return out
+end
+
+
+"""
+  conj(x)
+
+Conjugation of a `dualnum`
+"""
+function conj(x::dualnum)
+  r = conj(x.val)
+  g = conj(x.grad)
+  return dualnum(r, g)
+end
+
+
+conj!(x::dualnum) = conj(x)
+

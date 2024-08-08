@@ -438,7 +438,6 @@ function Qtens{Z,Q}() where {Z <: Number,Q <: Qnum}
   return zeros(Z,[[Q()]])
 end
 
-#  import .tensor.convertTens
 """
     Qtens(T,Qt)
 

@@ -1,5 +1,5 @@
 
-import Base.isapprox
+
 """
     isapprox(A,B)
 

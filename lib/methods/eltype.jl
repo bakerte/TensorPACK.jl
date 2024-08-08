@@ -1,4 +1,4 @@
-import Base.eltype
+
 """
   G = eltype(A)
 
@@ -32,7 +32,6 @@ function eltype(X::TNobj)
   return eltype(X.N)
 end
 
-import Base.eltype
 """
     eltype(A)
 
@@ -44,7 +43,13 @@ function eltype(A::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   return W
 end
 
-#  import .tensor.elnumtype
+"""
+    elnumtype(A)
+
+Alias for `eltype` on a `qarray`
+
+See also: [`eltype`](@ref) [`qarray`](@ref)
+"""
 function elnumtype(A::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   return eltype(A)
 end

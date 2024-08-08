@@ -9,7 +9,6 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-import Base.setindex!
 """
   setindex!(B,A,i...)
 
@@ -32,15 +31,24 @@ function setindex!(B::tens{W},A::Array{W,N},a::genColType...) where {W <: Number
   end
   nothing
 end
-#=
-function setindex!(B::Array{W,N},A::diagonal{W},a::genColType...) where {W <: Number, N}
-  for w = 1:length(A)
-#    G = Array(A)
-    B[a...] = A[w]
+
+function setindex!(B::tens{W},A::diagonal{W},a::genColType...) where W <: Number
+  G = Array(B)
+  G[a...] = Array(A)
+  @inbounds @simd for w = 1:length(G)
+    B.T[w] = G[w]
   end
   nothing
 end
-=#
+
+function setindex!(B::Array{W,N},A::diagonal{W},a::genColType...) where {W <: Number, N}
+  G = Array(A)
+  for w = 1:length(A)
+    B[w] = A[w]
+  end
+  nothing
+end
+
 function setindex!(B::Array{W,N},A::tens{W},a::genColType...) where {W <: Number, N}
   G = Array(A)
   B[a...] = G
@@ -59,7 +67,7 @@ end
 =#
 function setindex!(B::tens{W},A::W,a::Integer,b::Integer...) where W <: Number
   index = 0
-  @inbounds @simd for q = length(b)0:-1:1
+  @inbounds @simd for q = length(b):-1:1
     index += b[q]-1
     index *= size(B,q)
   end
@@ -68,12 +76,20 @@ function setindex!(B::tens{W},A::W,a::Integer,b::Integer...) where W <: Number
   nothing
 end
 
- function setindex!(B::tens{W},A::W,a::Integer) where W <: Number
+function setindex!(B::tens{W},A::W,a::Integer) where W <: Number
   @inbounds B.T[a] = A
   nothing
 end
 
- function setindex!(B::diagonal{W},A::W,a::Integer) where W <: Number
+function setindex!(B::diagonal{W},A::W,a::Integer) where W <: Number
+  @inbounds B.T[a] = A
+  nothing
+end
+
+function setindex!(B::diagonal{W},A::W,a::Integer,b::Integer) where W <: Number
+  if a != b
+    error("not defined for loading diagonal on off-diagonal elements...convert to denstens with eye(a,b) [two integers]")
+  end
   @inbounds B.T[a] = A
   nothing
 end
@@ -97,13 +113,11 @@ function setindex!(H::bigvec,A::TensType,i::intType;ext::String=file_extension)
   nothing
 end
 
-import ..Base.setindex!
 function setindex!(Qts::TNnetwork,newTens::TensType,i::Integer)
   return Qts.net[i] = newTens
 end
 
 
-import Base.setindex!
 function setindex!(A::dtens,B::dtens,a::genColType...)
   for w = 1:length(A.d)
     setindex!(B[w-1],A[w-1],a...)
@@ -123,8 +137,6 @@ end
   nothing
 end
 
-
-import Base.setindex!
 function setindex!(A::Qtens{W,Q},B::Qtens{W,Q},vals::genColType...) where {W <: Number, Q <: Qnum}
   C = changeblock(B,A.currblock)
   Asize = size(A)

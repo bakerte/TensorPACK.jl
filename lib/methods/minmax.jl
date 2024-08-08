@@ -1,4 +1,5 @@
-import Base.minimum
+
+
 """
   minimum(T)
 
@@ -8,7 +9,6 @@ function minimum(A::tens)
   return minimum(A.T)
 end
 
-import Base.maximum
 """
   maximum(T)
 
@@ -20,17 +20,14 @@ end
 
 
 
-import Base.minimum
 function minimum(A::TNobj)
   return minimum(A.N)
 end
 
-import Base.maximum
 function maximum(A::TNobj)
   return maximum(A.N)
 end
 
-import Base.minimum
 """
   minimum(T)
 
@@ -44,7 +41,6 @@ function minimum(A::qarray)
   return val
 end
 
-import Base.maximum
 """
   maximum(T)
 

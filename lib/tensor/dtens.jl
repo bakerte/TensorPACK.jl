@@ -26,4 +26,10 @@ Creates a tensor `C` containing both values (`A`) and creates a second tensor of
 function dtens(A::W) where W <: TensType
   return dtens((A,ones(A)))
 end
-export dtens
+
+
+
+
+function dtens(d::W...) where W <: TensType
+  return dtens(d)
+end

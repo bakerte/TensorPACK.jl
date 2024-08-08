@@ -9,7 +9,8 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-import Base.permutedims!
+
+
 """
   G = permutedims!(A,[1,3,2,...])
 
@@ -41,7 +42,6 @@ function permutedims!(M::diagonal{W}, vec::NTuple{N,intType}) where {N, W <: Num
   return M
 end
 
-import Base.permutedims
 """
   G = permutedims(A,[1,3,2,...])
 
@@ -171,8 +171,6 @@ function permutedims(A::tens{W},iA::NTuple{G,intType}) where {W <: Number, G}
   return out
 end
 
-
-import Base.permutedims
 """
     permtuedims(A,order)
 
@@ -187,7 +185,6 @@ end
 
 #differentiate between case for integers (above but wrong code) and for labels
 #get "not labels" for set diff of the labels we know and don't know
-#  import ..Qtensor.permutedims!
 """
     permtuedims!(A,order)
 
@@ -213,8 +210,6 @@ end
 
 
 
-
-import Base.permutedims
 """
     permutedims(A,[1,3,2,...])
 
@@ -228,7 +223,6 @@ function permutedims(currQtens::Qtens{W,Q}, vec::Union{NTuple{N,P},Array{P,1}}) 
   return Qtens
 end
 
-import Base.permutedims!
 """
     permutedims!(A,[1,3,2,...])
 

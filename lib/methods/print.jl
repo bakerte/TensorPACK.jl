@@ -9,6 +9,8 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
+
+
 """
   showTens(Qt[,show=])
 
@@ -28,7 +30,6 @@ function showTens(M::denstens;show::Integer = 4)
 end
 export showTens
 
-import Base.print
 """
     print(A[,show=])
 
@@ -41,7 +42,6 @@ function print(A::denstens;show::Integer = 4)
   nothing
 end
 
-import Base.println
 """
     println(A[,show=])
 
@@ -55,7 +55,6 @@ function println(A::denstens;show::Integer = 4)
   nothing
 end
 
-import Base.println
 """
     println(A[,show=])
 
@@ -74,13 +73,17 @@ function println(A::TNobj;show::Integer=10)
   if typeof(A.N) <: denstens ||  typeof(A.N) <: qarray
     temp = length(A.N.T)
     maxshow = min(show,temp)
-    println("elements = ",A.N.T[1:maxshow])
+    if length(A.N.T) > maxshow
+      println("elements = ",A.N.T[1:maxshow],"... (",length(A.N.T),")")
+    else
+      println("elements = ",A.N.T[1:maxshow])
+    end
   else
     rAA = reshape(A.N,prod(size(A)))
     temp = length(rAA)
     maxshow = min(show,temp)
     if length(rAA) > maxshow
-      println("elements = ",rAA[1:maxshow],"...")
+      println("elements = ",rAA[1:maxshow],"... (",length(rAA),")")
     else
       println("elements = ",rAA[1:maxshow])
     end
@@ -146,7 +149,6 @@ function showQtens(Qtens::qarray;show::Integer = 4)
 end
 export showQtens
 
-import Base.print
 """
     print(A[,show=])
 
@@ -159,7 +161,6 @@ function print(A::qarray...;show::intType = 4)
   nothing
 end
 
-import Base.println
 """
     println(A[,show=])
 

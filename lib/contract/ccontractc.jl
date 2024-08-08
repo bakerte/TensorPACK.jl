@@ -10,11 +10,11 @@
 #
 
 """
-  ccontractc(A,B[,alpha=])
+    ccontractc(A,B[,alpha=])
 
 Similar to contract but 'A' and 'B' are conjugated
 
-See also: ['ccontract'](@ref) ['contractc'](@ref) ['ccontractc'](@ref)
+See also: ['ccontract'](@ref) ['contractc'](@ref) ['contract'](@ref)
 """
 function ccontractc(A::TensType,B::TensType;alpha::Number=eltype(A)(1))
   mA,mB = checkType(A,B)

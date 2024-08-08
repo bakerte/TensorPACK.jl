@@ -173,3 +173,19 @@ export Qtens
 some useful storage types `Union{NTuple{2,Array{intType,1}},Array{Array{intType,1},1}}`
 """
 const currblockTypes = Union{NTuple{2,Array{intType,1}},Array{Array{intType,1},1}}
+
+"""
+    nameTensType
+
+Any tensor with a .names field (`Union{nametens,directedtens}`)
+"""
+const nameTensType = Union{nametens,directedtens}
+export nameTensType
+
+"""
+    nametenstype
+
+Any tensor with a .names field (`Union{nametens,directedtens}`)
+"""
+const nametenstype = nameTensType
+export nametenstype

@@ -9,6 +9,8 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
+
+
 """
   G = reshape!(M,a...[,merge=])
 
@@ -71,7 +73,6 @@ function reshape!(M::tens{W}, S::Union{Array{Array{P,1},1},Tuple};merge::Bool=fa
 end
 export reshape!
 
-import Base.reshape
 """
   G = reshape(M,a...[,merge=])
 
@@ -177,7 +178,6 @@ end
 
 
 
-#  import ..tensor.reshape!
 """
     reshape!(M,a...[,merge=])
 
@@ -224,7 +224,6 @@ end
 
 
 
-import Base.reshape
 """
     reshape!(M,a...[,merge=])
 
@@ -536,7 +535,6 @@ function mergereshape(Qt::Qtens{W,Q};currblock::currblockTypes=equalblocks(Qt)) 
 end
 export mergereshape
 
-#  import ..tensor.unreshape!
 """
     unreshape!(Qt,a...)
 
@@ -564,7 +562,6 @@ function unreshape!(Qt::qarray)
   return unreshape(Qt)
 end
 
-#  import ..tensor.unreshape
 """
     unreshape(Qt,a...)
 

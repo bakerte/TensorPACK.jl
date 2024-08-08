@@ -1,4 +1,4 @@
-import LinearAlgebra.ndims
+
 """
   G = ndims(A)
 
@@ -10,7 +10,6 @@ function ndims(A::denstens)
   return length(size(A))
 end
 
-import Base.ndims
 """
     ndims(A)
 
@@ -33,7 +32,6 @@ function ndims(A::dtens)
 end
 
 
-import LinearAlgebra.ndims
 """
     ndims(A)
 
