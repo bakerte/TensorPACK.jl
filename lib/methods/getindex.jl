@@ -9,7 +9,8 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-import Base.getindex
+
+
 """
   G = getindex(M,a...)
 
@@ -190,7 +191,6 @@ function searchindex(C::Union{Array{W,N},Diagonal{W}},a::NTuple{N,intType}) wher
   return C[a...]
 end
 
-#  import ..tensor.searchindex
 """
     searchindex(C,a...)
 
@@ -207,7 +207,6 @@ end
 
 export searchindex
 
-import Base.lastindex
 """
   G = lastindex(M,i)
 
@@ -224,7 +223,6 @@ function lastindex(Qts::TNnetwork)
 end
 
 #get the last index of a Qtensor (ex: A[:,1:end]...defines "end")
-import Base.lastindex
 """
     lastindex(Qtens,i)
 
@@ -262,12 +260,11 @@ function getindex(A::bigvec,i::Integer)
   return tensorfromdisc(A.V[i])
 end
 
-function getindex(A::bigvec,i::Integer)
-  return tensorfromdisc(A.V[i])
+function getindex(Qts::TNnetwork,i::Integer)
+  return Qts.net[i]
 end
 
-import ..Base.getindex
-function getindex(Qts::TNnetwork,i::Integer)
+function getindex(Qts::TNnetwork,i::UnitRange)
   return Qts.net[i]
 end
 
@@ -302,7 +299,6 @@ end
 
 
 
-import Base.getindex
 """
     A[:,3:6,2,[1,2,4,8]]
 
