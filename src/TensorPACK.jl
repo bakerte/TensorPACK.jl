@@ -45,7 +45,7 @@ const TENPACK = TensorPACK
 export TENPACK
 
    const libdir = @__DIR__
-   const libpath = libdir*"/lib/"
+   const libpath = libdir*"/../lib/"
 
    files = ["imports.jl","banner.jl","types.jl","tensordef.jl","largevector.jl","libalg.jl","isapprox.jl"]
    for w = 1:length(files)
