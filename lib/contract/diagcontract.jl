@@ -152,8 +152,3 @@ function diagcontract!(conjA::Bool,conjB::Bool,A::Diagonal{W},iA::intvecType,B::
 end
 export diagcontract!
 
-#=
-function diagcontract(A::Diagonal{W},iA::intvecType,B::densTensType,iB::intvecType,Z::densTensType...;alpha::Number=eltype(A)(1),beta::Number=eltype(A)(1),inplace::Bool=false) where W <: Number
-  return diagcontract!(A,iA,B,iB,Z...,alpha=alpha,beta=beta,inplace=inplace)
-end
-=#
