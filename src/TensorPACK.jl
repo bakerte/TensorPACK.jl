@@ -77,7 +77,7 @@ export TENPACK
 
 
    subdir = "contract/"
-   files = ["dot.jl","dmul.jl","diagcontract.jl","maincontractor.jl","contract.jl","ccontract.jl","contractc.jl","ccontractc.jl","star.jl","autocontract.jl","trace.jl","strassOPen.jl","strassen.jl","checkcontract.jl"]
+   files = ["dot.jl","dmul.jl","diagcontract.jl","maincontractor.jl","contract.jl","ccontract.jl","contractc.jl","ccontractc.jl","star.jl","autocontract.jl","trace.jl","checkcontract.jl"]
    for w = 1:length(files)
       include(libpath*subdir*files[w])
    end
