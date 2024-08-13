@@ -31,7 +31,6 @@ See also: [`+`](@ref) [`sub!`](@ref) [`mult!`](@ref) [`div!`](@ref)
 function add!(A::W, B::W) where W <: TensType
   return add!(A,B,eltype(B)(1))
 end
-export add!
 
 function add!(A::TNobj,B::TNobj)
   reorder = matchnames(A,B.names)
@@ -42,10 +41,4 @@ function add!(A::TNobj,B::TNobj)
   end
   A.N = add!(A.N,C.N)
   return A
-end
-
-function +(x::dtens, y::dtens)
-  r = x[0] + y[0]
-  g = x[1] + y[1]
-  return dtens(r, g)
 end
