@@ -56,3 +56,20 @@ function +(x::dualnum, y::Number)
   return dualnum(x.val + y, x.grad)
 end
 +(x::Number, y::dualnum) = y+x
+
+
+function +(x::dtens, y::dtens)
+  r = x[0] + y[0]
+  g = x[1] + y[1]
+  return dtens(r, g)
+end
+
+
+
+function +(a::Number, B::TensType)
+  if isapprox(a,0)
+    return B
+  else
+    error("Addition of a tensor by a non-zero number not defined")
+  end
+end
