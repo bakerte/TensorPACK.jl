@@ -31,10 +31,6 @@ function kron(Ns::Integer, Mterm::Tuple{R,S}...;dim::Array{S}=[size(Mterm[(w-1) 
   return final
 end
 
-function kron(Mterm::TensType,i::intType,Ns::intType)
-  return kron(Ns,(Mterm,i))
-end
-
 function kron(M1::TensType,i::intType,Ns::intType)
   return kron(Ns,(M1,i))
 end
