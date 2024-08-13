@@ -1,7 +1,18 @@
 
+
 function ^(A::Diagonal{W},P::B) where {W <: Number, B <: Number}
   C = A.T .^ P
   return Diagonal(C)
+end
+
+function ^(A::tens{W},P::B) where {W <: Number, B <: Number}
+  if B <: Integer
+    C = prod(w->A,1:P)
+  else
+    R = Array(A)
+    C = tens(R^P)
+  end
+  return C
 end
 
 """
