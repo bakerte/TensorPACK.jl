@@ -10,7 +10,7 @@ import Serialization
 import Base.+
 import LinearAlgebra.+
 
-
+import Base.kron
 import Base.^
 
 

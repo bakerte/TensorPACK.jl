@@ -11,3 +11,6 @@ export convertTens
 
 
 export add!
+
+
+#export kron
