@@ -9,8 +9,6 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-
-
 """
   G = reshape!(M,a...[,merge=])
 
@@ -19,15 +17,8 @@ In-place reshape for dense tensors (otherwise makes a copy) with output `G`; can
 See also: [`reshape`](@ref)
 """
 function reshape!(M::tens{W}, S::NTuple{N,intType};merge::Bool=false) where {N, W <: Number}
-  #=
-  newsize = Array{intType,1}(undef,N)
-  @inbounds @simd for w = 1:N
-    newsize[w] = S[w]
-  end
-  =#
-  M.size = S #newsize
-  return M#tens(S,M.T)
-#  return M#tens(S,M.T)
+  M.size = S
+  return M
 end
 
 function reshape!(M::tens{W}, S::intType...;merge::Bool=false) where W <: Number

@@ -13,7 +13,7 @@
 #>--------|  Check contract |------<
 #         +-----------------+
 """
-   checkcontract(A,iA,B,iB[,Z,alpha=1,beta=1])
+    checkcontract(A,iA,B,iB[,Z,alpha=1,beta=1])
 
 Returns nothing if contraction between two `TensType` is valid
 """

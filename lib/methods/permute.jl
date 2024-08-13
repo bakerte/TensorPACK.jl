@@ -12,33 +12,25 @@
 
 
 """
-  G = permutedims!(A,[1,3,2,...])
+    G = permutedims!(A,[1,3,2,...])
 
 Permute dimensions of a Qtensor in-place (no equivalent, but returns value so it can be used identically to `permutedims` on a dense tensor)
 
 See also: [`permutedims`](@ref)
 """
-function permutedims!(M::tens{W}, vec::Array{P,1}) where {W <: Number, P <: intType}
+function permutedims!(M::Union{Array{W,G},tens{W}}, vec::Array{P,1}) where {P <: intType, G, W <: Number}
   return permutedims(M,(vec...,))
 end
 
-function permutedims!(M::tens{W}, vec::NTuple{N,intType}) where {N, W <: Number}
+function permutedims!(M::Union{Array{W,G},tens{W}}, vec::NTuple{N,intType}) where {N, G, W <: Number}
   return permutedims(M,vec)
 end
 
-function permutedims!(M::AbstractArray{W,P}, vec::NTuple{N,intType}) where {N, P, W <: Number}
-  return permutedims(M,vec)
-end
-
-function permutedims!(M::AbstractArray{W,P}, vec::Array{intType,1}) where {P, W <: Number}
-  return permutedims(M,vec)
-end
-
-function permutedims!(M::diagonal{W}, vec::Array{P,1}) where {W <: Number, P <: intType}
+function permutedims!(M::diagonal, vec::Union{Array,Tuple})
   return M
 end
 
-function permutedims!(M::diagonal{W}, vec::NTuple{N,intType}) where {N, W <: Number}
+function permutedims(M::diagonal, vec::Union{Array,Tuple})
   return M
 end
 
@@ -67,15 +59,7 @@ function permutedims(A::Array{W,G},iA::NTuple{G,intType}) where {W <: Number, G}
   return out
 end
 
-function permutedims(M::diagonal{W}, vec::Array{P,1}) where {W <: Number, P <: intType}
-  return M
-end
-
-function permutedims(M::diagonal{W},iA::NTuple{G,intType}) where {W <: Number, G}
-  return M
-end
-
-function permutedims!(P::Array{W,R},A::Union{Array{W,R},tens{W}},iA::NTuple{G,intType},Asizes::NTuple{G,intType},newsizes::NTuple{G,intType}) where {W <: Number, G, R}
+function permutedims!(P::Array{W,R},A::Array{W,R},iA::NTuple{G,intType},Asizes::NTuple{G,intType},newsizes::NTuple{G,intType}) where {W <: Number, G, R}
   startind = 0
   @inbounds while startind < G && iA[startind+1] == startind+1
     startind += 1
@@ -165,7 +149,7 @@ function permutedims(A::tens{W},iA::NTuple{G,intType}) where {W <: Number, G}
 
     permutedims!(P,A.T,iA,Asizes,newsizes)
 
-    vecnewsizes = ntuple(w->newsizes[w],G) #[newsizes[w] for w = 1:G]#
+    vecnewsizes = ntuple(w->newsizes[w],G)
     out = tens{W}(vecnewsizes,P)
   end
   return out

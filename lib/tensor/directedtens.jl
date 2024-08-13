@@ -29,7 +29,7 @@ function directedtens(Qt::nametens) #where W <: TensType
   return directedtens(Qt,arrows)
 end
 
-function directedtens(Qt::nametens,arrows::Array{intType,1};regTens::Bool=false)
+function directedtens(Qt::nametens,arrows::Array{intType,1};regTens::Bool=false,conj::Bool=false)
   if eltype(arrows) != Int8
     arrows = convert(Array{Int8,1},arrows)
   end

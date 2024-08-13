@@ -30,6 +30,6 @@ end
 
 
 
-function dtens(d::W...) where W <: TensType
+function dtens(d::NTuple{2,W}) where W <: TensType
   return dtens(d)
 end

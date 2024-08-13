@@ -57,7 +57,11 @@ function +(x::dualnum, y::Number)
 end
 +(x::Number, y::dualnum) = y+x
 
+"""
+    C = +(A,B)
 
+Add two `dtens` together
+"""
 function +(x::dtens, y::dtens)
   r = x[0] + y[0]
   g = x[1] + y[1]
@@ -65,7 +69,11 @@ function +(x::dtens, y::dtens)
 end
 
 
+"""
+    B = +(a,B)
 
+Adds `a` to `B` only if `a` is 0. Will return the same matrix `B`
+"""
 function +(a::Number, B::TensType)
   if isapprox(a,0)
     return B

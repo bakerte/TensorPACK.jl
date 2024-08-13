@@ -1,5 +1,13 @@
-
-
+#########################################################################
+#
+#           Tensor Linear Algebra Package (TENPACK)
+#                          v1.0
+#
+#########################################################################
+# Made by Thomas E. Baker and « les qubits volants » (2024)
+# See accompanying license with this program
+# This code is native to the julia programming language (v1.10.4+)
+#
 
 function *(val::Number,A::dtens)
   B = copy(A)
@@ -122,11 +130,20 @@ Mutiplies a tensor `A` by a number `num` with output `G`
 
 See also: [`mult!`](@ref)
 """
-function *(num::Number, M::TensType)
-  if !(typeof(num) <: eltype(M))
-    num = convert(eltype(M),num)
+function *(num::T, M::TensType) where T <: Number
+  if !(T <: eltype(M))
+    if T <: Complex && !(eltype(M) <: Complex)
+      aM = convertTens(ComplexF64,M)
+      xnum = ComplexF64(num)
+    else
+      aM = M
+      xnum = convert(eltype(M),num)
+    end
+  else
+    aM = M
+    xnum = num
   end
-  return tensorcombination(M,alpha=(num,))
+  return tensorcombination(aM,alpha=(xnum,))
 end
 
 """
