@@ -26,10 +26,3 @@ Creates a tensor `C` containing both values (`A`) and creates a second tensor of
 function dtens(A::W) where W <: TensType
   return dtens((A,ones(A)))
 end
-
-
-
-
-function dtens(d::NTuple{2,W}) where W <: TensType
-  return dtens(d)
-end
