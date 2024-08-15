@@ -9,6 +9,11 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
+"""
+    B = convertTens(T,A)
+
+Converts any `TensType` `A` into the same `TensType` but with data type `T`
+"""
 function convertTens(T::DataType,A::TensType)
   if typeof(A) <: denstens
     B = tens(T,A)

@@ -82,6 +82,10 @@ function truncate(D::Array{W,1}...;m::Integer=0,minm::Integer=2,mag::Float64=0.,
 
     pstart,pstop,incr = sizeD,1,-1
 
+    if sizeD <= 0
+      error("input a tensor into svd of small enough weight that all of it was truncated")
+    end
+
     if nozeros
       while ordered_bigD[pstart] < effZero
         pstart -= 1

@@ -10,7 +10,7 @@
 #
 
 """
-    abs2(x)
+    y = abs2(x)
 
 Absolute value squared of a `dualnum`
 """
@@ -19,8 +19,17 @@ function abs2(x::dualnum)
 end
 
 """
-    abs(x)
+    y = abs(x)
 
 Absolute value of a `dualnum`
 """
 abs(x::dualnum) = sqrt(abs2(x))
+
+"""
+    y = abs(x,a)
+
+Equivalent to `abs(x)`
+"""
+function abs(x::Number,a::Number)
+  return abs(x)
+end

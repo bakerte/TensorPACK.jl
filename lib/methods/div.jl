@@ -10,7 +10,7 @@
 #
 
 """
-    div!(A,num)
+    B = div!(A,num)
 
 Gives the division of named tensor `A` by number `num`
 
@@ -22,9 +22,9 @@ function div!(A::TNobj,num::Number)
 end
 
 """
-  G = div!(A,x)
+    B = div!(A,x)
 
-Division by a scalar `A/x` (default x = 1) for dense or quantum tensors with output `G`
+Division by a scalar `A/x` (default x = 1) for dense or quantum tensors with output `B`
 
 See also: [`/`](@ref) [`add!`](@ref) [`sub!`](@ref) [`mult!`](@ref)
 """

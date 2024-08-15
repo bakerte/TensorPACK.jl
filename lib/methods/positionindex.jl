@@ -116,7 +116,14 @@ See also: [`pos2ind!`](@ref)
   return x
 end
 
- function pos2ind(currpos::Array{P,1},S::NTuple{G,P}) where {G, P <: Integer}
+"""
+  G = pos2ind(currpos,S)
+
+Generates an index `G` from an input position `currpos` (array) with tensor size `S` (tuple)
+
+See also: [`pos2ind!`](@ref)
+"""
+function pos2ind(currpos::Array{P,1},S::NTuple{G,P}) where {G, P <: Integer}
   x = 0
   @inbounds @simd for i = G:-1:2
     x += currpos[i]-1
@@ -126,6 +133,13 @@ end
   return x
 end
 
+"""
+  G = pos2ind(currpos,S)
+
+Generates an index `G` from an input position `currpos` (array) with tensor size `S` (array)
+
+See also: [`pos2ind!`](@ref)
+"""
 function pos2ind(currpos::NTuple{N,P},S::Array{P,1}) where {N, P <: Integer}
   x = 0
   @inbounds @simd for i = N:-1:2
@@ -157,7 +171,13 @@ end
 export pos2ind!
 
 
+"""
+  G = zeropos2ind(currpos,S,selector)
 
+Generates an index `G` from an input position `currpos` (array, 0-indexed) with tensor size `S` (tuple) but only those elements given in `selector` (tuple)
+
+See also: [`pos2ind!`](@ref)
+"""
 function zeropos2ind(currpos::Array{X,1},S::NTuple{P,X},selector::NTuple{G,X}) where X <: Integer where G where P
   x = 0
   @inbounds @simd for i = G:-1:1
@@ -167,6 +187,11 @@ function zeropos2ind(currpos::Array{X,1},S::NTuple{P,X},selector::NTuple{G,X}) w
   return x+1
 end
 
+"""
+  G = ind2zeropos(vec,S)
+
+Generates positions (output `G`, a matrix where rows are values or column individual vectors) that are zero-indexed based on size `S`
+"""
 function ind2zeropos(vec::Array{X,1},S::NTuple{P,X}) where X <: Integer where P
   currpos = Array{X,2}(undef,P,length(vec))
   @inbounds for k = 1:length(vec)

@@ -20,6 +20,13 @@ function sum(A::denstens)
   return sum(A.T)
 end
 
+"""
+  G = sum(A)
+
+Sum elements of a `TNobj` `A` (ouptut `G`)
+
+See: [`TNobj`](@ref)
+"""
 function sum(R::TNobj)
   return sum(R.N)
 end

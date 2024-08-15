@@ -1,13 +1,18 @@
-
-
-
-
-
+#########################################################################
+#
+#           Tensor Linear Algebra Package (TENPACK)
+#                          v1.0
+#
+#########################################################################
+# Made by Thomas E. Baker and « les qubits volants » (2024)
+# See accompanying license with this program
+# This code is native to the julia programming language (v1.10.4+)
+#
 
 """
     -(A,B)
 
-Subtracts tensor `A` from `B`
+Subtracts two `TNobj`s `A` and `B`
 
 See also: [`sub!`](@ref)
 """
@@ -15,9 +20,16 @@ function -(A::TNobj,B::TNobj)
   return sub!(copy(A),B)
 end
 
+"""
+    -(A,B)
+
+Subtracts two `dtens` `A` and `B`
+
+See also: [`sub!`](@ref)
+"""
 function -(x::dtens, y::dtens)
   r = x[0] - y[0]
-  g = x[1] - y[1]
+  g = sqrt((x[1])^2 + (y[1])^2)
   return dtens(r, g)
 end
 
@@ -26,18 +38,18 @@ end
 ###############
 
 """
-  -(x,y)
+    -(x,y)
 
 Subtraction of two `dualnum`s
 """
 function -(x::dualnum, y::dualnum)
   r = x.val - y.val
-  g = x.grad - y.grad
+  g = sqrt(x.grad^2 + y.grad^2)
   return dualnum(r, g)
 end
 
 """
-  -(x,y)
+    -(x,y)
 
 Subtraction of a `dualnum` and a regular number
 """
@@ -46,10 +58,20 @@ function -(x::dualnum, y::Number)
 end
 -(x::Number, y::dualnum) = y-x
 
+"""
+    -(M)
+
+Negation of a `qarray`
+"""
 function -(M::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   return tensorcombination(M,alpha=(W(-1),))
 end
 
+"""
+    -(x)
+
+Negation of a `dualnum`
+"""
 function -(x::dualnum)
   r = -x.val
   g = -x.grad
@@ -57,7 +79,7 @@ function -(x::dualnum)
 end
 
 """
-  G = -(A,B)
+    G = -(A,B)
 
 Subtracts two tensors `A` and `B` (`A`-`B`) with output `G`
 
@@ -68,7 +90,13 @@ function -(A::TensType, B::TensType)
   return tensorcombination((eltype(A)(1),eltype(B)(-1)),mA,mB)
 end
 
+"""
+    C = -(A,B)
 
+Subtracts a matrix `A` full of `dualnum`s from a matrix full of numbers `B` with output `G`
+
+See also: [`sub!`](@ref)
+"""
 function -(A::Matrix{dualnum}, B::Matrix{Number})
   derivC = Array{dualnum,2}(undef,shape[1],shape[2])
   for i in 1:shape[1]
@@ -79,6 +107,13 @@ function -(A::Matrix{dualnum}, B::Matrix{Number})
   return derivC
 end
 
+"""
+    C = -(A,B)
+
+Subtracts a matrix `A` full of numbers from a matrix full of `dualnum`s `B` with output `G`
+
+See also: [`sub!`](@ref)
+"""
 function -(A::Matrix{Number}, B::Matrix{dualnum})
   shape = size(A)
 
@@ -91,7 +126,13 @@ function -(A::Matrix{Number}, B::Matrix{dualnum})
   return derivC
 end
 
+"""
+    C = -(A,B)
 
+Subtracts a vector `A` full of `dualnum`s from a vector full of numbers `B` with output `G`
+
+See also: [`sub!`](@ref)
+"""
 function -(A::Vector{dualnum}, B::Vector{<:Number})
   shape = size(A)
 
@@ -102,24 +143,19 @@ function -(A::Vector{dualnum}, B::Vector{<:Number})
   return derivC
 end
 
+"""
+    C = -(A,B)
+
+Subtracts a vector `A` full of numbers from a vector full of `dualnum`s `B` with output `G`
+
+See also: [`sub!`](@ref)
+"""
 function -(A::Vector{Number}, B::Vector{dualnum})
   shape = size(A)
 
   derivC = Array{dualnum,1}(undef,shape[1])
   for i in 1:shape[1]
     derivC[i] = A[i] - B[i]
-  end
-  return derivC
-end
-
-function poi(A::Matrix{dualnum}, B::Union{Vector{dualnum}, Vector{Float64}})
-  num_variables = length(A[1,1].gradient)
-  derivC = Array{dualnum,2}(undef,size(A,1),size(B,2))
-  for x = 1:size(A,1)
-    derivC[x] = init_dualnum(0, num_variables)
-    for z = 1:size(A,2)
-      derivC[x] += A[x,z]*B[z]
-    end
   end
   return derivC
 end

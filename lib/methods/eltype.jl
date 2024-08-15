@@ -1,3 +1,13 @@
+#########################################################################
+#
+#           Tensor Linear Algebra Package (TENPACK)
+#                          v1.0
+#
+#########################################################################
+# Made by Thomas E. Baker and « les qubits volants » (2024)
+# See accompanying license with this program
+# This code is native to the julia programming language (v1.10.4+)
+#
 
 """
   G = eltype(A)
@@ -8,10 +18,20 @@ function eltype(A::tens{W}) where W <: Number
   return W
 end
 
+"""
+  G = eltype(A)
+
+Returns the element type `G` contained in the `T` field of `diagonal` `A`
+"""
 function eltype(A::diagonal{W}) where W <: Number
   return W
 end
 
+"""
+  G = eltype(A)
+
+Returns the element type `G` contained in the `T` field of a large vector type (`bigvec`) `A`
+"""
 function eltype(op::bigvec)
   return op.type
 end
@@ -28,6 +48,11 @@ function elnumtype(A::tens{W}) where W <: Number
 end
 export elnumtype
 
+"""
+  G = eltype(A)
+
+Returns the element type `G` contained in the `T` field of `TNobj` `A`
+"""
 function eltype(X::TNobj)
   return eltype(X.N)
 end

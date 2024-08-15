@@ -45,13 +45,12 @@ function ^(x::dualnum, y::Number)
   return dualnum(r, g)
 end
 
-
 """
     C = ^(A,B)
 
 Computes `A^B` for a `denstens` matrix `A` by a power `B`
 """
-function ^(A::nametens,P::B) where {W <: Number, B <: Number}
+function ^(A::nametens,P::B) where B <: Number
   @assert(ndims(A)==2)
   return nametens(A.N^P,A.names)
 end

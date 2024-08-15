@@ -30,19 +30,6 @@ See: [`diagonal`](@ref) [`Array`](@ref)
 function Array(M::diagonal{W}) where W <: Number
   return LinearAlgebra.Diagonal(M.T)
 end
-#=
-"""
-    G = Array(M)
-
-Converts (but performs no operation, G=A) on an `Abstract` type
-
-See: [`diagonal`](@ref) [`Array`](@ref)
-"""
-function Array(M::AbstractArray)
-  return M #Array(M)
-end
-=#
-export Array
 
 
 """

@@ -35,6 +35,13 @@ function /(x::dualnum, y::Number)
   return dualnum(r, g)
 end
 
+"""
+    C = /(A,B)
+
+division of a matrix `A` of `dualnum`s by a `dualnum` `B`
+
+See also: [`dualnum`](@ref)
+"""
 function /(A::Matrix{dualnum},B::dualnum)
   C = Array{dualnum,2}(undef,size(A,1),size(A,2))
   for y = 1:size(A,2)
@@ -69,5 +76,4 @@ function /(M::TensType, num::Number)
     P[w] /= num
   end
   return P
-#  return tensorcombination(M,alpha=(num,),fct=/)
 end

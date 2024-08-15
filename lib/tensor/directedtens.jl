@@ -9,16 +9,6 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-#=
-"""
-  directedtens(Qt,arrows)
-
-constructor for named tensor `Qt` and vector of directed arrows `arrows`
-"""
-function directedtens(Qt::nametens{W},arrows::Array{B,1},conj::Bool) where {W <: TensType, B <: Integer}
-  return directedtens(Qt,arrows,conj)
-end
-=#
 """
     A = directedtens(Qt)
 
@@ -56,9 +46,20 @@ constructor for named tensor from a tensor `Qt` and vector of index names `strin
 function directedtens(Qt::T,namez::String,arrows::Array{B,1};regTens::Bool=false,conj::Bool=false) where {T <: TensType, B <: Integer}
   return directedtens(Qt,namez,conj,arrows)
 end
-export directedtens
+
 #=
 function ndims(Qt::TNobj)
   return length(Qt.N)
+end
+=#
+
+#=
+"""
+  directedtens(Qt,arrows)
+
+constructor for named tensor `Qt` and vector of directed arrows `arrows`
+"""
+function directedtens(Qt::nametens{W},arrows::Array{B,1},conj::Bool) where {W <: TensType, B <: Integer}
+  return directedtens(Qt,arrows,conj)
 end
 =#

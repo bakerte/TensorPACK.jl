@@ -9,7 +9,6 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-
 """
   exp!(A,prefactor)
 
@@ -58,11 +57,7 @@ end
 export exp!
 
 function exp(A::Array{W,2},prefactor::Number) where W <: Number
-#  if W <: Real && typeof(prefactor) <: Real
-    newexpA = copy(A)
-#  else
-#    newexpA = 
-#  end
+  newexpA = copy(A)
   return exp!(newexpA,prefactor)
 end
 

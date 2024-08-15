@@ -88,25 +88,6 @@ function conj!(A::nametens)
 end
 
 
-
-
-#=
-function conj!(A::nametens)
-  conj!(A.N)
-  A.conj = !A.conj
-  return A
-end
-=#
-
-#=
-function conj!(A::directedtens)
-  @inbounds @simd for w = 1:ndims(A)
-    A.arrows[w] = !A.arrows[w]
-  end
-  A.conj = !A.conj
-  nothing
-end
-=#
 """
     conj(A)
 

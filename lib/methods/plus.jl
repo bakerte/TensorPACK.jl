@@ -43,7 +43,7 @@ Addition of two `dualnum`s
 """
 function +(x::dualnum, y::dualnum)
   r = x.val + y.val
-  g = x.grad + y.grad
+  g = sqrt(x.grad^2 + y.grad^2)
   return dualnum(r, g)
 end
 
@@ -64,7 +64,7 @@ Add two `dtens` together
 """
 function +(x::dtens, y::dtens)
   r = x[0] + y[0]
-  g = x[1] + y[1]
+  g = sqrt(x[1]^2 + y[1]^2)
   return dtens(r, g)
 end
 
@@ -81,3 +81,5 @@ function +(a::Number, B::TensType)
     error("Addition of a tensor by a non-zero number not defined")
   end
 end
+
+

@@ -10,9 +10,9 @@
 #
 
 """
-    A = network(Qts)
+    A = network(Qts[,level=0])
 
-constructor to generates a network of TNobjs that stores a vector of named tensors `Qts`
+constructor to generates a network of `TNobj`s that stores a vector of named tensors `Qts`
 """
 function network(Qts::Tuple;level::Integer=0)
   type = eltype(Qts)
@@ -23,6 +23,11 @@ function network(Qts::Tuple;level::Integer=0)
   return network(altQts,level)
 end
 
+"""
+    A = network(Qts[,level=0])
+
+constructor to generates a network of `Array`s that stores a vector of named tensors `Qts`
+"""
 function network(Qts::W;level::Integer=0) where W <: Array
   return network(Qts,level)
 end
@@ -53,4 +58,3 @@ converts named tensor `Qt` to a network with `i` copied elements not shallow cop
 function network(Qts::W,n::Integer) where W  <: TNobj
 return network{W}(W[copy(Qts) for i = 1:n],0)
 end
-export network

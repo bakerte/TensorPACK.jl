@@ -10,14 +10,19 @@
 #
 
 """
-  G = sqrt!(M)
+    M = sqrt!(M)
 
-Takes the square root of a dense tensor (new tensor created) or Qtensor (in-place) with output `G`
+Takes the square root of a dense tensor (new tensor created) or Qtensor (in-place)
 """
 function sqrt!(M::TensType)
   return tensorcombination!(M,alpha=(0.5,),fct=^)
 end
 
+"""
+    M = sqrt!(M)
+
+Takes the square root of a `diagonal` (new tensor created) or Qtensor (in-place)
+"""
 function sqrt!(M::diagonal{W}) where W <: Number
   @inbounds @simd for i = 1:length(M)
     M[i] = sqrt(M[i])
@@ -37,13 +42,17 @@ function sqrt(M::TensType)
   return tensorcombination(M,alpha=(0.5,),fct=^)
 end
 
+"""
+  G = sqrt(M)
+
+Takes the square root of a `diagonal` tensor with output `G`
+
+See also: [`sqrt`](@ref)
+"""
 function sqrt(M::diagonal{W}) where W <: Number
   return sqrt!(copy(M))
 end
 
-function abs(x::Number,a::Number)
-  return abs(x)
-end
 
 """
   G = sqrtabs!(M)
@@ -55,6 +64,13 @@ function sqrtabs!(M::TensType)
   return tensorcombination!(M,alpha=(0.5,),fct=^)
 end
 
+"""
+  A = sqrtabs!(A)
+
+Takes the square root of the absolute value of a `diagonal` tensor
+
+See also: [`sqrt`](@ref)
+"""
 function sqrtabs!(M::diagonal{W}) where W <: Number
   @inbounds @simd for i = 1:length(M)
     M[i] = sqrt(abs(M[i]))
@@ -64,9 +80,9 @@ end
 export sqrt!
 
 """
-  G = sqrt(M)
+  G = sqrtabs(M)
 
-Takes the square root of a tensor with output `G`
+Takes the square root of the absolute value of a tensor with output `G`
 
 See also: [`sqrt`](@ref)
 """
@@ -75,7 +91,14 @@ function sqrtabs(M::TensType)
   return tensorcombination!(G,alpha=(0.5,),fct=^)
 end
 
-function sqrtabs(M::diagonal{W}) where W <: Number
+"""
+  G = sqrtabs(M)
+
+Takes the square root of the absolute value of a `diagonal` tensor with output `G`
+
+See also: [`sqrt`](@ref)
+"""
+function sqrtabs(M::diagonal)
   return sqrt!(copy(M))
 end
 

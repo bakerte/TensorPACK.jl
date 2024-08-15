@@ -1,6 +1,16 @@
+#########################################################################
+#
+#           Tensor Linear Algebra Package (TENPACK)
+#                          v1.0
+#
+#########################################################################
+# Made by Thomas E. Baker and « les qubits volants » (2024)
+# See accompanying license with this program
+# This code is native to the julia programming language (v1.10.4+)
+#
 
 """
-  G = norm(A)
+    B = norm(A)
 
 Froebenius norm of a `denstens` `A` as output `G`
 
@@ -9,10 +19,9 @@ See: [`denstens`](@ref)`
 function norm(A::denstens)
   return real(norm(A.T))
 end
-export norm
 
 """
-    norm(A)
+    B = norm(A)
 
 Gives the norm of named tensor `A`
 """
@@ -25,7 +34,7 @@ function norm(A::dtens)
 end
 
 """
-  norm(A)
+    B = norm(A)
 
 L2 norm of a vector `A` containing `dualnum`s
 """
@@ -38,22 +47,29 @@ function norm(A::AbstractArray{W}) where W <: dualnum
 end
 
 """
-    norm(A)
+    B = norm(A)
 
 Froebenius norm of a Qtensor
 """
 function norm(QtensA::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   return real(metricdistance(QtensA,power=2,fct=abs))
 end
-export norm
 
+"""
+    B = norm!(A)
+
+Normalizes any input `TensType` `A`
+"""
 function norm!(M::TensType)
   return div!(M,norm(M))
 end
-export norm!
 
 
+"""
+    B = norm(A)
 
+Returns the norm of a vector of `dualnum` elements
+"""
 function norm(A::Vector{dualnum})
   total = 0
   for x in A

@@ -168,10 +168,16 @@ function tens{W}(P::tens{Z}) where {W <: Number, Z <: Number}
   return newtens
 end
 
+"""
+    G = tens(W,P)
+
+Converts tensor `P` into the `denstens` (`G`) and converts to type `W`
+
+See also: [`denstens`](@ref)
+"""
 function tens(W::DataType,P::tens{Z}) where {Z <: Number}
   return tens{W}(P)
 end
-export tens
 
 
 

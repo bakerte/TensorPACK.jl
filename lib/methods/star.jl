@@ -9,6 +9,11 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
+"""
+    B = *(c,A)
+
+Multiplies value `c` onto a `dtens`
+"""
 function *(val::Number,A::dtens)
   B = copy(A)
   B[0] *= val
@@ -43,6 +48,11 @@ function *(x::dualnum, y::Number)
 end
 *(y::Number, x::dualnum) = x*y
 
+"""
+    C = *(A,B)
+
+Multiplies a matrix of `dualnum` `A` onto a `dualnum` `B`
+"""
 function *(A::Matrix{dualnum},B::dualnum)
   C = Array{dualnum,2}(undef,size(A,1),size(A,2))
   for y = 1:size(A,2)
@@ -53,10 +63,20 @@ function *(A::Matrix{dualnum},B::dualnum)
   return C
 end
 
+"""
+    C = *(A,B)
+
+Multiplies a `dualnum` `A` onto a matrix of `dualnum` `B`
+"""
 function *(B::dualnum,A::Matrix{dualnum})
   return A*B
 end
 
+"""
+    C = *(A,B)
+
+Multiplies a matrix of regular numbers `A` onto a `dualnum` `B`
+"""
 function *(A::Matrix{<:Number},B::dualnum)
   C = Array{dualnum,2}(undef,size(A,1),size(A,2))
   for y = 1:size(A,2)
@@ -67,12 +87,23 @@ function *(A::Matrix{<:Number},B::dualnum)
   return C
 end
 
+"""
+    C = *(A,B)
+
+Multiplies a `dualnum` `A` onto a matrix of regular numbers `B`
+"""
 function *(B::dualnum,A::Matrix{<:Number})
   return A*B
 end
 
-# For some reason this will only work with Float64 in the vector and not Number
-function *(A::Matrix{dualnum}, B::Vector{Float64})
+"""
+    C = *(A,B)
+
+Multiplies a matrix of `dualnum` `A` onto a vector of `dualnum` or numbers `B`
+"""
+function *(A::Matrix{dualnum}, B::Vector{W}) where W <: Union{Number, dualnum}
+  # For some reason this will only work with Float64 in the vector and not Number
+
   num_variables = length(A[1,1].gradient)
   derivC = Array{dualnum,2}(undef,size(A,1),size(B,2))
   for x = 1:size(A,1)
@@ -84,6 +115,11 @@ function *(A::Matrix{dualnum}, B::Vector{Float64})
   return derivC
 end
 
+"""
+    C = *(A,B)
+
+Multiplies a matrix of `dualnum` `A` onto a matrix of `dualnum` `B`
+"""
 function *(A::Matrix{dualnum},B::Matrix{dualnum})
   num_variables = length(A[1,1].gradient)
   derivC = Array{dualnum,2}(undef,size(A,1),size(B,2))
@@ -110,6 +146,13 @@ function *(A::TNobj,num::Number)
   return mult!(copy(A),num)
 end
 
+"""
+    *(num,A)
+
+Gives the multiplication of named tensor `A` by number `num` (commutative)
+
+See also: [`mult!`](@ref)
+"""
 function *(num::Number,A::TNobj)
   return A*num
 end

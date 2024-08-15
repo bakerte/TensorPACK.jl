@@ -22,8 +22,14 @@ function transpose(M::TensType)
   return pM
 end
 
+"""
+  transpose(c)
 
-function transpose(A::Union{Matrix{dualnum}, Vector{dualnum}})
+Performs adjoint of a matrix of `dualnum` `A`; assumes rank-2 tensor and flips indices (no conjugation)
+
+See: [`dualnum`](@ref) [`adjoint`](@ref)
+"""
+function transpose(A::Matrix{W}#=Union{Matrix{dualnum}, Vector{dualnum}}=#) where W <: dualnum
   num_vars = length(A[1,1].gradient)
   original_rows = size(A, 1)
   original_cols = size(A, 2)

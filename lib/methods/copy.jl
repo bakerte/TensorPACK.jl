@@ -1,8 +1,16 @@
-
-
+#########################################################################
+#
+#           Tensor Linear Algebra Package (TENPACK)
+#                          v1.0
+#
+#########################################################################
+# Made by Thomas E. Baker and « les qubits volants » (2024)
+# See accompanying license with this program
+# This code is native to the julia programming language (v1.10.4+)
+#
 
 """
-  G = copy(M)
+    G = copy(M)
 
 Copies a `denstens` (output `G`); `deepcopy` is inherently not type stable, so this function should be used instead
 
@@ -12,12 +20,19 @@ function copy(A::tens{W}) where {W <: Number}
   return tens{W}(A.size,copy(A.T))
 end
 
+"""
+    G = copy(M)
+
+Copies a `diagonal` (output `G`); `deepcopy` is inherently not type stable, so this function should be used instead
+
+See: [`diagonal`](@ref) [`deepcopy`](@ref)
+"""
 function copy(A::diagonal{W}) where {W <: Number}
   return diagonal{W}(copy(A.T))
 end
 
 """
-  G = copy(names,X[,ext=".dmrjulia",copyext=ext])
+    G = copy(names,X[,ext=".dmrjulia",copyext=ext])
 
 Copies tensors from `largeEnv` input `X` to a new tensor with a vector of strings `names` representing the new filenames
 """
@@ -30,12 +45,19 @@ function copy(names::Array{String,1},X::bigvec;ext::String=file_extension,copyex
   return newObj
 end
 
+"""
+    B = copy(names,A[,ext=file_extension])
+
+copy any large storage type `A` with new names `names`
+
+See also: [`file_extension`](@ref)
+"""
 function copy(names::String,X::bigvec;ext::String=file_extension,copyext::String=ext)
   return copy(names .* X.V,X,ext=ext,copyext=copyext)
 end
 
 """
-    copy(A)
+    B = copy(A)
 
 Returns a copy of named tensor `A`
 
@@ -46,7 +68,7 @@ function copy(A::nametens)
 end
 
 """
-    copy(A)
+    B = copy(A)
 
 Returns a copy of directed tensor `A`
 
@@ -57,22 +79,27 @@ function copy(A::directedtens)
 end
 
 """
-  copy(A)
+    B = copy(A)
 
-Returns a copy of network of named tensors `A`
+Returns a copy of network of any `TNnetwork` `A`
+
+See also: [`TNnetwork`](@ref)
 """
 function copy(A::TNnetwork)
   return network([copy(A.net[i]) for i = 1:length(A)])
 end
 
 
+"""
+    B = copy(A)
 
+Returns a copy of network of `dtens` `A`
 
+See also: [`dtens`](@ref)
+"""
 function copy(A::dtens)
   return dtens(copy(A[0]),copy(A[1]))
 end
-
-
 
 """
     copy!(Qt)

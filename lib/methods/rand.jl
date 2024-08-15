@@ -12,12 +12,17 @@
 """
     G = rand(A)
 
-Generates a random tensor `G` from inputting another tensor (rank-2) or from quantum number labels
+Generates a random tensor `G` from inputting `denstens` `A` (rank-2) or from quantum number labels
 """
 function rand(rho::tens{W}) where W <: Number
   return tens{W}(rand(W, size(rho)))
 end
 
+"""
+    G = rand(A)
+
+Generates a random tensor `G` from inputting `AbstractArray` `A` (rank-2) or from quantum number labels
+"""
 function rand(rho::AbstractArray{W,N}) where {W <: Number, N}
   return rand(W, size(rho))
 end

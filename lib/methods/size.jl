@@ -12,31 +12,45 @@
 
 
 """
-  G = size(A)
+    G = size(A)
 
 Outputs tuple `G` representing the size of a `denstens` `A` (identical usage to `Array` `size` call)
 
 See also: [`denstens`](@ref) [`Array`](@ref)
 """
-function size(A::tens)
+function size(A::denstens)
   return (A.size...,)
 end
 
+"""
+    G = size(A)
+
+Outputs tuple `G` representing the size of a `diagonal` `A`
+
+See also: [`denstens`](@ref) [`Array`](@ref)
+"""
 function size(A::diagonal)
   return (length(A),length(A))
 end
 
 """
-  G = size(A,i)
+    G = size(A,i)
 
 Gets the size of index `i` of a `denstens` `A` (identical usage to `Array` `size` call) as output `G`
 
 See also: [`denstens`](@ref) [`Array`](@ref)
 """
-function size(A::tens,i::Integer)::intType
+function size(A::denstens,i::Integer)::intType
   return A.size[i]
 end
 
+"""
+    G = size(A,i)
+
+Gets the size of index `i` of a `diagonal` `A` as output `G`
+
+See also: [`denstens`](@ref) [`Array`](@ref)
+"""
 function size(A::diagonal,i::Integer)::intType
   return i == 1 || i == 2 ? length(A) : 1
 end
@@ -46,18 +60,28 @@ end
 
 
 """
-    size(A[,w=])
+    size(A)
 
-Gives the size of named tensor `A` where `w` is an integer or an index label
+Gives the size of `TNobj` `A`
 """
 function size(A::TNobj)
   return size(A.N)
 end
 
+"""
+    size(A,w)
+
+Gives the size of `TNobj` `A` where `w` is the index (integer)
+"""
 function size(A::TNobj,w::Integer)
   return size(A.N,w)
 end
 
+"""
+    size(A,w)
+
+Gives the size of `TNobj` `A` where `w` is the index (String)
+"""
 function size(A::TNobj,w::String)
   condition = true
   p = 0
@@ -68,12 +92,22 @@ function size(A::TNobj,w::String)
   return size(A.N,p)
 end
 
-function size(A::dtens,i)
-  return size(A[0],i)
-end
+"""
+    size(A)
 
+Gives the size of `dtens` `A`
+"""
 function size(A::dtens)
   return size(A[0])
+end
+
+"""
+    size(A,w)
+
+Gives the size of `dtens` `A` where `w` is the index (integer)
+"""
+function size(A::dtens,i::Integer)
+  return size(A[0],i)
 end
 
 """
@@ -85,6 +119,11 @@ function size(A::qarray, i::intType)::intType
   return prod(w->length(A.QnumMat[w]),A.size[i])
 end
 
+"""
+    size(A)
+
+size of `qarray` `A`
+"""
 function size(A::qarray)
   return ntuple(w->size(A,w),ndims(A))
 end

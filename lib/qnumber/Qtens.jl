@@ -9,8 +9,6 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-
-
 """
     leftsummary,rightsummary = LRsummary_invQ(QNsummary,flux)
 

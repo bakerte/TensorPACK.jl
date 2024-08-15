@@ -26,10 +26,9 @@ Finds the determinant of an `Array`
 function det(A::Array)
   return LinearAlgebra.det(A)
 end
-export det
 
 """
-  G = logdet(A)
+    G = logdet(A)
 
 Finds the log-determinant of a `tens`
 """
@@ -38,11 +37,10 @@ function logdet(A::tens)
 end
 
 """
-  G = logdet(A)
+    G = logdet(A)
 
 Finds the log-determinant of an `Array`
 """
 function logdet(A::Array)
   return LinearAlgebra.logdet(A)
 end
-export logdet

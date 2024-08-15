@@ -52,40 +52,54 @@ function dualnum(W::DataType)
   return dualnum{W}(W(0),W(1))
 end
 
+"""
+  dualnum([,type=Float64])
 
-
-function dualnum_zeros(indeces::Integer, nvars::Integer)
-  z = dualnum[]
-  for i in 1:indeces
-    append!(z, [init_dualnum(0, nvars)])
-  end
-  return z
-end
-
-function dualnum_zeros(rows::Integer, cols::Integer, nvars::Integer)
-  zarray = dualnum_zeros(rows, nvars)
-  zmatrix = zarray
-  for c in 2:cols
-    zmatrix = hcat(zmatrix, zarray)
-  end
-  return zmatrix
-end
-
-function dualnum_identity(len::Integer, nvars::Integer)
-  matr = dualnum_zeros(len, len, nvars)
-  for i in 1:len
-    matr[i,i] = init_dualnum(1, nvars)
-  end
-  return matr
+Creates a zero `dualnum` of type Float64
+"""
+function dualnum(;type::DataType=Float64)
+  return dualnum{type}(W(0),W(1))
 end
 
 
+"""
+    dualnum_zeros(inds)
+
+creates a `dualnum` of zeros
+"""
+function dualnum_zeros(inds::Integer)
+  return tens([dualnum() for i = 1:inds])
+end
+
+"""
+    dualnum_zeros(rows,cols)
+
+creates a matrix of `dualnum`s (`rows` x `cols`) of zeros
+"""
+function dualnum_zeros(rows::Integer, cols::Integer)
+  return [dualnum() for i = 1:rows, j = 1:cols]
+end
+
+"""
+    dualnum_identity(rows,cols)
+
+creates a matrix of `dualnum`s (`rows` x `cols`) of ones in an identity matrix
+"""
+function dualnum_identity(len::Integer)
+  return diagonal(dualnum_ones(len))
+end
 
 
-function init_dualnum(real, num_variables)
+#=
+"""
+    init_dualnum(val[,nvars])
+
+"""
+function init_dualnum(real; nvars=1)
   return dualnum(real, zeros(num_variables))
 end
-
+=#
+#=
 function init_dualnum(real, num_variables, variable_index)
   if variable_index > num_variables
     error("The given variable index must be less than or equal to the number of variables for a dualnum")
@@ -96,4 +110,4 @@ function init_dualnum(real, num_variables, variable_index)
   g[variable_index] = 1
   return dualnum(real, g)
 end
-
+=#

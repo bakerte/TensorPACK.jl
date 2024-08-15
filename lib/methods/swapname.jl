@@ -10,9 +10,9 @@
 #
 
 """
-  swapname!(A,labels)
+    swapname!(A,labels)
 
-Finds elements in `labels` (must be length 2) and interchanges the name. For example, `swapname!(A,["a","c"])` will find the label `"a"` and `"c"` and interchange them. A chain of swaps can also be requested (i.e., `swapname!(A,[["a","c"],["b","d"]])`)
+Finds elements of an input `TNobj` in `labels` (must be length 2) and interchanges the name. For example, `swapname!(A,[["a","c"]])` will find the label `"a"` and `"c"` and interchange them. A chain of swaps can also be requested (i.e., `swapname!(A,[["a","c"],["b","d"]])`)
 
 Works as a pseudo-permute in many cases. Will not permute if the names are not found.
 
@@ -35,25 +35,43 @@ function swapname!(A::TNobj,inds::Array{Array{W,1},1}) where W <: String
   nothing
 end
 
+"""
+    swapnames!(A,labels)
+
+Finds elements of an input `TNobj` in `labels` (must be length 2) and interchanges the name. For example, `swapname!(A,["a","c"])` will find the label `"a"` and `"c"` and interchange them. A chain of swaps can also be requested (i.e., `swapname!(A,[["a","c"],["b","d"]])`)
+
+Works as a pseudo-permute in many cases. Will not permute if the names are not found.
+
+See also: [`swapname!`](@ref)
+"""
 function swapname!(A::TNobj,inds::Array{W,1}) where W <: String
   swapname!(A,[inds])
 end
 export swapname!
 
 """
-  swapnames!(A,labels)
+    swapnames!(A,labels)
 
-Finds elements in `labels` (must be length 2) and interchanges the name. For example, `swapname!(A,["a","c"])` will find the label `"a"` and `"c"` and interchange them. A chain of swaps can also be requested (i.e., `swapname!(A,[["a","c"],["b","d"]])`)
+Finds elements of an input `TNobj` in `labels` (must be length 2) and interchanges the name. For example, `swapname!(A,[["a","c"]])` will find the label `"a"` and `"c"` and interchange them. A chain of swaps can also be requested (i.e., `swapname!(A,[["a","c"],["b","d"]])`)
 
 Works as a pseudo-permute in many cases. Will not permute if the names are not found.
 
 See also: [`swapname!`](@ref)
 """
-function swapnames!(A::nametens,inds::Array{Array{W,1},1}) where W <: String
+function swapnames!(A::TNobj,inds::Array{Array{W,1},1}) where W <: String
   swapname!(A,inds)
 end
 
-function swapnames!(A::nametens,inds::Array{W,1}) where W <: String
+"""
+    swapnames!(A,labels)
+
+Finds elements of an input `TNobj` in `labels` (must be length 2) and interchanges the name. For example, `swapname!(A,["a","c"])` will find the label `"a"` and `"c"` and interchange them. A chain of swaps can also be requested (i.e., `swapname!(A,[["a","c"],["b","d"]])`)
+
+Works as a pseudo-permute in many cases. Will not permute if the names are not found.
+
+See also: [`swapname!`](@ref)
+"""
+function swapnames!(A::TNobj,inds::Array{W,1}) where W <: String
   swapname!(A,[inds])
 end
 export swapnames!

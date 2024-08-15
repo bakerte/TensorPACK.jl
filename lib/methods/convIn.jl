@@ -20,11 +20,20 @@ function convIn(iA::Union{Array{P,1},Array{P,2}}) where P <: Integer
   return ntuple(i->iA[i],length(iA))
 end
 
+"""
+    B = convIn(A)
+
+Converts an integer `A` into a tuple
+"""
 function convIn(iA::Integer)
   return (iA,)
 end
 
+"""
+    B = convIn(A)
+
+Converts input tuple to a tuple (identity operation)
+"""
 function convIn(iA::NTuple{N,intType}) where N
   return iA
 end
-export convIn

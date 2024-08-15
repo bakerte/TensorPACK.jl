@@ -9,12 +9,21 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
+"""
+    display(A)
 
+fancy display format for `denstens` `A` (appears as Array)
+"""
 function display(A::denstens)
   display(Array(A))
   nothing
 end
 
+"""
+    display(A)
+
+fancy display format for `TNobj` `A` (appears as Array)
+"""
 function display(X::TNobj)
   if ndims(X) == 0
     display(X[1])

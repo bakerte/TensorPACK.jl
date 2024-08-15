@@ -139,10 +139,24 @@ function eye(A::tens{W},iA::Array{P,1}) where {W <: Number, P <: Union{Integer,T
   return reshape!(Id,newsize...)
 end
 
+"""
+    B = eye(A,iA)
+
+Creates an identity matrix based on indices `iA` (single integer) of `A` (`denstens`) for use in trace operations
+
+See also: [`trace`](@ref)
+"""
 function eye(A::tens{W},iA::Integer) where {W <: Number}
   return eye(A,[iA...])
 end
 
+"""
+    B = eye(A,iA)
+
+Creates an identity matrix based on indices `iA` (stored as a vector of integers) of `A` (`denstens`) for use in trace operations
+
+See also: [`trace`](@ref)
+"""
 function eye(A::Array{W,N},iA::Array{P,1}) where {N, W <: Number,P <: Union{Integer,Tuple}}
   a = size(A,iA[1][1])
   Id = zeros(W,a,a) + LinearAlgebra.I #makeId(W,size(A,iA[1][1]),addone=true,addRightDim=false)
@@ -163,6 +177,13 @@ function eye(A::Array{W,N},iA::Array{P,1}) where {N, W <: Number,P <: Union{Inte
   return reshape!(Id,newsize...)
 end
 
+"""
+    B = eye(A,iA...)
+
+Creates an identity matrix based on indices `iA` (any number of integers) of `A` (`denstens`) for use in trace operations
+
+See also: [`trace`](@ref)
+"""
 function eye(A::Array{W,N},iA::Integer...) where {W <: Number,N}
   return eye(A,[iA...])
 end
