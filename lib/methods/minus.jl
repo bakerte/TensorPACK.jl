@@ -33,6 +33,32 @@ function -(x::dtens, y::dtens)
   return dtens(r, g)
 end
 
+"""
+    C = -(A,B)
+
+Subtracts a matrix `A` to a `diagonal` `B`
+"""
+function -(A::Matrix{W},B::diagonal) where W <: Number
+  C = copy(A)
+  for w = 1:size(C,1)
+    C[w,w] -= B[w]
+  end
+  return C
+end
+
+"""
+    C = +(A,B)
+
+Subtracts a `diagonal` `A` to a matrix `B`
+"""
+function -(B::diagonal,A::Matrix{W}) where W <: Number
+  C = copy(A)
+  for w = 1:size(C,1)
+    C[w,w] = -C[w,w] + B[w]
+  end
+  return C
+end
+
 ###############
 # Subtraction #
 ###############
