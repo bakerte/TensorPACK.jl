@@ -138,42 +138,95 @@ end
 """
     C = trace(A,inds)
 
-Computes the trace of named tensor `A` with specified `inds` (integers, symbols, or strings--ex: [[1,2],[3,4],[5,6]])
+Computes the trace of `nametens` `A` with specified `inds` (integers, symbols, or strings--ex: [[1,2],[3,4],[5,6]])
 """
-function trace(A::nametens,inds::Array{W,1}) where W <: String
-  if W <: Integer
-    error("Why are you putting integers to trace a nametens? Should it not be strings? Can extract unnamed tensor with A.N or similar")
-#    return trace(A.N,inds)
-  else
+function trace(A::nametens,inds::Array{Array{W,1},1}) where W <: String
 
-    vect = Array{intType,1}(undef,2)
-    for a = 1:length(vect)
-      c = 1
-      while inds[a] != A.names[c]
+  vect = Array{intType,1}(undef,2*length(inds))
+  counter = 0
+  w = 0
+  while counter < length(vect) 
+    w += 1
+    b = 0
+    while b < length(inds[w]) && counter < length(vect) 
+      b += 1
+      c = 0
+      while c < length(A.names) && counter < length(vect) 
         c += 1
-      end
-      vect[a] = c
-    end
-
-    B = trace(A.N,vect)
-
-    newnames = Array{eltype(A.names),1}(undef,length(A.names)-length(vect))
-    w = 0
-    counter = 0
-    while w < length(A.names) && counter < length(newnames)
-#    for w = 1:length(newnames)
-      w += 1
-      if !(w in vect)
-        counter += 1
-        newnames[counter] = A.names[w]
+        if inds[w][b] == A.names[c]
+          counter += 1
+          vect[counter] = c
+        end
       end
     end
-#    newnames = setdiff(A.names,inds)
-
-#    println(newnames)
-
-    return nametens(B,newnames)
   end
+
+  convec = [(vect[w],vect[w+1]) for w = 1:2:length(vect)]
+
+  B = trace(A.N,convec)
+
+  newnames = Array{eltype(A.names),1}(undef,length(A.names)-2*length(inds))
+  w = 0
+  counter = 0
+  while w < length(A.names) && counter < length(newnames)
+    w += 1
+    if !(w in vect)
+      counter += 1
+      newnames[counter] = A.names[w]
+    end
+  end
+
+  return nametens(B,newnames)
+end
+
+function trace(A::TNobj,inds::Array{W,1}...) where W <: String
+  return trace(A,[inds[w] for w = 1:length(inds)])
+end
+
+"""
+    C = trace(A,inds)
+
+Computes the trace of `directedtens` `A` with specified `inds` (integers, symbols, or strings--ex: [[1,2],[3,4],[5,6]])
+"""
+function trace(A::directedtens,inds::Array{Array{W,1},1}) where W <: String
+
+  vect = Array{intType,1}(undef,2*length(inds))
+  counter = 0
+  w = 0
+  while counter < length(vect) 
+    w += 1
+    b = 0
+    while b < length(inds[w]) && counter < length(vect) 
+      b += 1
+      c = 0
+      while c < length(A.names) && counter < length(vect) 
+        c += 1
+        if inds[w][b] == A.names[c]
+          counter += 1
+          vect[counter] = c
+        end
+      end
+    end
+  end
+
+  convec = [(vect[w],vect[w+1]) for w = 1:2:length(vect)]
+
+  B = trace(A.N,convec)
+
+  newnames = Array{eltype(A.names),1}(undef,length(A.names)-2*length(inds))
+  newarrows = Array{Bool,1}(undef,length(A.arrows)-2*length(inds))
+  w = 0
+  counter = 0
+  while w < length(A.names) && counter < length(newnames)
+    w += 1
+    if !(w in vect)
+      counter += 1
+      newnames[counter] = A.names[w]
+      newarrows[counter] = A.arrows[w]
+    end
+  end
+
+  return directedtens(B,newnames,newarrows)
 end
 #=
 function trace(A::directedtens,inds::Array{Array{W,1},1}) where W <: Union{Any,Integer}
@@ -189,15 +242,15 @@ end
 
 Computes the trace of named tensor `A` with specified `inds` (integers, symbols, or strings--ex: [1,2])
 """
-function trace(A::TNobj,inds::Array{W,1}) where W <: Union{Any,Integer}
-  return trace(A,inds)
+function trace(A::TNobj,inds::Array{W,1}) where W <: Union{String,Integer}
+  return trace(A,[inds])
 end
 export trace
-
-
-
-
-
+#=
+function trace(A::TNobj,inds::Array{Array{W,1},1}) where W <: Union{String,Integer}
+  return trace(A,inds)
+end
+=#
 """
     C = trace(A,inds)
 
