@@ -140,7 +140,7 @@ end
 
 Computes the trace of `nametens` `A` with specified `inds` (integers, symbols, or strings--ex: [[1,2],[3,4],[5,6]])
 """
-function trace(A::nametens,inds::Array{Array{W,1},1}) where W <: String
+function trace(A::Union{nametens,directedtens},inds::Array{Array{W,1},1}) where W <: String
 
   vect = Array{intType,1}(undef,2*length(inds))
   counter = 0
@@ -166,6 +166,9 @@ function trace(A::nametens,inds::Array{Array{W,1},1}) where W <: String
   B = trace(A.N,convec)
 
   newnames = Array{eltype(A.names),1}(undef,length(A.names)-2*length(inds))
+  if typeof(A) <: directedtens
+    newarrows = Array{Bool,1}(undef,length(A.arrows)-2*length(inds))
+  end
   w = 0
   counter = 0
   while w < length(A.names) && counter < length(newnames)
@@ -173,16 +176,24 @@ function trace(A::nametens,inds::Array{Array{W,1},1}) where W <: String
     if !(w in vect)
       counter += 1
       newnames[counter] = A.names[w]
+      if typeof(A) <: directedtens
+        newarrows[counter] = A.arrows[w]
+      end
     end
   end
 
-  return nametens(B,newnames)
+  return typeof(A) <: nametens ? nametens(B,newnames) : directedtens(B,newnames,newarrows)
 end
 
+"""
+    C = trace(A,inds...)
+
+Computes the trace of `nametens` `A` with specified `inds` (any number)
+"""
 function trace(A::TNobj,inds::Array{W,1}...) where W <: String
   return trace(A,[inds[w] for w = 1:length(inds)])
 end
-
+#=
 """
     C = trace(A,inds)
 
@@ -228,6 +239,7 @@ function trace(A::directedtens,inds::Array{Array{W,1},1}) where W <: String
 
   return directedtens(B,newnames,newarrows)
 end
+=#
 #=
 function trace(A::directedtens,inds::Array{Array{W,1},1}) where W <: Union{Any,Integer}
   B = trace(A.T,inds)
@@ -236,7 +248,7 @@ function trace(A::directedtens,inds::Array{Array{W,1},1}) where W <: Union{Any,I
   newarrows = A.arrows[leftoverinds]
   return directedtens(B,newarrows,A.conj)
 end
-=#
+
 """
     C = trace(A,inds)
 
@@ -245,6 +257,7 @@ Computes the trace of named tensor `A` with specified `inds` (integers, symbols,
 function trace(A::TNobj,inds::Array{W,1}) where W <: Union{String,Integer}
   return trace(A,[inds])
 end
+=#
 export trace
 #=
 function trace(A::TNobj,inds::Array{Array{W,1},1}) where W <: Union{String,Integer}
