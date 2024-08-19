@@ -32,6 +32,11 @@ function add!(A::W, B::W) where W <: TensType
   return add!(A,B,eltype(B)(1))
 end
 
+"""
+   C = add!(A,B)
+
+adds two `TNobj`s together
+"""
 function add!(A::TNobj,B::TNobj)
   reorder = matchnames(A,B.names)
   if !issorted(reorder)

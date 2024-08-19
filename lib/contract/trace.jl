@@ -138,7 +138,7 @@ end
 """
     C = trace(A,inds)
 
-Computes the trace of `nametens` `A` with specified `inds` (integers, symbols, or strings--ex: [[1,2],[3,4],[5,6]])
+Computes the trace of `nametens` or `directedtens` `A` with specified `inds` (integers, symbols, or strings--ex: [[1,2],[3,4],[5,6]])
 """
 function trace(A::Union{nametens,directedtens},inds::Array{Array{W,1},1}) where W <: String
 

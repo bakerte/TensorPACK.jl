@@ -10,7 +10,7 @@
 #
 
 """
-    G = permutedims!(A,[1,3,2,...])
+    B = permutedims!(A,[1,3,2,...])
 
 Permute dimensions of a Qtensor in-place (no equivalent, but returns value so it can be used identically to `permutedims` on a dense tensor)
 

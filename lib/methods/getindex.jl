@@ -56,85 +56,6 @@ function getindex!(C::tens{W}, a::genColType...) where W <: Number
   return dC
 end
 export getindex!
-#=
-function auxassemble!(C::tens{W},a::NTuple{G,genColType}) where {W <: Number, G}
-
-  notintegers = 0
-  startind = 0
-  @inbounds for w = 1:G
-    if !(typeof(a[w]) <: Integer)
-      notintegers += 1
-      if startind == 0
-        startind = w
-      end
-    end
-  end
-
-  cols,newsize = get_denseranges_sizes(size(C),a...)
-
-
-  x = prod(newsize)
-  newT = Array{W,1}(undef,x)
-
-
-  notfirst = startind > 1
-  factor = 1
-  if notfirst
-    @inbounds @simd for h = startind-1:-1:1
-      factor *= newsize[h]
-    end
-  end
-
-  reqvec = makepos(G)
-
-  i = 0
-  @inbounds while i < length(newT)
-    position_incrementer!(reqvec,newsize)
-  
-  
-    backZ = reqvec[G]
-    @inbounds @simd for w = G-1:-1:startind
-      backZ -= 1
-      backZ *= size(C,w)
-      backZ += reqvec[w]
-    end
-  
-    if notfirst
-  
-      foreZ = newsize[startind-1]
-      @inbounds @simd for p = startind-2:-1:1
-        foreZ -= 1
-        foreZ *= newsize[w]
-        foreZ += newvec[w]
-      end
-  
-      @inbounds @simd for x = 0:newsize[startind]-1
-        z = x + backZ
-        z -= 1
-        z *= factor
-        z += foreZ
-  
-        i += 1
-        newT[i] = C.T[z]
-      end
-  
-    else
-      @inbounds @simd for x = 0:newsize[startind]-1
-        z = x + backZ
-        i += 1
-        newT[i] = C.T[z]
-      end
-    end
-  
-    reqvec[startind] += newsize[startind]
-  end
-
-  dC = tens{W}(newsize,newT)
-
-  return dC
-end
-export auxassemble!
-=#
 
 function getindex!(C::diagonal{W}, b::genColType,a::genColType) where W <: Number
   if typeof(a) <: Integer
@@ -302,7 +223,7 @@ end
 """
     A[:,3:6,2,[1,2,4,8]]
 
-Finds selected elements of a Qtensor or dense tensor;
+Finds selected elements of a `qarray`
 
 #Note:
 + Any modification to the output of this function can make the orignal tensor invalid.
@@ -531,7 +452,11 @@ function evaluate_keep(C::qarray,q::Integer,Linds::Array{P,1},ap::Array{K,1},row
   return keeprows
 end
 
+"""
+    B = getindex(A,w)
 
+Obtain elements from a `dualnum` with `w`=0 being the value and `w`=1 being the derivative of `A`
+"""
 function getindex(A::dualnum{W},w::intType) where W <: Number
   if w == 0
     out = A.val

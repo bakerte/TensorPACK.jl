@@ -10,9 +10,9 @@
 #
 
 """
-  exp!(A,prefactor)
+    B = exp!(A,prefactor)
 
-exponentiate (exp(`prefactor`*`A`)) a matrix or `denstens` (also matrix)
+exponentiate (exp(`prefactor`*`A`)) a `Matrix`
 """
 function exp!(A::Array{W,2},prefactor::Number) where W <: Number
   if !isapprox(prefactor,1)
@@ -30,6 +30,11 @@ function exp!(A::Array{W,2},prefactor::Number) where W <: Number
   return expA
 end
 
+"""
+    B = exp!(A,prefactor)
+
+exponentiate (exp(`prefactor`*`A`)) a `denstens`
+"""
 function exp!(A::tens{W},prefactor::Number) where W <: Number
   X = reshape(A.T,A.size)
   expX = exp!(X,prefactor)
@@ -43,28 +48,38 @@ function exp!(A::tens{W},prefactor::Number) where W <: Number
 end
 
 """
-  exp!(A)
+    B = exp!(A)
 
-exponentiate (exp(`A`)) a matrix or `denstens` (also matrix)
+exponentiate (exp(`A`)) a `Matrix`
 """
 function exp!(A::Array{W,2}) where W <: Number
   return exp!(A,W(1))
 end
 
+"""
+    B = exp!(A)
+
+exponentiate (exp(`A`)) a `denstens`
+"""
 function exp!(A::tens{W}) where W <: Number
   return exp!(A,W(1))
 end
 export exp!
 
+"""
+    B = exp(A,prefactor)
+
+exponentiate (exp(`prefactor`*`A`)) an `Array`
+"""
 function exp(A::Array{W,2},prefactor::Number) where W <: Number
   newexpA = copy(A)
   return exp!(newexpA,prefactor)
 end
 
 """
-  G = exp(A)
+    B = exp(A,prefactor)
 
-Exponentiate a matrix `A` from the `denstens` type with output `G`
+exponentiate (exp(`prefactor`*`A`)) an `denstens`
 """
 function exp(A::tens{W},prefactor::Number) where W <: Number
   X = reshape(A.T,A.size)
@@ -72,14 +87,19 @@ function exp(A::tens{W},prefactor::Number) where W <: Number
   return tens(newtype,exp(X,prefactor))
 end
 
+"""
+    B = exp(A)
+
+exponentiate (exp(`A`)) a `denstens`
+"""
 function exp(A::tens{W}) where W <: Number
   return exp(A,W(1))
 end
 
 """
-  G = exp(alpha,beta)
+    B = exp(alpha,beta)
 
-Exponentiate a tridiagonal matrix from the two lists `alpha` (diagonal elements) and `beta` (off-diagonal elements) type with output `G`
+Exponentiate a tridiagonal matrix from the two lists `alpha` (diagonal elements) and `beta` (off-diagonal elements) type with output `B`
 """
 function exp(alpha::Array{W,1},beta::Array{Y,1},prefactor::Number) where {W <: Number, Y <: Number}
   d = length(alpha)
@@ -100,9 +120,9 @@ end
 
 #best implementation
 """
-  G = exp(A)
+    B = exp(A,prefactor)
 
-Exponentiate a symmetric, tridiagonal matrix `A` with output `G`
+Exponentiate a symmetric, tridiagonal matrix `A` with output `B` (=exp(`prefactor`*`A`))
 """
 function exp(G::LinearAlgebra.SymTridiagonal{W, Vector{W}},prefactor::Number) where W <: Number
   D,U = LinearAlgebra.eigen(G)
@@ -120,16 +140,50 @@ function exp(G::LinearAlgebra.SymTridiagonal{W, Vector{W}},prefactor::Number) wh
   return out
 end
 
+"""
+    B = exp(alpha,beta)
+
+Create the exponential of a tridiagonal matrix with diagonal elements `alpha` and off-diagonal elements `beta`
+"""
 function exp(alpha::Array{W,1},beta::Array{Y,1}) where {W <: Number, Y <: Number}
   return exp(alpha,beta,W(1))
 end
+#=
+"""
+    B = exp(alpha,beta,prefactor)
 
+Create the exponential of a tridiagonal matrix with diagonal elements `alpha` and off-diagonal elements `beta` mulitplied by `prefactor`
+"""
+function exp(alpha::Array{W,1},beta::Array{Y,1},prefactor::Number) where {W <: Number, Y <: Number}
+  return exp(LinearAlgebra.SymTridiagonal(alpha,beta),prefactor)
+end
+=#
+
+"""
+    B = exp(A)
+
+Create the exponential of an input tridiagonal matrix `A`
+"""
 function exp(G::LinearAlgebra.SymTridiagonal{W, Vector{W}}) where W <: Number
   return exp(G,W(1))
 end
+#=
+"""
+    B = exp(A,prefactor)
 
+Create the exponential of an input tridiagonal matrix `A` times the `prefactor`
+"""
+function exp(G::LinearAlgebra.SymTridiagonal{W, Vector{W}},prefactor::Number) where W <: Number
+  return exp(Array(G),prefactor)
+end
+=#
 
 #decomposition of unitaries, so can do block by block
+"""
+    B = exp!(A,prefactor)
+
+Create the exponential of an input `qarray` `A` times the `prefactor`
+"""
 function exp!(C::Qtens{W,Q},prefactor::Number) where {W <: Number, Q <: Qnum}
   if W == typeof(prefactor)
     A = changeblock(C,C.currblock[1],C.currblock[2])
@@ -143,10 +197,20 @@ function exp!(C::Qtens{W,Q},prefactor::Number) where {W <: Number, Q <: Qnum}
   return B
 end
 
+"""
+    B = exp!(A)
+
+Create the exponential of an input `qarray` `A`
+"""
 function exp!(C::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   return exp!(C,W(1))
 end
 
+"""
+    B = exp(A,prefactor)
+
+Create the exponential of an input `qarray` `A` times the `prefactor`
+"""
 function exp(C::Qtens{W,Q},prefactor::Number) where {W <: Number, Q <: Qnum}
   A = changeblock(C,C.currblock)
 
@@ -170,6 +234,11 @@ function exp(C::Qtens{W,Q},prefactor::Number) where {W <: Number, Q <: Qnum}
   return Qtens{newtype,Q}(newsize,newT,newind,newcurrblock,newQblocksum,newMat,newSum,newflux)
 end
 
+"""
+    B = exp(A)
+
+Create the exponential of an input `qarray` `A`
+"""
 function exp(C::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   return exp(C,W(1))
 end

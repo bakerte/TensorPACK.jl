@@ -220,7 +220,7 @@ function lanczos(psi::AbstractArray,invec::AbstractArray...;Lenv::TensType=[0],R
   else
     newpsisave = Array{tens{eltype(psi)},1}(undef,length(psisave))
   end
-  retpsi,D = lanczos(tens(psi),changevec...,Lenv=Lenv,Renv=Renv,maxiter=maxiter,retnum=retnum,updatefct=updatefct,reorth=reorth,effZero=effZero,alpha=alpha,beta=beta,psisave=newpsisave,start=start,numE=numE,saveE=saveE)
+  D,retpsi = lanczos(tens(psi),changevec...,Lenv=Lenv,Renv=Renv,maxiter=maxiter,retnum=retnum,updatefct=updatefct,reorth=reorth,effZero=effZero,alpha=alpha,beta=beta,psisave=newpsisave,start=start,numE=numE,saveE=saveE)
 
   true_retpsi = Array{typeof(psi),1}(undef,length(retpsi))
 

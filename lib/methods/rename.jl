@@ -12,7 +12,7 @@
 """
     rename!(A,inds)
 
-replaces named indices in `A` with indices in `inds`; either format [string,[string,arrow]] or [string,string] or [string,[string]] is accepted for `inds`
+replaces named indices of `TNobj` `A` in-place with indices in `inds`, a vector of length-2 vectors containing strings
 """
 function rename!(A::TNobj,inds::Array{Array{W,1},1}) where W <: String
   for a = 1:length(inds)
@@ -32,6 +32,11 @@ function rename!(A::TNobj,inds::Array{Array{W,1},1}) where W <: String
   nothing
 end
 
+"""
+    B = rename!(A,inds)
+
+Renames indices in-place of a `TNobj` `A` with array of strings (length 2) `inds`
+"""
 function rename!(A::TNobj,inds::Array{W,1}) where W <: String
   rename!(A,[inds])
 end
@@ -55,9 +60,23 @@ function rename!(A::TNobj,currvar::String,newvar::String)
 end
 export rename!
 
+"""
+    rename(A,inds)
+
+replaces named indices of `TNobj` `A` with indices in `inds`, a vector of length-2 vectors containing strings
+"""
 function rename(A::TNobj,inds::Array{Array{W,1},1}) where W <: String
   B = copy(A)
   rename!(B,inds)
   return B
 end
 export rename
+
+"""
+    B = rename!(A,inds)
+
+Renames indices of a `TNobj` `A` with array of strings (length 2) `inds`
+"""
+function rename(A::TNobj,inds::Array{W,1}) where W <: String
+  rename(A,[inds])
+end

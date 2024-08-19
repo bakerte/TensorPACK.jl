@@ -704,7 +704,7 @@ Generates svd decomposition of named tensor `A` according to `order`; same outpu
 + `truncerr`: total truncation error (L-2 norm)
 + `mag`: magnitude of the output tensor
 """
-function svd(AA::nametens,order::Array{Array{B,1},1};cutoff::Float64 = 0.,m::Integer = 0,minm::Integer=2,nozeros::Bool=true,power::Number=2,leftflux::Bool=false,mag::Float64=0.,
+function svd(AA::TNobj,order::Array{Array{B,1},1};cutoff::Float64 = 0.,m::Integer = 0,minm::Integer=2,nozeros::Bool=true,power::Number=2,leftflux::Bool=false,mag::Float64=0.,
   effZero::Real=defzero,keepdeg::Bool=false,decomposer::Function=libsvd,name::String="svdind",leftadd::String="L",rightadd::String="R") where B <: String
 
   lnames = findnames(AA,order[1])
@@ -719,9 +719,11 @@ function svd(AA::nametens,order::Array{Array{B,1},1};cutoff::Float64 = 0.,m::Int
 
   U,D,V,truncerr,newmag = svd(AA.N,neworder,power=power,mag=mag,cutoff=cutoff,m=m,nozeros=nozeros,minm=minm,leftflux=leftflux,keepdeg=keepdeg,decomposer=decomposer)
 
-  TNobjU = nametens(U,vcat(AA.names[left],[leftname]))
-  TNobjD = nametens(D,[leftname,rightname])
-  TNobjV = nametens(V,vcat([rightname],AA.names[right]))
+  retfct = typeof(AA) <: nametens ? nametens : directedtens
+
+  TNobjU = retfct(U,vcat(AA.names[left],[leftname]))
+  TNobjD = retfct(D,[leftname,rightname])
+  TNobjV = retfct(V,vcat([rightname],AA.names[right]))
 
   return TNobjU,TNobjD,TNobjV,truncerr,newmag
 end
@@ -748,6 +750,7 @@ function findnames(P::nameTensType,names::Array{String,1})
   return matchnames
 end
 
+#=
 """
     U,D,V,truncerr,newmag = svd(A,order[,cutoff=0.,m=0,mag=0.,minm=2,nozeros=true,a=size(A,1),b=size(A,2),power=2,leftflux=false,effZero=defzero,keepdeg=false,inplace=false,decomposer=libsvd,name="svdind",leftadd="L",rightadd="R"])
 
@@ -805,7 +808,7 @@ function svd(AA::directedtens,order::Array{Array{B,1},1};cutoff::Float64 = 0.,m:
 
   return TNobjU,TNobjD,TNobjV,truncerr,newmag
 end
-
+=#
 """
     UD,DV,truncerr,mag = symsvd(A,order[,mag=,cutoff=,m=,name=,leftadd=,rightadd=])
 

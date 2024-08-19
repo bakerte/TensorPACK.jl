@@ -50,8 +50,8 @@ Decomposes `X` with a LQ decomposition.
 function liblq end
 
 """
-    defzero = 1E-24
+    defzero = 1E-28
 
-default value of zero used in truncating decompositions; we truncate (typically) in the square of the density matrix occupation value, so this is (1E-12)^2
+default value of zero used in truncating decompositions; we truncate (typically) in the square of the density matrix occupation value, so this is (1E-14)^2
 """
-const defzero = 1E-24
+const defzero = 1E-28

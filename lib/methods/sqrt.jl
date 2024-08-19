@@ -99,7 +99,7 @@ Takes the square root of the absolute value of a `diagonal` tensor with output `
 See also: [`sqrt`](@ref)
 """
 function sqrtabs(M::diagonal)
-  return sqrt!(copy(M))
+  return sqrtabs!(copy(M))
 end
 
 
