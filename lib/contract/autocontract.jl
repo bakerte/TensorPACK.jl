@@ -61,7 +61,7 @@ end
 Contracts a tensor network into a single tensor. The values in `exclude` are the index positions of tensors to not contract. 
 The algorithm will call either `greedy_contract` or `local_contract` depending on the network input.
 """
-function contract(tensors::W...) where W <: TensType
+function contract(tensors::W...) where W <: TNobj
 	return contract(network(tensors...))
 end
 
