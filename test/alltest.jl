@@ -212,7 +212,7 @@ const tests = [
 
   "autodiff_test.jl",
 
-#  "tensornetwork_test.jl",
+  "tensornetwork_test.jl"
 
   
 ]
