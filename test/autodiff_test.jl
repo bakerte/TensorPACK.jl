@@ -7,10 +7,11 @@ else
   performancevals = Dict()
 end
 
-
-ndim = max(round(Int64,rand()*10),2)
-Asize = ntuple(w->max(2,round(Int64,rand()*10)),ndim)
+#=
+ndim = 4 #max(round(Int64,rand()*10),2)
+Asize = (5,7,10,4) #ntuple(w->max(2,round(Int64,rand()*10)),ndim)
 A = rand(Asize...)
+=#
 
 println("#            +---------------+")
 println("#>-----------|  autodiff.jl  |-----------<")
@@ -48,9 +49,13 @@ function test_autodiff()
 
   B * B
 
-  sqrt(p)
+  return abs((sqrt(p) - checkval).val) < 1E-8
 end
 
+testval = "test_autodiff()"
+fulltest &= testfct(testval,"Babylonian test",performancevals)
+
+println()
 
 A = rand(20,10)
 dA = dtens(A)

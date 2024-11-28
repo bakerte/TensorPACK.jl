@@ -44,10 +44,8 @@ fulltest &= testfct(testval,"krylov(tens,tens)")
 
 
 
+
 println()
-
-
-
 
 m = 50
 g = 2
@@ -73,10 +71,6 @@ checkD,checkU = LinearAlgebra.eigen(Array(A))
 
 testval = "norm(D[1:g]-checkD[1:g]) < 1E-8"
 fulltest &= testfct(testval,"krylov(tens,tens) [cvg=true]",performancevals)
-
-println()
-
-
 
 
 

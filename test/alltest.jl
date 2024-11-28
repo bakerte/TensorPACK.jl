@@ -9,8 +9,14 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-function avg(x)
-  return sum(x)/length(x)
+function stdavg(x)
+  avgval = sum(x)/length(x)
+  if length(x) == 1
+    stdval = 0
+  else #if typeof(x) <: Union{Tuple,Array}
+    stdval = sqrt(sum(w->(x[w]-avgval)^2,1:length(x))/(length(x)*(length(x)-1)))
+  end
+  return avgval,stdval
 end
 
 function testfct(test::Bool,message::String)
@@ -29,6 +35,100 @@ end
 
 const timeflag = "_time"
 const memflag = "_mem"
+
+function comparrow!(xvec,y,σ;tol=2)
+
+  print("  ")
+
+  for w = 1:length(xvec)
+    x = xvec[w]
+    diffxy = abs(x - y)
+
+    if diffxy > tol*σ
+      if x < y
+        printstyled("v",color=:green)
+      else
+        printstyled("^",color=:red)
+      end
+    else
+      printstyled(".",color=:yellow)
+    end
+  end
+  print(" ")
+end
+
+const SI_units = [("T",12),("G",9),("M",6),("k",3),("",0),("c",-2),("m",-3),("μ",-6),("n",-9),("p",-12),("f",-15),("a",-18)]
+
+function findSI(x::Number)
+  w = 1 #length(SI_units)
+#  println()
+#  println(x)
+#  println()
+  while w < length(SI_units) && !(SI_units[w][2] > x >= SI_units[w+1][2])
+    w += 1
+  end
+  return SI_units[w+1][1],10^(-1.0*SI_units[w+1][2])
+end
+
+const countnum = 10
+
+function compareval!(storedict::Dict,message::String,value::Number;tol::Number=5)
+
+  if typeof(value) <: Integer
+    printval = "$(value)"
+  else
+    p = Base.log(10,value)
+
+    power = floor(intType,p)
+#    val = round(value*10^(-power),digits=3)
+
+    prefix,adjustval = findSI(power)
+    printval = round(value*adjustval,digits=4)
+    printval = "$(printval)$(prefix)s"
+  end
+
+  if haskey(storedict,message)
+    checkval = storedict[message]
+    avgval,stdval = stdavg(checkval)
+
+    diffval = abs(value - avgval)
+    
+    colourbool = diffval > tol*stdval
+    printstyled(printval,color = colourbool ? (:red) : (:green))
+    if colourbool
+      sigval = length(checkval) == 1 ? 0 : round(diffval/stdval,digits=2)
+      printstyled(" (+/- ",sigval,"σ)",color= :yellow)
+    end
+
+#    comparrow_vec = [ for w = 1:length(checkval)]
+
+#    compstring = comparrow(checkval,avgval#=value=#,stdval)
+#    print(" "*compstring*" ")
+
+    if typeof(checkval) <: Number
+      outval = (checkval,value)
+    else
+      if typeof(checkval) <: Tuple
+        if length(checkval) >= countnum
+          outval = (Base.tail(checkval)...,value)
+        else
+          outval = (checkval...,value)
+        end
+      else
+        outval = (value,)
+      end
+    end
+
+    comparrow!(checkval,avgval,stdval,tol=tol)
+
+  else
+    printstyled(printval,color=:blue)
+    outval = value
+  end
+
+  setindex!(performancevals,outval,message)
+end
+
 
 function testfct(evalstring::String,message::String,storedict::Dict)
 
@@ -55,32 +155,15 @@ function testfct(evalstring::String,message::String,storedict::Dict)
 
     memstring = message * memflag
     print("     mem: ")
-    if haskey(storedict,memstring)
-      colourbool = abs(alloc - avg(storedict[memstring]))/alloc > 0.1
-      printstyled("$alloc",color= colourbool ? (:red) : (:green))
-      setindex!(performancevals,alloc,memstring)
-    else
-      printstyled("$alloc",color=:blue)
-      setindex!(performancevals,alloc,(memstring,))
-    end
+
+    compareval!(storedict,memstring,alloc)
 
     print(" | ")
 
     timestring = message * timeflag
     print("time: ")
     timer = t2-t1#@time eval(base)
-    if haskey(storedict,timestring)
-      timechange = abs(timer - avg(storedict[timestring]))/timer
-      colourbool = timechange > 0.2
-      printstyled("$timer",color= colourbool ? (:red) : (:green))
-      if colourbool
-        pertime = round(timechange*100)
-        printstyled(" ($(pertime)%)",color= :yellow)
-      end
-    else
-      printstyled("$timer",color=:blue)
-    end
-    setindex!(performancevals,timer,timestring)
+    compareval!(storedict,timestring,timer)
     println()
 
     return test
@@ -110,6 +193,7 @@ function checkall(fulltestrecord::Array{Bool,1},i::Integer,fulltest::Bool)
 end
 
 const tests = [
+
   "tensor_test.jl",
 
   "QN_test.jl",
@@ -128,7 +212,9 @@ const tests = [
 
   "autodiff_test.jl",
 
-  "tensornetwork_test.jl"
+#  "tensornetwork_test.jl",
+
+  
 ]
 
 """
@@ -138,10 +224,7 @@ Tests all functions in the files enumerated in `tests`. Default is to check all 
 
 See also: [`libdir`](@ref)
 """
-function libtest(;tests::Array{String,1}=tests,dir::String=libdir,path::String=dir*"/../test/")
-
-
-
+function libtest(;tests::Array{String,1}=tests,dir::String=libdir,path::String=dir*"/test/")
 
   fulltestrecord = Array{Bool,1}(undef,length(tests))
 

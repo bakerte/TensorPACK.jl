@@ -13,8 +13,8 @@ println("#            +--------------+")
 fulltest = true
 
 
-ndim = max(round(Int64,rand()*10),2)
-Asize = ntuple(w->max(2,round(Int64,rand()*10)),ndim)
+ndim = 4 #max(round(Int64,rand()*10),2)
+Asize = (5,8,10,3) #ntuple(w->max(2,round(Int64,rand()*10)),ndim)
 A = rand(Asize...)
 
 

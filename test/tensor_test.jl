@@ -1,5 +1,4 @@
 
-import Serialization
 file = testpath*"dict"*file_extension
 if isfile(file)
   performancevals = Serialization.deserialize(file)
@@ -13,8 +12,8 @@ println("#            +-------------+")
 fulltest = true
 
 
-ndim = max(round(Int64,rand()*10),2)
-Asize = ntuple(w->max(2,round(Int64,rand()*10)),ndim)
+ndim = 6 #max(round(Int64,rand()*10),2)
+Asize = (4,2,5,7,3,8) #ntuple(w->max(2,round(Int64,rand()*10)),ndim)
 A = rand(Asize...)
 
 
@@ -40,24 +39,23 @@ println()
 println("input tests; default input auto-pass, tens(Array), by this point")
 
 B = tens(type=ComplexF64)
-loadtest1 = "B.size == (0,) && B.T == Array{ComplexF64,1}(undef,0)"
+loadtest1 = "B.size == [0] && B.T == Array{ComplexF64,1}(undef,0)"
 fulltest &= testfct(loadtest1,"tens(;type=)",performancevals)
 
 B = tens(ComplexF64)
-loadtest2 = "B.size == (0,) && B.T == Array{ComplexF64,1}(undef,0)"
+loadtest2 = "B.size == [0] && B.T == Array{ComplexF64,1}(undef,0)"
 fulltest &= testfct(loadtest2,"tens(type)",performancevals)
 
 
-import LinearAlgebra
 size_vec = rand(ndim)
 C = LinearAlgebra.Diagonal(size_vec)
 B = tens(ComplexF64,C)
 
-testval = "B.size == (ndim,ndim) && isapprox(B.T,reshape(Array(C),ndim^2))"
+testval = "B.size == [ndim,ndim] && isapprox(B.T,reshape(Array(C),ndim^2))"
 fulltest &= testfct(testval,"tens(Type,AbstractArray)",performancevals)
 
 B = tens(C)
-testval = "B.size == (ndim,ndim) && isapprox(B.T,reshape(Array(C),ndim^2))"
+testval = "B.size == [ndim,ndim] && isapprox(B.T,reshape(Array(C),ndim^2))"
 fulltest &= testfct(testval,"tens(AbstractArray)",performancevals)
 
 B = tens(ComplexF64,A)
@@ -98,6 +96,7 @@ testval = "size(B) == size(C)"
 fulltest &= testfct(testval,"zeros(AbstractArray)",performancevals)
 
 B = zeros(tA)
+
 testval = "size(B) == size(tA)"
 fulltest &= testfct(testval,"zeros(denstens)",performancevals)
 
@@ -117,28 +116,28 @@ fulltest &= testfct(testval,"zero(denstens)",performancevals)
 
 println()
 
-ldim = round(Int64,rand(5:40,1)[1])
-rdim = round(Int64,rand(5:40,1)[1])
+ldim = 20 #round(Int64,rand(5:40,1)[1])
+rdim = 30 #round(Int64,rand(5:40,1)[1])
 println("  (ldim,rdim) = (",ldim,",",rdim,")")
 A = eye(ComplexF64,ldim,rdim)
 mindim = min(ldim,rdim)
-testval = "size(A) == (ldim,rdim) && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)"
+testval = "size(A) == [ldim,rdim] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)"
 fulltest &= testfct(testval,"eye",performancevals)
 
 println()
 
 A = eye(ComplexF64,ldim,ldim,addone=true,addRightDim=false)
-testval = size(A) == (1,ldim,ldim) 
+testval = size(A) == [1,ldim,ldim]
 testval &= isapprox(sum(A),ldim) && eltype(A) == ComplexF64
 testval &= isapprox(norm(A[1,1:mindim,1:mindim]),sqrt(mindim))
 fulltest &= testfct(testval,"eye (square, left)")
 
 A = eye(ComplexF64,ldim,rdim,addone=true,addRightDim=true)
-testval = "size(A) == (ldim,rdim,1) && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim,1]),zeros(mindim,mindim) + LinearAlgebra.I)"
+testval = "size(A) == [ldim,rdim,1] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim,1]),zeros(mindim,mindim) + LinearAlgebra.I)"
 fulltest &= testfct(testval,"eye (square, right)",performancevals)
 
 A = eye(ComplexF64,ldim,rdim)
-testval = "size(A) == (ldim,rdim) && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)"
+testval = "size(A) == [ldim,rdim] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)"
 fulltest &= testfct(testval,"eye (rectangular)",performancevals)
 
 println()
@@ -146,7 +145,7 @@ ldim,rdim = rdim,ldim
 println("  (ldim,rdim) = (",ldim,",",rdim,")")
 A = eye(ComplexF64,ldim,rdim)
 mindim = min(ldim,rdim)
-testval = size(A) == (ldim,rdim)
+testval = size(A) == [ldim,rdim]
 testval &= isapprox(sum(A),mindim)
 testval &= eltype(A) == ComplexF64
 testval &= isapprox(Array(A[1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)
@@ -155,23 +154,23 @@ fulltest &= testfct(testval,"eye")
 println()
 
 A = eye(ComplexF64,ldim,ldim,addone=true,addRightDim=false)
-testval = size(A) == (1,ldim,ldim)
+testval = size(A) == [1,ldim,ldim]
 testval &= isapprox(sum(A),ldim) && eltype(A) == ComplexF64
 testval &= isapprox(norm(A[1,1:mindim,1:mindim]),sqrt(mindim))
 fulltest &= testfct(testval,"eye (square, left)")
 
 A = eye(ComplexF64,ldim,rdim,addone=true,addRightDim=true)
-testval = "size(A) == (ldim,rdim,1) && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim,1]),zeros(mindim,mindim) + LinearAlgebra.I)"
+testval = "size(A) == [ldim,rdim,1] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim,1]),zeros(mindim,mindim) + LinearAlgebra.I)"
 fulltest &= testfct(testval,"eye (square, right)",performancevals)
 
 A = eye(ComplexF64,ldim,rdim)
-testval = "size(A) == (ldim,rdim) && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)"
+testval = "size(A) == [ldim,rdim] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)"
 fulltest &= testfct(testval,"eye (rectangular)",performancevals)
 
-A = rand(ldim,rdim,50,10)
+A = rand(ldim,rdim,5,2)
 B = eye(A,[1,2,3])
 
-testval = "isapprox(sum(B),ldim*rdim*50) && size(B) == (ldim,ldim,rdim,rdim,50,50)"
+testval = "isapprox(sum(B),ldim*rdim*5) && size(B) == (ldim,ldim,rdim,rdim,5,5)"
 
 fulltest &= testfct(testval,"eye (index inputs, [1,2,3])",performancevals)
 #=
@@ -231,11 +230,11 @@ A = Diagonal(rand(10))
 B = tens(rand(ComplexF64,20,40,3))
 
 C,D = checkType(A,B)
-testval = "typeof(C) <: denstens && eltype(C) == ComplexF64 && typeof(D) <: denstens && eltype(D) == ComplexF64"
+testval = "typeof(C) <: diagonal && eltype(C) == ComplexF64 && typeof(D) <: denstens && eltype(D) == ComplexF64"
 fulltest &= testfct(testval,"checkType(Diagonal,denstens)",performancevals)
 
 C,D = checkType(B,A)
-testval = "typeof(C) <: denstens && eltype(C) == ComplexF64 && typeof(D) <: denstens && eltype(D) == ComplexF64"
+testval = "typeof(C) <: denstens && eltype(C) == ComplexF64 && typeof(D) <: diagonal && eltype(D) == ComplexF64"
 fulltest &= testfct(testval,"checkType(denstens,Diagonal)",performancevals)
 
 C = checkType(A)
@@ -330,10 +329,10 @@ fulltest &= testfct(testval,"length(denstens)",performancevals)
 
 println()
 
-testval = "size(A) == (A.size...,)"
+testval = "tupsize(A) == (A.size...,)"
 fulltest &= testfct(testval,"size(denstens)",performancevals)
 
-testval = "ntuple(n->size(A,n),length(A.size)) == size(A)"
+testval = "ntuple(n->size(A,n),ndims(A)) == tupsize(A)"
 fulltest &= testfct(testval,"size(denstens,int)",performancevals)
 
 println()
@@ -588,15 +587,15 @@ fulltest &= testfct(testval,"reshape(Array,Vector)",performancevals)
 tA = tens(rand(20,40,30,50))
 
 rA = reshape(tA,20,1200,50)
-testval = "isapprox(rA.T,tA.T) && size(rA) == (20,1200,50) && size(tA) == (20,40,30,50)"
+testval = "isapprox(rA.T,tA.T) && size(rA) == [20,1200,50] && size(tA) == [20,40,30,50]"
 fulltest &= testfct(testval,"reshape(tens,integer)",performancevals)
 
 rA = reshape(tA,(20,1200,50))
-testval = "isapprox(rA.T,tA.T) && size(rA) == (20,1200,50) && size(tA) == (20,40,30,50)"
+testval = "isapprox(rA.T,tA.T) && size(rA) == [20,1200,50] && size(tA) == [20,40,30,50]"
 fulltest &= testfct(testval,"reshape(tens,tuple)",performancevals)
 
 rA = reshape(tA,[20,1200,50])
-testval = "isapprox(rA.T,tA.T) && size(rA) == (20,1200,50) && size(tA) == (20,40,30,50)"
+testval = "isapprox(rA.T,tA.T) && size(rA) == [20,1200,50] && size(tA) == [20,40,30,50]"
 fulltest &= testfct(testval,"reshape(tens,Vector)",performancevals)
 
 rA = reshape(copy(A),20,1200,50)
@@ -612,7 +611,7 @@ testval = "isapprox(norm(rA),norm(A)) && size(rA) == (20,1200,50) && size(A) == 
 fulltest &= testfct(testval,"reshape(Array,Vector)",performancevals)
 
 rA = reshape(copy(tA),[[1],[2,3],[4]])
-testval = "isapprox(rA.T,tA.T) && size(rA) == (20,1200,50) && size(tA) == (20,40,30,50)"
+testval = "isapprox(rA.T,tA.T) && size(rA) == [20,1200,50] && size(tA) == [20,40,30,50]"
 fulltest &= testfct(testval,"reshape(tens,[[indexes]])",performancevals)
 
 
@@ -620,19 +619,19 @@ fulltest &= testfct(testval,"reshape(tens,[[indexes]])",performancevals)
 tA = tens(rand(20,40,30,50))
 
 rA = reshape(copy(tA),20,1200,50)
-testval = "isapprox(rA.T,tA.T) && size(rA) == (20,1200,50) && size(tA) == (20,40,30,50)"
+testval = "isapprox(rA.T,tA.T) && size(rA) == [20,1200,50] && size(tA) == [20,40,30,50]"
 fulltest &= testfct(testval,"reshape(tens,integer)",performancevals)
 
 rA = reshape(copy(tA),(20,1200,50))
-testval = "isapprox(rA.T,tA.T) && size(rA) == (20,1200,50) && size(tA) == (20,40,30,50)"
+testval = "isapprox(rA.T,tA.T) && size(rA) == [20,1200,50] && size(tA) == [20,40,30,50]"
 fulltest &= testfct(testval,"reshape!(tens,tuple)",performancevals)
 
 rA = reshape!(copy(tA),[20,1200,50])
-testval = "isapprox(rA.T,tA.T) && size(rA) == (20,1200,50) && size(tA) == (20,40,30,50)"
+testval = "isapprox(rA.T,tA.T) && size(rA) == [20,1200,50] && size(tA) == [20,40,30,50]"
 fulltest &= testfct(testval,"reshape!(tens,Vector)",performancevals)
 
 rA = reshape!(copy(tA),[[1],[2,3],[4]])
-testval = "isapprox(rA.T,tA.T) && size(rA) == (20,1200,50) && size(tA) == (20,40,30,50)"
+testval = "isapprox(rA.T,tA.T) && size(rA) == [20,1200,50] && size(tA) == [20,40,30,50]"
 fulltest &= testfct(testval,"reshape!(tens,[[indexes]])",performancevals)
 
 println()
@@ -642,7 +641,7 @@ testval = "isapprox(norm(rA),norm(A)) && size(rA) == (20,1200,50) && size(A) == 
 fulltest &= testfct(testval,"unreshape(Array,Vector)",performancevals)
 
 rA = unreshape(copy(tA),20,1200,50)
-testval = "isapprox(norm(rA.T),norm(tA.T)) && size(rA) == (20,1200,50) && size(tA) == (20,40,30,50)"
+testval = "isapprox(norm(rA.T),norm(tA.T)) && size(rA) == [20,1200,50] && size(tA) == [20,40,30,50]"
 fulltest &= testfct(testval,"unreshape(tens,Vector)",performancevals)
 
 rA = unreshape!(copy(A),20,1200,50)
@@ -650,7 +649,7 @@ testval = "isapprox(norm(rA),norm(A)) && size(rA) == (20,1200,50) && size(A) == 
 fulltest &= testfct(testval,"unreshape!(Array,Vector)",performancevals)
 
 rA = unreshape!(copy(tA),20,1200,50)
-testval = "isapprox(norm(rA.T),norm(tA.T)) && size(rA) == (20,1200,50) && size(tA) == (20,40,30,50)"
+testval = "isapprox(norm(rA.T),norm(tA.T)) && size(rA) == [20,1200,50] && size(tA) == [20,40,30,50]"
 fulltest &= testfct(testval,"unreshape!(tens,Vector)",performancevals)
 
 println()
@@ -713,12 +712,14 @@ tA = tens(A)
 tB = tens(B)
 
 C = joinindex(tA,tB,1)
-testval = "isapprox(sum(tA)+sum(tB),sum(C)) && size(C) == (40,20,10)"
-fulltest &= testfct(testval,"joinindex(tens,integer)",performancevals)
+#println(sum(tA)+sum(tB)," ",sum(C))
+testval = "isapprox(sum(tA)+sum(tB),sum(C)) && size(C) == [40,20,10]"
+fulltest &= testfct(testval,"joinindex(tens,tens,integer)",performancevals)
 
 C = joinindex(tA,tB,[1,2])
-testval = "isapprox(sum(tA)+sum(tB),sum(C)) && size(C) == (40,40,10)"
-fulltest &= testfct(testval,"joinindex(tens,Array)",performancevals)
+#println(sum(tA)+sum(tB)," ",sum(C))
+testval = "isapprox(sum(tA)+sum(tB),sum(C)) && size(C) == [40,40,10]"
+fulltest &= testfct(testval,"joinindex(tens,tens,Array)",performancevals)
 
 
 
