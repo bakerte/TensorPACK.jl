@@ -20,7 +20,6 @@ function makepos(ninds::intType)
   pos = Array{intType,1}(undef,ninds)
   return makepos!(pos)
 end
-export makepos
 
 """
   G = makepos!(pos)
@@ -38,7 +37,6 @@ function makepos!(pos::Array{intType,1})
   end
   return pos
 end
-export makepos!
 
 """
   position_incrementer!(pos,sizes)
@@ -55,7 +53,38 @@ Increments a vector (but no entry over `sizes`) by one step.  Will change conten
   end
   nothing
 end
-export position_incrementer!
+
+"""
+  position_incrementer!(pos,minsize,maxsize)
+
+Increments a vector with maximum `maxsize` and minimum value `minsize` by one step.  Will change contents of `pos`.
+"""
+ function position_incrementer!(pos::Array{G,1},minsize::Array{W,1},maxsize::Array{W,1}) where {G <: Integer, W <: intType}
+  w = 1
+  @inbounds pos[w] += 1
+  @inbounds while w <= length(pos) && pos[w] > maxsize[w]
+    pos[w] = minsize[w]
+    w += 1
+    pos[w] += 1
+  end
+  nothing
+end
+
+"""
+  position_incrementer!(pos,minmaxvector)
+
+Increments a vector with maximum `maxsize` and minimum value `minsize` by one step.  Will change contents of `pos`.
+"""
+ function position_incrementer!(pos::Array{G,1},minmaxvector::Array{NTuple{2,W},1}) where {G <: Integer, W <: intType}
+  w = 1
+  @inbounds pos[w] += 1
+  @inbounds while w <= length(pos) && pos[w] > minmaxvector[w][2] #maxsize[w]
+    pos[w] = minmaxvector[w][1] #minsize[w]
+    w += 1
+    pos[w] += 1
+  end
+  nothing
+end
 
 """
   ind2pos!(currpos,k,x,index,S)
@@ -104,7 +133,9 @@ end
 
 Generates an index `G` from an input position `currpos` (tuple) with tensor size `S` (tuple)
 
-See also: [`pos2ind!`](@ref)
+Note: This function is purposefully not defined with a vector input. The reason is that tuples tend to be much more efficient in terms of allocation use. Use `tupsize` before a loop to get the best performance.
+
+See also: [`pos2ind!`](@ref) [`tupsize`](@ref)
 """
  function pos2ind(currpos::NTuple{G,P},S::NTuple{G,P}) where {G, P <: Integer}
   x = 0
@@ -149,7 +180,6 @@ function pos2ind(currpos::NTuple{N,P},S::Array{P,1}) where {N, P <: Integer}
   @inbounds x += currpos[1]
   return x
 end
-export pos2ind
 
 """
   pos2ind!(currpos,S)
@@ -168,7 +198,6 @@ See also: [`pos2ind`](@ref)
   @inbounds x[j] = val
   nothing
 end
-export pos2ind!
 
 
 """

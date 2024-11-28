@@ -9,17 +9,26 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-
-
 """
     G = size(A)
 
 Outputs tuple `G` representing the size of a `denstens` `A` (identical usage to `Array` `size` call)
 
-See also: [`denstens`](@ref) [`Array`](@ref)
+See also: [`tupsize`](@ref) [`denstens`](@ref) [`Array`](@ref)
 """
 function size(A::denstens)
-  return (A.size...,)
+  return A.size
+end
+
+"""
+    G = tupsize(A)
+
+Returns size of input tensor `A` but as a tuple instead of a vector
+
+See also: [`size`](@ref) [`denstens`](@ref) [`Array`](@ref)
+"""
+function tupsize(A::Union{TensType,diagonal})
+  return ntuple(b->size(A,b),ndims(A)) #(A.size...,)
 end
 
 """
@@ -125,5 +134,10 @@ end
 size of `qarray` `A`
 """
 function size(A::qarray)
+
+#  println(A)
+
+#  println(ndims(A))
+
   return ntuple(w->size(A,w),ndims(A))
 end

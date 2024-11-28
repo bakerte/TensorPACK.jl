@@ -16,7 +16,7 @@ Sum elements of a `denstens` `A` (ouptut `G`)
 
 See: [`denstens`](@ref)
 """
-function sum(A::denstens)
+function sum(A::Union{denstens,diagonal})
   return sum(A.T)
 end
 

@@ -31,7 +31,6 @@ See also: [`-`](@ref) [`add!`](@ref) [`sub!`](@ref) [`mult!`](@ref) [`div!`](@re
 function sub!(A::W,B::W) where W <: TensType
   return add!(A,B,eltype(A)(-1))
 end
-export sub!
 
 """
     sub!(A,B)

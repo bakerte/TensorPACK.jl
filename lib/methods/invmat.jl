@@ -49,7 +49,6 @@ function invmat!(M::Diagonal{W};zeronum::Float64=1E-12) where W <: Number
   end
   return M
 end
-export invmat!
 
 """
   G = invmat(M[,zero=])
@@ -58,10 +57,9 @@ Creates inverse of a diagonal matrix with output `G`; if value is below `zero`, 
 
 See also: [`invmat!`](@ref)
 """
-function invmat(M::TensType;zeronum::Float64=1E-16) 
+function invmat(M::Union{TensType,diagonal};zeronum::Float64=1E-16) 
   return invmat!(copy(M))#,zeronum=zeronum)
 end
-export invmat
 
 """
   G = invmat(M[,zero=])
@@ -88,5 +86,4 @@ function invmat!(A::qarray)
   end
   return A
 end
-export invmat!
 

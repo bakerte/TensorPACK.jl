@@ -30,6 +30,30 @@ function kron(Ns::Integer, Mterm::Tuple{R,S}...;dim::Array{S}=[size(Mterm[(w-1) 
 end
 
 """
+    C = kron(Ns,M...[,dim=...])
+
+Takes the kronecker product over `Ns` sites of any number of operators given in a tuple `M` (2 elements: operator, site to be applied) with dimensions on each site `dim`
+"""
+function kron(F::Union{denstens,diagonal,qarray}, Ns::Integer,Mterm::Tuple{R,S}...;dim::Array{S}=[size(Mterm[(w-1) % length(Mterm) + 1][1],1) for w = 1:Ns]) where {R <: TensType, S <: Integer}
+  posvec = [Mterm[w][2] for w = 1:length(Mterm)]
+  final  =  1
+  minpos = minimum(posvec)
+  for i = 1:Ns
+      if i in posvec
+        index = findfirst(w->i==posvec[w],1:length(posvec))
+        final = kron(final, Array(Mterm[index][1]))
+      elseif i < minpos
+        arrayF = Array(F)
+        final = LinearAlgebra.kron(final, arrayF)
+      else
+        id = Array(eye(dim[i]))
+        final = LinearAlgebra.kron(final, id)
+      end
+  end
+  return final
+end
+
+"""
     C = kron(Op,i,Ns)
 
 Creates the kronecker product of an input operator `Op` on site `i` of an `Ns` site system
@@ -38,6 +62,25 @@ function kron(M1::TensType,i::intType,Ns::intType)
   return kron(Ns,(M1,i))
 end
 
+"""
+    C = kron(Op,i,Ns,F)
+
+Creates the kronecker product of an input operator `Op` on site `i` of an `Ns` site system with a trailing operator `F`
+"""
+function kron(F::TensType,M1::TensType,i::intType,Ns::intType)
+  return kron(F,Ns,(M1,i))
+end
+
+#=
+"""
+    C = kron(Op,Ns)
+
+Creates the kronecker product of an input operator `Op` on all sites for an `Ns` site system
+"""
+function kron(M1::TensType,Ns::intType)
+  return sum(w->kron(Ns,(M1,w)),1:Ns)
+end
+=#
 """
     C = kron(Op,i,Op2,j,Ns)
 
@@ -117,4 +160,22 @@ Multiplies operator `Op` by number `a`
 """
 function kron(num::Number,M1::TensType)
   return M1*num
+end
+
+"""
+    kron(A,B)
+
+Kroneckers diagonal type `A` by `TensType` `B`
+"""
+function kron(A::diagonal,B::TensType)
+  return kron(Array(A),B)
+end
+
+"""
+    kron(A,B)
+
+Kroneckers diagonal type `B` by `TensType` `A`
+"""
+function kron(A::TensType,B::diagonal)
+  return kron(A,Array(B))
 end

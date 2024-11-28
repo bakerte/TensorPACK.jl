@@ -15,7 +15,7 @@
 creates an identity matrix of integer size `d`
 """
 function eye(;d::intType=2)
-  return eye(Float64,d) #zeros(d,d)+LinearAlgebra.I
+  return eye(Float64,d)
 end
 
 """
@@ -24,7 +24,7 @@ end
 creates an identity matrix of integer size `d` with type 'type'
 """
 function eye(type::DataType;d::intType=2)
-  return eye(type,d) #zeros(d,d)+LinearAlgebra.I
+  return eye(type,d)
 end
 
 """
@@ -33,7 +33,7 @@ end
 creates an identity matrix of integer size `d`
 """
 function eye(d::intType)
-  return eye(Float64,d) #zeros(d,d)+LinearAlgebra.I
+  return eye(Float64,d)
 end
 
 """
@@ -42,9 +42,8 @@ end
 creates an identity matrix of integer size `d` with type 'type'
 """
 function eye(type::DataType,d::intType)
-  return diagonal(ones(type,d))
+  return Diagonal(ones(type,d))
 end
-export eye
 
 #=
 function makeIdarray(W::DataType,ldim::Integer;addone::Bool=false,addRightDim::Bool=false,loadleft::Bool=true)
@@ -62,12 +61,12 @@ function eye(W::DataType,ldim::Integer,rdim::Integer;addone::Bool=false,addRight
   oneval = W(1)
   if addone
     if addRightDim
-      newsize = (ldim,rdim,1)
+      newsize = [ldim,rdim,1]
     else
-      newsize = (1,ldim,rdim)
+      newsize = [1,ldim,rdim]
     end
   else
-    newsize = (ldim,rdim)
+    newsize = [ldim,rdim]
   end
   Id = zeros(W,prod(newsize))
   stop = min(ldim,rdim) #loadleft ? ldim : rdim
@@ -103,6 +102,18 @@ See also: [`denstens`](@ref)
 """
 function eye(ldim::Integer,rdim::Integer;addone::Bool=false,addRightDim::Bool=false,loadleft::Bool=true)
   return eye(Float64,ldim,rdim;addone=addone,addRightDim=addRightDim)
+end
+
+"""
+    G = eye(ldim,rdims...[,addone=false,addRightDim=false])
+
+Generates an identity tensor (`denstens` of output type `Float64` [default Float64], `G`) that contracts to the identity operator (rank-2) when applied on another tensor traces out that a pair of indices of equal dimension. Parameter `ldim` x `rdims[1]` x `rdims[2]` x ... denotes the size of the index to contract over, `addone` if `true` leaves two indices of size 1 on indices 1 and 4 (rank-4 tensor). Option `addRightDim` adds one index of size 1 on the third index (rank-3).
+
+See also: [`denstens`](@ref)
+"""
+function eye(ldim::Integer,rdims::Integer...;addone::Bool=false,addRightDim::Bool=false)
+  inI = eye(Float64,ldim,prod(rdims);addone=addone,addRightDim=addRightDim)
+  return reshape!(inI,ldim,rdims...)
 end
 #=
 function makeId(ldim::Integer;addone::Bool=false,addRightDim::Bool=false)
@@ -151,6 +162,28 @@ function eye(A::tens{W},iA::Integer) where {W <: Number}
 end
 
 """
+    B = eye(A)
+
+Creates an identity matrix based on any `TensType` rank-2 input `A` (uses dimension of first index)
+
+See also: [`trace`](@ref)
+"""
+function eye(A::TensType)
+  return eye(size(A,1))
+end
+
+"""
+    B = eye(W,A)
+
+Creates an identity matrix based on any `TensType` rank-2 input `A` (uses dimension of first index) with element type `W`
+
+See also: [`trace`](@ref)
+"""
+function eye(W::DataType,A::TensType)
+  return eye(size(A,1))
+end
+
+"""
     B = eye(A,iA)
 
 Creates an identity matrix based on indices `iA` (stored as a vector of integers) of `A` (`denstens`) for use in trace operations
@@ -187,7 +220,6 @@ See also: [`trace`](@ref)
 function eye(A::Array{W,N},iA::Integer...) where {W <: Number,N}
   return eye(A,[iA...])
 end
-export eye
 
 """
     eye(A,iA)

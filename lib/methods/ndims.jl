@@ -17,7 +17,7 @@ Number of dimensions (rank) `B` of a `denstens` (identical usage to `Array` `ndi
 See also: [`denstens`](@ref) [`Array`](@ref)
 """
 function ndims(A::denstens)
-  return length(size(A))
+  return length(A.size)
 end
 
 """

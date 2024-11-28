@@ -10,9 +10,9 @@
 #
 
 """
-  G = tensorcombination(M...[,alpha=,fct=])
+  G = tensorcombination(M...[,alpha=(1,1,1...),fct=*])
 
-Performs a linear combination of the input tensors `M` with coefficients `alpha` to output tensor `G`.  For example, A*2 + B*3 is tensorcombinaton(A,B,alpha=(2,3)).
+Performs a linear combination of the input `denstens` `M` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.
 
 The input function `fct` can be altered. For example,  A/2 + B/3 is tensorcombinaton(A,B,alpha=(2,3),fct=/).
 """
@@ -22,12 +22,26 @@ function tensorcombination(M::tens{W}...;alpha::NTuple{R,W}=ntuple(i->W(1),lengt
   return tens{W}(M[1].size,output_vector)
 end
 
-function tensorcombination(M::diagonal{W}...;alpha::NTuple{R,W}=ntuple(i->W(1),length(M)),fct::Function=*) where {W <: Number, R}
+"""
+  G = tensorcombination(M...[,alpha=(1,1,1...),fct=*])
+
+Performs a linear combination of the input `Diagonal` `M` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.
+
+The input function `fct` can be altered. For example,  A/2 + B/3 is tensorcombinaton(A,B,alpha=(2,3),fct=/).
+"""
+function tensorcombination(M::Diagonal{W}...;alpha::NTuple{R,W}=ntuple(i->W(1),length(M)),fct::Function=*) where {W <: Number, R}
   input_tup = ntuple(g->M[g].T,length(M))
   output_vector = tensorcombination(input_tup...,alpha=alpha,fct=fct)
-  return diagonal{W}(output_vector)
+  return Diagonal{W}(output_vector)
 end
 
+"""
+  G = tensorcombination(M...[,alpha=(1,1,1...),fct=*])
+
+Performs a linear combination of the input Array `M` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.
+
+The input function `fct` can be altered. For example,  A/2 + B/3 is tensorcombinaton(A,B,alpha=(2,3),fct=/).
+"""
 function tensorcombination(M::Array{W,N}...;alpha::NTuple{R,W}=ntuple(i->W(1),length(M)),fct::Function=*) where {W <: Number, N, R}
   nterms = min(length(M),length(alpha))
   newTensor = Array{W,N}(undef,size(M[1])...)
@@ -41,18 +55,38 @@ function tensorcombination(M::Array{W,N}...;alpha::NTuple{R,W}=ntuple(i->W(1),le
   return newTensor
 end
 
+"""
+  G = tensorcombination(alpha,M...[,fct=*])
+
+Performs a linear combination of the input `denstens` `M` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.
+
+The input function `fct` can be altered. For example,  A/2 + B/3 is tensorcombinaton(A,B,alpha=(2,3),fct=/).
+"""
 function tensorcombination(alpha::NTuple{G,W},M::tens{W}...;fct::Function=*) where {W <: Number, G}
   return tensorcombination(M...,alpha=alpha,fct=fct)
 end
 
+"""
+  G = tensorcombination(alpha,M...[,fct=*])
+
+Performs a linear combination of the input `Diagonal` `M` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.
+
+The input function `fct` can be altered. For example,  A/2 + B/3 is tensorcombinaton(A,B,alpha=(2,3),fct=/).
+"""
 function tensorcombination(alpha::NTuple{G,W},M::Array{W,G}...;fct::Function=*) where {W <: Number, G}
   return tensorcombination(M...,alpha=alpha,fct=fct)
 end
 
+"""
+  G = tensorcombination(alpha,M...[,fct=*])
+
+Performs a linear combination of the input Array `M` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.
+
+The input function `fct` can be altered. For example,  A/2 + B/3 is tensorcombinaton(A,B,alpha=(2,3),fct=/).
+"""
 function tensorcombination(alpha::NTuple{G,W},M::Diagonal{W}...;fct::Function=*) where {W <: Number, G}
   return tensorcombination(M...,alpha=alpha,fct=fct)
 end
-export tensorcombination
 
 """
   G = tensorcombination!(M...[,alpha=,fct=])
@@ -126,6 +160,15 @@ function tensorcombination!(alpha::NTuple{R,W},M::LinearAlgebra.Diagonal{W,Vecto
 end
 =#
 
+"""
+  G = tensorcombination!(alpha,M...[,fct=*])
+
+Performs a linear combination of the input `denstens`, Array, or `Diagonal` `M` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.
+
+This version converts input `alpha` to the same type as the element type of `M`
+
+The input function `fct` can be altered. For example,  A/2 + B/3 is tensorcombinaton(A,B,alpha=(2,3),fct=/).
+"""
 function (tensorcombination!(alpha::NTuple{R,S},M::P...;fct::Function=*) where P <: Union{tens{W},Array{W,G},Diagonal{W}}) where {R, G, W <: Number, S <: Number}
   if W != S
     alpha = ntuple(w->convert(W,alpha[w]),length(alpha))
@@ -133,11 +176,16 @@ function (tensorcombination!(alpha::NTuple{R,S},M::P...;fct::Function=*) where P
   out = tensorcombination!(M...,alpha=alpha,fct=fct)
   return out
 end
-export tensorcombination!
 
 
 
+"""
+  G = tensorcombination!(M...[,alpha=(1,1,1...),fct=*])
 
+Performs a linear combination of the input `qarray` `M` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.
+
+The input function `fct` can be altered. For example,  A/2 + B/3 is tensorcombinaton(A,B,alpha=(2,3),fct=/).
+"""
 function tensorcombination!(M::Qtens{W,Q}...;alpha::NTuple{N,W}=ntuple(i->eltype(M[1])(1),length(M)),fct::Function=*) where {Q <: Qnum, W <: Number, N}
   if length(M) == 1
     A = tensorcombination!(M[1],alpha=(alpha[1],))
@@ -151,6 +199,13 @@ function tensorcombination!(M::Qtens{W,Q}...;alpha::NTuple{N,W}=ntuple(i->eltype
   return A
 end
 
+"""
+  G = tensorcombination(M[,alpha=(1,),fct=*])
+
+Performs a linear combination of the input `qarray` `M` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.
+
+The input function `fct` can be altered. For example,  A/2 + B/3 is tensorcombinaton(A,B,alpha=(2,3),fct=/).
+"""
 function tensorcombination!(M::Qtens{W,Q};alpha::NTuple{N,W}=(W(1),),fct::Function=*) where {Q <: Qnum, W <: Number, N}
   if !isapprox(alpha[1],W(1))
     @inbounds for q = 1:length(M.T)
@@ -166,11 +221,22 @@ function tensorcombination!(M::Qtens{W,Q};alpha::NTuple{N,W}=(W(1),),fct::Functi
   return M
 end
 
+"""
+  G = tensorcombination!(alpha,M...[,fct=*])
+
+Performs a linear combination of the input `qarray` `M` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.
+
+The input function `fct` can be altered. For example,  A/2 + B/3 is tensorcombinaton(A,B,alpha=(2,3),fct=/).
+"""
 function tensorcombination!(alpha::NTuple{N,S},M::Qtens{W,Q}...;fct::Function=*) where {Q <: Qnum, W <: Number, N, S <: Number}
   return tensorcombination!(M...,alpha=alpha,fct=fct)
 end
 
+"""
+    findvals(Lrows,newrows)
 
+Finds values of a set of rows `Lrows` (or columns) from a an input vector of new row numbers `newrows`
+"""
 function findvals(Lrows::Array{intType,1},newrows::Array{intType,1})
   subsetL = Array{intType,1}(undef,length(Lrows))
   g = 1
@@ -189,7 +255,13 @@ function findvals(Lrows::Array{intType,1},newrows::Array{intType,1})
 end
 
 
+"""
+  G = tensorcombination!(A,B[,alpha=(1,1),fct=*])
 
+Performs a linear combination of the input `qarray` `A` with `B` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.
+
+The input function `fct` can be altered. For example,  A/2 + B/3 is tensorcombinaton(A,B,alpha=(2,3),fct=/).
+"""
 function tensorcombination!(A::Qtens{W,Q},QtensB::Qtens{W,Q};alpha::NTuple{2,W}=(W(1),W(1)),fct::Function=*) where {Q <: Qnum, W <: Number}
 
   B = changeblock(QtensB,A.currblock)
@@ -317,12 +389,28 @@ function tensorcombination!(A::Qtens{W,Q},QtensB::Qtens{W,Q};alpha::NTuple{2,W}=
   return A
 end
 
+"""
+  G = tensorcombination(M...[,alpha=(1,1,1...),fct=*])
+
+Performs a linear combination (making a copy of the first entry of `M`) of the input `qarray` `M` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.
+
+The input function `fct` can be altered. For example,  A/2 + B/3 is tensorcombinaton(A,B,alpha=(2,3),fct=/).
+"""
 function tensorcombination(M::Qtens{W,Q}...;alpha::NTuple{N,W}=ntuple(i->eltype(M[1])(1),length(M)),fct::Function=*) where {Q <: Qnum, W <: Number, N}
   A = copy(M[1])
   newtup = (A,Base.tail(M)...)
   return tensorcombination!(newtup...,alpha=alpha,fct=fct)
 end
 
+"""
+  G = tensorcombination(alpha,M...[,fct=*])
+
+Performs a linear combination of the input `qarray` `M` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.
+
+This version converts input `alpha` to the same type as the element type of `M`
+
+The input function `fct` can be altered. For example,  A/2 + B/3 is tensorcombinaton(A,B,alpha=(2,3),fct=/).
+"""
 function tensorcombination(alpha::NTuple{N,W},M::Qtens{W,Q}...;fct::Function=*) where {Q <: Qnum, W <: Number, N}
   return tensorcombination(M...,alpha=alpha,fct=fct)
 end

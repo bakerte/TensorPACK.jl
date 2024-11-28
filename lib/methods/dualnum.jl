@@ -33,6 +33,11 @@ Initializes the `dualnum` type with value `val` and a gradient `grad` (default v
 function dualnum(val::W; grad::W=W(1)) where W <: Number
   return dualnum{W}(val, grad)
 end
+
+
+function dualnum{W}(val::Number; grad::Number=W(1)) where W <: Number
+  return dualnum{W}(val, grad)
+end
 #=
 """
   dualnum(val,grad)
@@ -41,6 +46,11 @@ Initializes the `dualnum` type with value `val` and a gradient `grad`
 """
 function dualnum(val::W, grad::W) where W <: Number
   return dualnum{W}(val, grad)
+end
+=#
+#=
+function dualnum{W}(X::Number) where W <: Number
+  return dualnum{W}(X)
 end
 =#
 """
@@ -58,7 +68,7 @@ end
 Creates a zero `dualnum` of type Float64
 """
 function dualnum(;type::DataType=Float64)
-  return dualnum{type}(W(0),W(1))
+  return dualnum{type}(type(0),type(1))
 end
 
 
@@ -111,3 +121,16 @@ function init_dualnum(real, num_variables, variable_index)
   return dualnum(real, g)
 end
 =#
+import Base.real
+function real(X::dualnum)
+  return dualnum{Float64}(real(X.val),real(X.grad))
+end
+
+import Base.isless
+function isless(X::dualnum,Y::Number)
+  return X.val < Y
+end
+
+function isless(Y::dualnum,X::Number)
+  return Y.val < X
+end

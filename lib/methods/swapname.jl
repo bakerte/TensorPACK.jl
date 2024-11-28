@@ -32,7 +32,7 @@ function swapname!(A::TNobj,inds::Array{Array{W,1},1}) where W <: String
       A.names[x],A.names[y] = A.names[y],A.names[x]
     end
   end
-  nothing
+  return A
 end
 
 """
@@ -47,7 +47,6 @@ See also: [`swapname!`](@ref)
 function swapname!(A::TNobj,inds::Array{W,1}) where W <: String
   swapname!(A,[inds])
 end
-export swapname!
 
 """
     swapnames!(A,labels)
@@ -74,4 +73,3 @@ See also: [`swapname!`](@ref)
 function swapnames!(A::TNobj,inds::Array{W,1}) where W <: String
   swapname!(A,[inds])
 end
-export swapnames!

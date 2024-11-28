@@ -47,7 +47,7 @@ Conjugates a `diagonal` `A` in-place (creates no copy) but also has output `G`
 
 See also: [`conj!`](@ref) [`diagonal`](@ref)`
 """
-function conj!(M::diagonal{W}) where W <: Number
+function conj!(M::Diagonal{W}) where W <: Number
   if !(W <: Real)
     LinearAlgebra.conj!(M.T)
   end
@@ -61,10 +61,10 @@ Conjugates a `diagonal` by creating a copy `G`
 
 See also: [`conj`](@ref) [`diagonal`](@ref)`
 """
-function conj(M::diagonal{W}) where W <: Number
+function conj(M::Diagonal{W}) where W <: Number
   if !(W <: Real)
     newT = LinearAlgebra.conj(M.T)
-    out = diagonal{W}(newT)
+    out = Diagonal{W}(newT)
   else
     out = M
   end

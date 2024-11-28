@@ -35,3 +35,9 @@ end
 function isapprox(A::Array,B::denstens)
   return isapprox(B,A)
 end
+
+#sub-function for isapproximate since dualnum is a Number
+import Base.rtoldefault
+function rtoldefault(X::Type{dualnum{W}}) where W
+  return Base.rtoldefault(W)
+end

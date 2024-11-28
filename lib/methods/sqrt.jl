@@ -23,13 +23,12 @@ end
 
 Takes the square root of a `diagonal` (new tensor created) or Qtensor (in-place)
 """
-function sqrt!(M::diagonal{W}) where W <: Number
+function sqrt!(M::Diagonal{W}) where W <: Number
   @inbounds @simd for i = 1:length(M)
     M[i] = sqrt(M[i])
   end
   return M
 end
-export sqrt!
 
 """
   G = sqrt(M)
@@ -49,7 +48,7 @@ Takes the square root of a `diagonal` tensor with output `G`
 
 See also: [`sqrt`](@ref)
 """
-function sqrt(M::diagonal{W}) where W <: Number
+function sqrt(M::Diagonal{W}) where W <: Number
   return sqrt!(copy(M))
 end
 
@@ -71,13 +70,12 @@ Takes the square root of the absolute value of a `diagonal` tensor
 
 See also: [`sqrt`](@ref)
 """
-function sqrtabs!(M::diagonal{W}) where W <: Number
+function sqrtabs!(M::Diagonal{W}) where W <: Number
   @inbounds @simd for i = 1:length(M)
     M[i] = sqrt(abs(M[i]))
   end
   return M
 end
-export sqrt!
 
 """
   G = sqrtabs(M)

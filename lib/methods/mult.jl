@@ -31,7 +31,6 @@ See also: [`*`](@ref) [`add!`](@ref) [`sub!`](@ref) [`div!`](@ref)
 function mult!(num::Number,M::W) where W <: TensType
   return mult!(M,num)
 end
-export mult!
 
 """
     mult!(A,num)

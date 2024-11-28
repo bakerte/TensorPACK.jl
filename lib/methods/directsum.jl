@@ -12,12 +12,13 @@
 """
     G = joinindex!(vec,A,B)
 
-In-place joinindexenatation of tensors `A` (replaced for Qtensors only) and `B` along indices specified in `vec`
+In-place joinindexenatation of tensors `A` (either `denstens` or Array type) and `B` along indices specified in `vec`
 """
 function joinindex!(bareinds::intvecType,A::Union{tens{W},Array{W,N}},B::Union{tens{W},Array{W,N}}) where {W <: Number, N}
   inds = convIn(bareinds)
 
   nA = ndims(A)
+
   #=
   if typeof(A) <: denstens || typeof(B) <: denstens
     finalsize = Array{intType,1}(undef,nA)
@@ -36,7 +37,7 @@ function joinindex!(bareinds::intvecType,A::Union{tens{W},Array{W,N}},B::Union{t
     end
     =#
 #  end
-  finalsize = ntuple(w-> w in inds ? size(A,w) + size(B,w) : size(A,w),nA)
+  finalsize = intType[w in inds ? size(A,w) + size(B,w) : size(A,w) for w = 1:nA] #ntuple(w-> w in inds ? size(A,w) + size(B,w) : size(A,w),nA)
 
   Asize = size(A)
   Bsize = size(B)
@@ -63,6 +64,7 @@ function joinindex!(bareinds::intvecType,A::Union{tens{W},Array{W,N}},B::Union{t
       C = Array{W,nA}(undef,finalsize...)
     end
   end
+
   Aloop!(C,A,finalsize,Asize)
   Bloop!(C,B,finalsize,Bsize,inds,Asize)
 
@@ -72,7 +74,15 @@ function joinindex!(bareinds::intvecType,A::Union{tens{W},Array{W,N}},B::Union{t
   return C
 end
 
-function Aloop!(C::Union{Array{W,nA},Array{W,1}},A::Union{tens{W},Array{W,nA}},finalsize::Union{NTuple{nA,intType},Array{intType,1}},Asize::NTuple{nA,intType}) where {nA, W <: Number}
+"""
+    Aloop!(C,A,finalsize,Asize)
+
+Function boundary to load in first tensor in a direct sum into C (Array) from `denstens` or Array `A`; `finalsize` is the size of the resulting tensor as a vector or tuple; `Asize` is the size of `A` as a vector or tuple
+"""
+function Aloop!(C::Union{Array{W,G},Array{W,1}},A::Union{tens{W},Array{W,G}},finalsize::Union{NTuple{G,intType},Array{intType,1}},Asize::Union{Array{intType,1},NTuple{G,intType}}) where {G, W <: Number}
+
+  nA = ndims(A)
+
   pos = makepos(nA)
   d1 = 1
 #  @inbounds while d1 < nA && Asize[d1] == 1
@@ -88,6 +98,7 @@ function Aloop!(C::Union{Array{W,nA},Array{W,1}},A::Union{tens{W},Array{W,nA}},f
   p = 0
   for y = 1:Aysize
     position_incrementer!(pos,Asize)
+
     backZ = pos[nA]
     @inbounds @simd for w = nA-1:-1:d1
       backZ -= 1
@@ -103,7 +114,19 @@ function Aloop!(C::Union{Array{W,nA},Array{W,1}},A::Union{tens{W},Array{W,nA}},f
   nothing
 end
 
-function Bloop!(C::Union{Array{W,nA},Array{W,1}},B::Union{tens{W},Array{W,nA}},finalsize::Union{NTuple{nA,intType},Array{intType,1}},Bsize::NTuple{nA,intType},inds::NTuple{G,intType},Asize::NTuple{nA,intType}) where {nA, G, W <: Number}
+"""
+    Bloop!(C,B,finalsize,inds,Asize)
+
+Function boundary to load in second tensor in a direct sum into C (Array) from `denstens` or Array `B`; `finalsize` is the size of the resulting tensor as a vector or tuple; `inds` are the indices that are expanded; `Asize` is the size of `A` as a vector or tuple
+"""
+function Bloop!(C::Union{Array{W,R},Array{W,1}},B::Union{tens{W},Array{W,R}},finalsize::Union{NTuple{R,intType},Array{intType,1}},Bsize::Union{Array{intType,1},NTuple{R,intType}},inds::NTuple{G,intType},Asize::Union{Array{intType,1},NTuple{R,intType}}) where {R, G, W <: Number}
+
+
+
+  nA = ndims(B)
+
+
+
   pos = makepos(nA) #makepos!(pos)
   Bpos = makepos(nA)
 
@@ -143,11 +166,20 @@ function Bloop!(C::Union{Array{W,nA},Array{W,1}},B::Union{tens{W},Array{W,nA}},f
 end
 
 
+"""
+    G = joinindex!(vec,A,B)
 
+In-place joinindexenatation of tensors `A` (Array type) and `B` over all indices (most useful for rank-2 tensors as a matrix direct sum)
+"""
 function joinindex!(A::Array{S,N},B::Array{W,N}) where {W <: Number, S <: Number, N}
   return joinindex!(A,B,[i for i = 1:N])
 end
 
+"""
+    G = joinindex!(vec,A,B)
+
+In-place joinindexenatation of tensors `A` (`denstens`) and `B` over all indices (most useful for rank-2 tensors as a matrix direct sum)
+"""
 function joinindex!(A::tens{S},B::tens{W}) where {W <: Number, S <: Number}
   return joinindex!(A,B,[i for i = 1:ndims(A)])
 end
@@ -175,7 +207,6 @@ function joinindex(A::W,B::R,inds::intvecType) where {W <: TensType, R <: TensTy
   mA,mB = checkType(A,B)
   return joinindex(inds,mA,mB)
 end
-export joinindex
 
 """
   G = joinindex!(A,B,vec)
@@ -186,7 +217,6 @@ function joinindex!(A::W,B::R,inds::intvecType) where {W <: TensType, R <: TensT
   mA,mB = checkType(A,B)
   return joinindex!(inds,mA,mB)
 end
-export joinindex!
 
 """
   directsum(A,B...[,group=[1,2]])
@@ -206,7 +236,6 @@ function directsum(A::TensType,B::TensType...;group::Array{W,1}=[1,2],fct::Funct
   end
   return out
 end
-export directsum
 
 """
   directsum!(A,B...[,group=[1,2]])
@@ -218,7 +247,6 @@ See also: [`joinindex`](@ref) [`joinindex!`](@ref) [`directsum!`](@ref)
 function directsum!(A::TensType,B::TensType...;group::Array{W,1}=[1,2],fct::Function=joinindex!) where W <: Integer
   return directsum!(A,B...,group=group,fct=fct)
 end
-export directsum!
 
 
 
@@ -231,7 +259,11 @@ export directsum!
 
 
 
+"""
+    getblockrows(A,Aqind,leftAblock)
 
+Obtains effective rows of an input `qarray` `A` for a given block `Aqind` and dimensions of the blocks `leftAblock`
+"""
 function getblockrows(A::qarray,Aqind::Integer,leftAblock::Array{P,1}) where P <: Integer
   Arows = Array{intType,1}(undef,size(A.ind[Aqind][1],2))
   if size(A.ind[Aqind][1],1) > 0
@@ -250,7 +282,11 @@ end
 
 
 
+"""
+    joinloop!(A,B,commonblocks,origAsize...)
 
+Function boundary for `joinindex!` taking input `qarray`s `A` and `B` and quantum number blocks with the same quantum numbers `commonblocks` (array of size 2 tuples); `origAsize` is the base size of the input `A` taken from .QnumMat
+"""
 function joinloop!(A::Qtens{W,Q},B::Qtens{R,Q},commonblocks::Array{NTuple{2,intType},1},origAsize::intType...) where {W <: Number, R <: Number, Q <: Qnum}
   tup_Aleftsize = ntuple(w->A.currblock[1][w],length(A.currblock[1]))
   leftAblock = Array{intType,1}(undef,length(A.currblock[1])-1)
@@ -322,7 +358,11 @@ function joinloop!(A::Qtens{W,Q},B::Qtens{R,Q},commonblocks::Array{NTuple{2,intT
   nothing
 end
 
+"""
+    firstloop!(w,origAsize,A,index,newQnums,newQnumSum)
 
+Function boundary for `joinindex!` taking input `qarray` `A` examining a given row or column in .ind `w`; `index` is the current index to get a quantum number; `newQnums` is the new quantum number after joining (.QnumMat); `newQnumSum` is the new summary (.QnumSum); `origAsize` is the base size of the input `A` taken from .QnumMat as either a vector or tuple
+"""
 function firstloop!(w::Integer,origAsize::Union{Array{P,1},NTuple{G,P}},A::Qtens{W,Q},index::Integer,newQnums::Array{intType,1},newQnumSum::Array{Q,1}) where {W <: Number, Q <: Qnum, P <: Integer, G}
   @inbounds for j = 1:origAsize[w] #better serial on small systems (for sequential memory access?)
     thisQN = getQnum(index,j,A)
@@ -337,7 +377,11 @@ function firstloop!(w::Integer,origAsize::Union{Array{P,1},NTuple{G,P}},A::Qtens
   nothing
 end
 
+"""
+    matchloop(g,B,index,deltaflux,newQnums,newQnumSum)
 
+Function boundary that takes original size `g` of input tensor `A` in `joinindex!` and adds to sizes in second tensor `B`; `index` is the current base index (.QnumMat) that is being investigated; `deltaflux` is the change in flux between the two tensors to ensure matching; `newQnums` is the new quantum number after joining (.QnumMat); `newQnumSum` is the new summary (.QnumSum); `origAsize` is the base size of the input `A` taken from .QnumMat as either a vector or tuple
+"""
 function matchloop(g::Integer,B::Qtens{W,Q},index::Integer,deltaflux::Q,newQnums::Array{intType,1},newQnumSum::Array{Q,1}) where {W <: Number, Q <: Qnum}
   @inbounds for j = 1:size(B,index)
     g += 1
@@ -353,6 +397,11 @@ function matchloop(g::Integer,B::Qtens{W,Q},index::Integer,deltaflux::Q,newQnums
   nothing
 end
 
+"""
+    matchloop(g,B,index,deltaflux,newQnums,newQnumSum)
+
+Function boundary that adds in any non-matching blocks between `A` and `B` in a `joinindex!` call; `inds` is the indices to be expanded; `A` and `B` are `qarray`s; `Bleftover` is the leftover quantum numbers that were not already accounted for; `newT` is the resulting tensor that `A` and `B` are joined into; `newindexlist` (array or tuple) is a list of indices (.ind field) that will be needed for the new block; `inputsize` is a tuple that each index has and therefore must be added to each appropriate index; `newQblocksum` is the new summary of quantum numbers on each block
+"""
 function Bextraloop!(inds::Array{intType,1},A::Qtens{W,Q},B::Qtens{R,Q},Bleftover::Array{intType,1},
                       newT::Array{Array{P,2},1},newindexlist::Array{NTuple{2,Array{intType,2}},1},
                       inputsize::Tuple,newQblocksum::Array{NTuple{2,Q},1}) where {W <: Number, R <: Number, Q <: Qnum, P <: Number}
@@ -376,6 +425,11 @@ function Bextraloop!(inds::Array{intType,1},A::Qtens{W,Q},B::Qtens{R,Q},Bleftove
   nothing
 end
 
+"""
+    makerowcol(Lposes,Lsizes,A,q,LR)
+
+Generates rows of the effective matrix-equivalent based on the .ind field of an input `qarray` `A`; `Lposes` is a vector of integers that is used to store the integers; `Lsizes` is a tuple of sizes; `q` is an integer corresponding to a particular block of `A`; `LR` is either the row or column of the block that is required
+"""
 function makerowcol(Lposes::Array{P,1},Lsizes::Tuple,A::Qtens{W,Q},q::Integer,LR::Integer) where {P <: Integer, W <: Number, Q <: Qnum}
   @inbounds rows = Array{intType,1}(undef,size(A.ind[q][LR],2))
   for x = 1:length(rows)
@@ -387,12 +441,24 @@ function makerowcol(Lposes::Array{P,1},Lsizes::Tuple,A::Qtens{W,Q},q::Integer,LR
   return rows
 end
 
+"""
+    rowcolstart(rows,A,LR)
+
+Useful for reordering a joined tensor by checking to see if the return tensor is ordered for its rows and columns (better for efficiency later); takes input `qarray` `A` and a vector containing the rows `rows` computing either the left (`LR` = 1) or right (`LR` = 2) of the matrix-equivalent of the blocks
+
+If `rows` is sorted, nothing happens, else it re-sorts them
+"""
 function rowcolsort(rows::Array{P,1},A::Qtens{W,Q},LR::Integer) where {P <: Integer, W <: Number, Q <: Qnum}
   rowsort = issorted(rows)
-  newroworder = rowsort ? sortperm(rows) : [0] #1:size(A.ind[q][LR],2)
+  newroworder = rowsort ? sortperm(rows) : intType[0] #1:size(A.ind[q][LR],2)
   return rowsort,newroworder
 end
 
+"""
+    orderloop!(A,Lsizes,Rsizes,Lposes,Rposes)
+
+loads the existing .ind fields from `qarray` `A` into a new tensor (in-place) according to the sizes of the of the new tensor blocks given by `Lsizes` x `Rsizes`; inputs `Lposes` and `Rposes` are a vector of integers providing a rule to map integers from one .ind field to another
+"""
 function orderloop!(A::Qtens{W,Q},Lsizes::Tuple,Rsizes::Tuple,Lposes::Array{P,1},Rposes::Array{P,1}) where {W <: Number, Q <: Qnum, P <: Integer}
   @inbounds for q = 1:length(A.ind)
     rows = makerowcol(Lposes,Lsizes,A,q,1)
@@ -415,12 +481,20 @@ function orderloop!(A::Qtens{W,Q},Lsizes::Tuple,Rsizes::Tuple,Lposes::Array{P,1}
   nothing
 end
 
+"""
+    joinindex(inds,A,B[,ordered=false])
+
+performs a direct sum for `qarray`s `A` and `B` expanding indices `inds`; `ordered` will order the blocks inside of the tensor if required
+"""
 function joinindex(bareinds::intvecType,QtensA::Qtens{R,Q},QtensB::Qtens{S,Q};ordered::Bool=false) where {R <: Number, S <: Number, Q <: Qnum}
   return joinindex!(bareinds,copy(QtensA),QtensB,ordered=ordered)
 end
-export joinindex
 
+"""
+    joinindex!(inds,A,B[,ordered=false])
 
+performs a direct sum for `qarray`s `A` and `B` expanding indices `inds`; `ordered` will order the blocks inside of the tensor if required
+"""
 function joinindex!(bareinds::intvecType,QtensA::Qtens{R,Q},QtensB::Qtens{S,Q};ordered::Bool=false) where {R <: Number, S <: Number, Q <: Qnum}
   preinds = convIn(bareinds)
   inds = Array{intType,1}(undef,length(preinds))

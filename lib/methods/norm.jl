@@ -16,7 +16,7 @@ Froebenius norm of a `denstens` `A` as output `G`
 
 See: [`denstens`](@ref)`
 """
-function norm(A::denstens)
+function norm(A::Union{denstens,diagonal})
   return real(norm(A.T))
 end
 

@@ -23,7 +23,7 @@ end
 
 Returns the element type `G` contained in the `T` field of `diagonal` `A`
 """
-function eltype(A::diagonal{W}) where W <: Number
+function eltype(A::Diagonal{W}) where W <: Number
   return W
 end
 
@@ -46,7 +46,6 @@ See also: [`eltype`](@ref) [`denstens`](@ref)
 function elnumtype(A::tens{W}) where W <: Number
   return eltype(A)
 end
-export elnumtype
 
 """
   G = eltype(A)

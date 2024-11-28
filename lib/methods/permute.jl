@@ -12,22 +12,65 @@
 """
     B = permutedims!(A,[1,3,2,...])
 
-Permute dimensions of a Qtensor in-place (no equivalent, but returns value so it can be used identically to `permutedims` on a dense tensor)
+Permute dimensions of an Array or `denstens` in-place (no equivalent, but returns value so it can be used identically to `permutedims` on a dense tensor)
 
 See also: [`permutedims`](@ref)
 """
-function permutedims!(M::Union{Array{W,G},tens{W}}, vec::Array{P,1}) where {P <: intType, G, W <: Number}
+function permutedims!(M::tens{W}, vec::Array{P,1}) where {P <: intType, W <: Number}
   return permutedims(M,(vec...,))
 end
 
-function permutedims!(M::Union{Array{W,G},tens{W}}, vec::NTuple{N,intType}) where {N, G, W <: Number}
+"""
+    B = permutedims!(A,[1,3,2,...])
+
+Permute dimensions of an Array in-place (no equivalent, but returns value so it can be used identically to `permutedims` on a dense tensor)
+
+See also: [`permutedims`](@ref)
+"""
+function permutedims!(M::Array{W,G}, vec::Array{P,1}) where {P <: intType, G, W <: Number}
+  return permutedims(M,(vec...,))
+end
+
+"""
+    B = permutedims!(A,(1,3,2,...))
+
+Permute dimensions of an Array or `denstens` (tuple input) in-place (no equivalent, but returns value so it can be used identically to `permutedims` on a dense tensor)
+
+See also: [`permutedims`](@ref)
+"""
+function permutedims!(M::tens{W}, vec::NTuple{N,intType}) where {N, W <: Number}
   return permutedims(M,vec)
 end
 
+"""
+    B = permutedims!(A,(1,3,2,...))
+
+Permute dimensions of an Array (tuple input) in-place (no equivalent, but returns value so it can be used identically to `permutedims` on a dense tensor)
+
+See also: [`permutedims`](@ref)
+"""
+function permutedims!(M::Array{W,G}, vec::NTuple{N,intType}) where {N, G, W <: Number}
+  return permutedims(M,vec)
+end
+
+"""
+    B = permutedims!(A,[1,3,2,...])
+
+Permute dimensions of a `diagonal` in-place (no equivalent, but returns value so it can be used identically to `permutedims` on a dense tensor)
+
+See also: [`permutedims`](@ref)
+"""
 function permutedims!(M::diagonal, vec::Union{Array,Tuple})
   return M
 end
 
+"""
+    B = permutedims(A,[1,3,2,...])
+
+Permute dimensions of a `diagonal` with either vector or tuple input
+
+See also: [`permutedims`](@ref)
+"""
 function permutedims(M::diagonal, vec::Union{Array,Tuple})
   return M
 end
@@ -35,14 +78,32 @@ end
 """
   G = permutedims(A,[1,3,2,...])
 
-Permutes dimensions of `A` (identical usage to dense `size` call)
+Permutes dimensions of `A` (identical usage to dense `size` call) for a `denstens`
 
 See also: [`permutedims!`](@ref)
 """
-function permutedims(M::Union{Array{W,G},tens{W}}, vec::Array{P,1}) where {W <: Number, P <: intType, G}
+function permutedims(M::tens{W}, vec::Array{P,1}) where {W <: Number, P <: intType}
   return permutedims(M,(vec...,))
 end
 
+"""
+  G = permutedims(A,[1,3,2,...])
+
+Permutes dimensions of `A` (identical usage to dense `size` call) for an Array
+
+See also: [`permutedims!`](@ref)
+"""
+function permutedims(M::Array{W,G}, vec::Array{P,1}) where {W <: Number, P <: intType, G}
+  return permutedims(M,(vec...,))
+end
+
+"""
+  G = permutedims(A,(1,3,2,...))
+
+Permutes dimensions of `A` (input tuple) for an Array
+
+See also: [`permutedims!`](@ref)
+"""
 function permutedims(A::Array{W,G},iA::NTuple{G,intType}) where {W <: Number, G}
   if issorted(iA)
     out = A
@@ -57,7 +118,14 @@ function permutedims(A::Array{W,G},iA::NTuple{G,intType}) where {W <: Number, G}
   return out
 end
 
-function permutedims!(P::Array{W,R},A::Array{W,R},iA::NTuple{G,intType},Asizes::NTuple{G,intType},newsizes::NTuple{G,intType}) where {W <: Number, G, R}
+"""
+    permutedims!(B,A,iA,Asizes,newsizes)
+
+Permute dimensions of an input Array `A` output to array `B` (any rank) with permutation rule `iA`, original sizes of the `A` tensor `Asizes` and size of output `B` tensor `Bsizes`
+
+See also: [`permutedims`](@ref)
+"""
+function permutedims!(P::Array{W,R},A::Array{W,R},iA::Union{Array{intType,1},NTuple{G,intType}},Asizes::Union{Array{intType,1},NTuple{G,intType}},newsizes::Union{Array{intType,1},NTuple{G,intType}}) where {W <: Number, G, R}
   startind = 0
   @inbounds while startind < G && iA[startind+1] == startind+1
     startind += 1
@@ -131,13 +199,20 @@ function permutedims!(P::Array{W,R},A::Array{W,R},iA::NTuple{G,intType},Asizes::
   nothing
 end
 
+"""
+  G = permutedims(A,(1,3,2,...))
+
+Permutes dimensions of `A` (input tuple) for a `denstens`
+
+See also: [`permutedims!`](@ref)
+"""
 function permutedims(A::tens{W},iA::NTuple{G,intType}) where {W <: Number, G}
 
   if issorted(iA)
     out = A
   else
     Asizes = size(A) #ntuple(w->size(A,w),G)
-    newsizes = ntuple(w->Asizes[iA[w]],G)
+    newsizes = [Asizes[iA[w]] for w = 1:length(iA)] #ntuple(w->Asizes[iA[w]],G)
 
     psize = 1
     @inbounds @simd for w = 1:G
@@ -147,8 +222,8 @@ function permutedims(A::tens{W},iA::NTuple{G,intType}) where {W <: Number, G}
 
     permutedims!(P,A.T,iA,Asizes,newsizes)
 
-    vecnewsizes = ntuple(w->newsizes[w],G)
-    out = tens{W}(vecnewsizes,P)
+#    vecnewsizes = newsizes #ntuple(w->newsizes[w],G)
+    out = tens{W}(newsizes,P)
   end
   return out
 end
@@ -175,6 +250,7 @@ Permutes named tensor `A` according to `order` (ex: ["a","d","c","b"])
 See also: [`permutedims`](@ref)
 """
 function permutedims!(A::TNobj,order::Array{W,1}) where W <: String
+  intorder = Array{intType,1}(undef,length(order))
   for w = 1:length(order)
     checkname = false
     x = 0
@@ -182,11 +258,14 @@ function permutedims!(A::TNobj,order::Array{W,1}) where W <: String
       x += 1
       checkname = order[w] == A.names[x]
     end
-    if !checkname
+    if checkname
+      intorder[w] = x
+    else
       error("name not found on tensor that was requested to permute...make input names to permutedims match input tensor")
     end
   end
   A.names = order
+  permutedims!(A.N,intorder)
   return A
 end
 

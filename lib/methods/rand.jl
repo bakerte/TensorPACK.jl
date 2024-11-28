@@ -21,33 +21,50 @@ end
 """
     G = rand(A)
 
-Generates a random tensor `G` from inputting `AbstractArray` `A` (rank-2) or from quantum number labels
+Generates a random tensor `G` from inputting `AbstractArray` `A` (rank-2)
 """
 function rand(rho::AbstractArray{W,N}) where {W <: Number, N}
   return rand(W, size(rho))
 end
 
+"""
+    G = rand(W,A)
 
+Generates a random tensor `G` from inputting `AbstractArray` `A` (rank-2) with element type `W`
+"""
+function rand(W::DataType,sizearray::AbstractArray{R,1}) where {R <: intType}
+  return rand(W, sizearray...)
+end
 
 
 
 
 """
-    rand([DataType,]A[,arrows])
+    rand(A,arrows)
 
-generates a random tensor from inputting another tensor (rank-2) or from quantum number labels; can assign `arrows` for Qtensors if alternate arrow convention is requested
+generates a random tensor from inputting another tensor (rank-2); inverts quantum number symmetries according to `arrows` containing a `Bool`
 """
-function rand(Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};datatype::DataType=Float64,flux::Q=Q()) where Q <: Qnum
+function rand(Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};type::DataType=Float64,flux::Q=Q()) where Q <: Qnum
   newQlabels = Array{Q,1}[arrows[a] ? Qlabels[a] : inv.(Qlabels[a]) for a = 1:length(arrows)]
-  return Qtens(newQlabels,datatype=datatype,flux=flux,blockfct=rand)
+  return Qtens(newQlabels,type=type,flux=flux,blockfct=rand)
 end
 
-function rand(datatype::DataType,Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels)) where Q <: Qnum
-  return Qtens(Qlabels,datatype=datatype,flux=flux,currblock=currblock,blockfct=rand)
+"""
+    rand(W,Qlabels)
+
+generates a random tensor from inputting another tensor (rank-2) from `Qlabels` containing `qnum`s with element type `W`
+"""
+function rand(type::DataType,Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels)) where Q <: Qnum
+  return Qtens(Qlabels,type=type,flux=flux,currblock=currblock,blockfct=rand)
 end
 
-function rand(Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels),datatype::DataType=Float64) where Q <: Qnum
-  return Qtens(Qlabels,datatype=datatype,flux=flux,currblock=currblock,blockfct=rand)
+"""
+    rand(Qlabels)
+
+generates a random tensor from inputting another tensor (rank-2) from `Qlabels` containing `qnum`s
+"""
+function rand(Qlabels::Array{Array{Q,1},1};flux::Q=Q(),currblock::currblockTypes=equalblocks(Qlabels),type::DataType=Float64) where Q <: Qnum
+  return Qtens(Qlabels,type=type,flux=flux,currblock=currblock,blockfct=rand)
 end
 #=
 """
@@ -56,13 +73,23 @@ end
 Creates a random tensor `B` of the same type as `B`
 """
 =#
+"""
+    rand(Qtens)
+
+generates a random tensor from inputting another tensor (rank-2) from `Qtens`
+"""
 function rand(currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   Qlabels = fullQnumMat(currQtens)
-  return Qtens(Qlabels,datatype=W,currblock=currQtens.currblock,flux=currQtens.flux,blockfct=rand)
+  return Qtens(Qlabels,type=W,currblock=currQtens.currblock,flux=currQtens.flux,blockfct=rand)
 end
 
-function rand(datatype::DataType,currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
+"""
+    rand(W,Qtens)
+
+generates a random tensor from inputting another tensor (rank-2) from `Qtens` with element type `W`
+"""
+function rand(type::DataType,currQtens::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   Qlabels = fullQnumMat(currQtens)
-  return Qtens(Qlabels,datatype=datatype,currblock=currQtens.currblock,flux=currQtens.flux,blockfct=rand)
+  return Qtens(Qlabels,type=type,currblock=currQtens.currblock,flux=currQtens.flux,blockfct=rand)
 end
 

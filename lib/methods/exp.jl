@@ -64,7 +64,6 @@ exponentiate (exp(`A`)) a `denstens`
 function exp!(A::tens{W}) where W <: Number
   return exp!(A,W(1))
 end
-export exp!
 
 """
     B = exp(A,prefactor)

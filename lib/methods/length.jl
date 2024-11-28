@@ -16,7 +16,7 @@ Returns number of elements `G` (integer) total in `denstens` `M`
 
 See: [`denstens`](@ref)
 """
-function length(M::denstens)::intType
+function length(M::Union{denstens,diagonal})
   return length(M.T)
 end
 

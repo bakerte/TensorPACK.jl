@@ -32,4 +32,3 @@ function div!(M::TensType, num::Number)
   cnum = typeof(num) == eltype(M) ? num : convert(eltype(M),num)
   return tensorcombination!(M,alpha=(cnum,),fct=/)
 end
-export div!

@@ -35,4 +35,3 @@ function root(fct::Function,x0::Number;niter::Integer=1000,tol::Number=1E-9,m::N
   end
   return x0
 end
-export root

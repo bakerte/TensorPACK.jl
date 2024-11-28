@@ -27,8 +27,8 @@ Copies a `diagonal` (output `G`); `deepcopy` is inherently not type stable, so t
 
 See: [`diagonal`](@ref) [`deepcopy`](@ref)
 """
-function copy(A::diagonal{W}) where {W <: Number}
-  return diagonal{W}(copy(A.T))
+function copy(A::Diagonal{W}) where {W <: Number}
+  return Diagonal{W}(copy(A.T))
 end
 
 """
