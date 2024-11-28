@@ -84,7 +84,6 @@ export TENPACK
     include(libpath*subdir*files[w])
   end
 
-
   subdir = "decompose/"
   files = ["decompositions.jl","truncate.jl","svd.jl","svdvals.jl","eigen.jl","eigvals.jl","lq.jl","qr.jl","polar.jl","Krylov.jl","nullspace.jl"]
   for w = 1:length(files)
