@@ -70,9 +70,6 @@ export TENPACK
     include(libpath*subdir*files[w])
   end
 
-
-
-
   subdir = "qnumber/"
   include(libpath*subdir*"qnum.jl")
 
@@ -80,7 +77,6 @@ export TENPACK
   for w = 1:length(files)
     include(libpath*subdir*files[w])
   end
-
 
   subdir = "contract/"
   files = ["dot.jl","dmul.jl","diagcontract.jl","maincontractor.jl","contract.jl","ccontract.jl","contractc.jl","ccontractc.jl","star.jl","autocontract.jl","trace.jl","checkcontract.jl"]
