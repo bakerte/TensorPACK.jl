@@ -131,6 +131,6 @@ function isless(X::dualnum,Y::Number)
   return X.val < Y
 end
 
-function isless(Y::dualnum,X::Number)
+function isless(X::Number,Y::dualnum)
   return Y.val < X
 end
