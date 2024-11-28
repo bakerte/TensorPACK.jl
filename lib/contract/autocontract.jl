@@ -20,7 +20,7 @@ Names of indices on each site (`.names`) and dimensions of each site (`.dimensio
 """
 struct Indices
 	names::Array{String,1}
-	dimensions::NTuple{G,intType} where G
+	dimensions::Array{intType,1} #NTuple{G,intType} where G
 end
 
 """
@@ -42,7 +42,6 @@ function contract!(graph::network; exclude::Vector{intType} = intType[])
 	end
 	return answer
 end
-export contract!
 
 """
     contract!(graph[,exclude=intType[]])
@@ -65,11 +64,21 @@ function contract(tensors::W...) where W <: TNobj
 	return contract(network(tensors...))
 end
 
+"""
+    contract(graph[,exclude=[]])
+
+contracts a network of tensors `graph` and excludes all tensors (ordered sequentially) in `exclude`
+"""
 function contract(graph::network; exclude::Vector{intType} = intType[])
 	temp_graph = copy(graph)
 	return contract!(temp_graph,exclude=exclude)
 end
 
+"""
+    contract(tensors[,exclude=[]])
+
+contracts an array of tensors `tensors` and excludes all tensors (ordered sequentially) in `exclude`
+"""
 function contract(tensors::Vector{W}; exclude::Vector{intType} = intType[]) where W <: nametens
 	graph = network(tensors)
 	return contract(graph, exclude = exclude)
@@ -130,7 +139,7 @@ end
 
 Returns the product of all the dimensions of a tensor for given edges `E` (Vector)
 """
-function get_cost(edges::NTuple{G,intType}) where G 
+function get_cost(edges::Array{intType,1}) #where G 
 	cost = 1
 	for edge_dim in edges
 		cost *= edge_dim
@@ -269,7 +278,7 @@ end
 
 Obtains the rank of a tensor(does not count indices with dimension of 1)
 """
-function effective_rank(dimensions::NTuple{G,intType}) where G
+function effective_rank(dimensions::Array{intType,1}) #where G
 	nrank = 0
 	# does not consider dimension of value 1 to contribute to the rank
 	for i in dimensions
@@ -498,7 +507,7 @@ function update_temp(left::Indices, right::Indices, max_common::intType)
 		end
 	end
 
-	return Indices(new_names, (new_dimensions...,))
+	return Indices(new_names, new_dimensions)
 end
 
 """

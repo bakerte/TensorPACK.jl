@@ -90,7 +90,6 @@ function ccontractc(A::TensType,iA::intvecType,B::TensType,iB::intvecType,Z::Ten
     return maincontractor(true,true,mA,convIn(iA),mB,convIn(iB),Z...,alpha=alpha,beta=beta)
   end
 end
-export contract,ccontract,contractc,ccontractc
 
 """
   ccontractc(A,iA,B[,Z,alpha=,beta=])

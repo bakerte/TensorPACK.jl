@@ -28,7 +28,6 @@ function dot(inA::densTensType,inB::densTensType;Lfct::Function=adjoint,Rfct::Fu
   end
   return val
 end
-export dot
 
 """
     C = dot(A,H,B[,Lfct=adjoint,Rfct=identity])
@@ -60,7 +59,6 @@ function dot(inA::densTensType,inH::densTensType,inB::densTensType;Lfct::Functio
   end
   return val
 end
-export dot
 
 """
     C = dot(A,B[,Lfct=adjoint,Rfct=identity])

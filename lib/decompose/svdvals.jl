@@ -17,7 +17,6 @@ Returns singular values of input tensor `A` for any `densTensType`; output is a 
 @inline function svdvals(A::densTensType) #Union{AbstractVecOrMat,denstens}
   return LinearAlgebra.svdvals(A)
 end
-export svdvals
 #=
 """
   svdvals!(A)

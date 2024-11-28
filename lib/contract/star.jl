@@ -14,13 +14,14 @@
 
 Computes the equivalent of contract(X,ndims(X),Y,1) between any two `densTensType`
 """
-function *(X::densTensType,Y::densTensType)
-  if !(typeof(X) <: Diagonal) && !(typeof(Y) <: Diagonal)
+function *(X::denstens,Y::denstens)
+  #if !(typeof(X) <: Diagonal) && !(typeof(Y) <: Diagonal)
+
+    X,Y = checkType(X,Y)
+
     m = ndims(X) == 1 ? 1 : prod(w->size(X,w),1:ndims(X)-1)
     k = size(X,ndims(X))
     n = ndims(Y) < 2 ? 1 : prod(w->size(Y,w),2:ndims(Y))
-
-    X,Y = checkType(X,Y)
 
     out = libmult('N','N',X,Y,m,k,k,n)
 
@@ -29,22 +30,78 @@ function *(X::densTensType,Y::densTensType)
     iB = (1,)
     Aremain = ndims(A)-1
     Bremain = ndims(B)-1
-    AAsizes = ntuple(w->makesize(w,A,iA,B,iB),Aremain+Bremain) #[makesize(w,A,iA,B,iB) for w = 1:Aremain+Bremain]#
-    if typeof(X) <: denstens || typeof(Y) <: denstens
-      finaltens = tens(AAsizes,out)
-    else
-      finaltens = reshape!(out,AAsizes...)
+    AAsizes = Array{intType,1}(undef,Aremain+Bremain)
+    for w = 1:Aremain+Bremain
+      AAsizes[w] = makesize(w,A,iA,B,iB)
     end
-  else
-    finaltens = dmul(X,Y)
-  end
-  return finaltens
+  return tens(AAsizes,out)
 end
 
 """
+   *(A,B)
+
+Computes the contraction of diagonal tensor `A` with `B` of type `denstens` of `AbstractArray`
+"""
+function *(X::diagonal,Y::Union{denstens,AbstractArray})
+  return dmul(X,Y)
+end
+
+"""
+   *(A,B)
+
+Computes the contraction of diagonal tensor `B` with `A` of type `denstens` of `AbstractArray`
+"""
+function *(X::Union{denstens,AbstractArray},Y::diagonal)
+  return dmul(X,Y)
+end
+
+"""
+   *(A,B)
+
+Computes the contraction of array `A` with `B` of type `denstens`
+"""
+function *(X::Array,Y::denstens)
+  return tens(X)*Y
+end
+
+"""
+   *(A,B)
+
+Computes the contraction of array `B` with `A` of type `denstens`
+"""
+function *(X::denstens,Y::Array)
+  return X*tens(Y)
+end
+
+"""
+   *(A,B)
+
+Computes the contraction of array `A` with another array `B`
+"""
+function *(X::Array,Y::Array)
+  if eltype(X) <: dualnum || eltype(Y) <: dualnum
+#    num_variables = length(A[1,1].grad)
+    derivC = Array{dualnum,2}(undef,size(A,1),size(B,2))
+    for y = 1:size(B,2)
+      for x = 1:size(A,1)
+        derivC[x,y] = dualnum()
+        for z = 1:size(A,2)
+          derivC[x,y] += A[x,z]*B[z,y]
+        end
+      end
+    end
+    out = derivC
+  else
+    out = contract(X,ndims(X),Y,1)#Array(tens(X)*tens(Y))
+  end
+  return out
+end
+
+#=
+"""
     Z = X*Y
 
-Computes the equivalent of contract(X,ndims(X),Y,1) between a `diagonal` type tensor and a `tens`
+Computes the equivalent of contract(X,ndims(X),Y,1) between a `diagonal` type tensor and a `denstens`
 """
 function *(X::LinearAlgebra.Diagonal{R, Vector{R}},Y::tens{W}) where {R <: Number, W <: Number}
   outType = typeof(R(1)*W(1))
@@ -58,7 +115,6 @@ function *(X::LinearAlgebra.Diagonal{R, Vector{R}},Y::tens{W}) where {R <: Numbe
   end
   return tens{outType}(Y.size,Z)
 end
-
 """
     Z = X*Y
 
@@ -77,6 +133,7 @@ function *(Y::tens{W},X::Diagonal{R}) where {R <: Number, W <: Number}
   end
   return tens{outType}(Y.size,Z)
 end
+=#
 
 
 

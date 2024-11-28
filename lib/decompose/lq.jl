@@ -100,7 +100,6 @@ See also: [`svd`](@ref) [`eigen`](@ref)
 function lq!(AA::densTensType;a::Integer=size(AA,1),b::Integer=size(AA,2),decomposer::Function=liblq!,leftflux::Bool=false)
   return qr(AA,decomposer=decomposer,a=a,b=b)
 end
-export lq,lq!
 
 
 #       +------------------------+
@@ -129,7 +128,6 @@ See also: [`svd`](@ref) [`eigen`](@ref)
 function lq(QtensA::Qtens{W,Q};leftflux::Bool=false,a::Integer=1,b::Integer=1,decomposer::Function=liblq) where {W <: Number, Q <: Qnum}
   return qr(QtensA,leftflux=leftflux,decomposer=decomposer,a=a,b=b)
 end
-export lq
 
 function liblq(QtensA::Qtens{W,Q},a::Integer,b::Integer) where {W <: Number, Q <: Qnum}
   return qr(QtensA,a=a,b=b,decomposer=liblq)
@@ -157,7 +155,6 @@ See also: [`svd`](@ref) [`eigen`](@ref)
 function lq!(QtensA::Qtens{W,Q};leftflux::Bool=false,a::Integer=1,b::Integer=1,decomposer::Function=liblq!) where {W <: Number, Q <: Qnum}
   return qr(QtensA,leftflux=leftflux,decomposer=decomposer,a=a,b=b)
 end
-export lq!
 
 function liblq!(QtensA::Qtens{W,Q},a::Integer,b::Integer) where {W <: Number, Q <: Qnum}
   return qr(QtensA,a=a,b=b,decomposer=liblq)

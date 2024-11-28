@@ -30,11 +30,11 @@ function makeHpsi(Lenv::TensType,Renv::TensType,psi::TensType,invec::NTuple{G,R}
 end
 
 """
-    n = krylov(invec...[,Lenv=[0],Renv=[0],maxiter=...,updatefct=makeHpsi,reorth=false,effZero=defzero,alpha=...,beta=...,psisave=...,start=0,cvg=false,numE=...,saveE=...,goal=1E-12,eigvecs=true])
+    n = krylov(invec...[,Lenv=default_boundary,Renv=default_boundary,maxiter=...,updatefct=makeHpsi,reorth=false,effZero=defzero,alpha=...,beta=...,psisave=...,start=0,cvg=false,numE=...,saveE=...,goal=1E-12,eigvecs=true])
 
 Generates the krylov expansion with a Lanczos method returning the number `n` iterations that were computed before beta values fall below `effZero`; relevant parameters stored in `alpha`, `beta`, and `psisave`; elements of `invec` are provided to the `updatefct` on each iteration (maximum `maxiter`); `reorth` implements an attempt to maintani orthogonality or not; `numE` is the number of eigenvalues to optimize; `saveE` is a vector to store the previous eigenvalues; `goal` is the tolerance to converge the eigenvalues; `eigvecs` toggles whether to compute the eigenvectors (true) or Krylov vectors (false); `start` begins the Lanczos sequence at a particular alpha, beta, and starting vector
 """
-function krylov(invec::R...;Lenv::TensType=[0],Renv::TensType=[0],maxiter::intType = prod(w->size(invec[2],w),1:ndims(invec[2])-1),updatefct::Function=makeHpsi,reorth::Bool=false,effZero::Real=defzero,alpha::Array{S,1}=Array{Float64,1}(undef,maxiter),beta::Array{S,1}=Array{Float64,1}(undef,maxiter),psisave::TensType=Array{typeof(invec[1]),1}(undef,maxiter),start::intType=0,cvg::Bool=false,numE::intType=cvg ? 1 : 0,saveE::Array{S,1}=[1000. for w = 1:numE],goal::S=1E-12,eigvecs::Bool=true) where {R <: TensType, S <: Number}
+function krylov(invec::R...;Lenv::TensType=default_boundary,Renv::TensType=default_boundary,maxiter::intType = prod(w->size(invec[2],w),1:ndims(invec[2])-1),updatefct::Function=makeHpsi,reorth::Bool=false,effZero::Real=defzero,alpha::Array{S,1}=Array{Float64,1}(undef,maxiter),beta::Array{S,1}=Array{Float64,1}(undef,maxiter),psisave::TensType=Array{typeof(invec[1]),1}(undef,maxiter),start::intType=0,cvg::Bool=false,numE::intType=cvg ? 1 : 0,saveE::Array{S,1}=[1000. for w = 1:numE],goal::S=1E-12,eigvecs::Bool=true) where {R <: TensType, S <: Number}
   #specifying ::R for the type of the invec is best done if the TensType is not substituted for R...however, if using Julia types, then the function throws a bunch of extra allocations for the generality here. Tested for Vector and Matrix input. The code here is the most general and least costly version available and is enabled by the denstens type
 
   psi = invec[1]
@@ -130,14 +130,13 @@ function krylov(invec::R...;Lenv::TensType=[0],Renv::TensType=[0],maxiter::intTy
 
   return n
 end
-export krylov
 
 """
-    D,U,alpha,beta = lanczos(invec...[,Lenv=[0],Renv=[0],maxiter=...,updatefct=makeHpsi,reorth=false,effZero=defzero,alpha=...,beta=...,psisave=...,start=0,cvg=false,numE=...,saveE=...,goal=1E-12,eigvecs=true])
+    D,U,alpha,beta = lanczos(invec...[,Lenv=default_boundary,Renv=default_boundary,maxiter=...,updatefct=makeHpsi,reorth=false,effZero=defzero,alpha=...,beta=...,psisave=...,start=0,cvg=false,numE=...,saveE=...,goal=1E-12,eigvecs=true])
 
 Generates the energies contained in `D`and vectors `U` from a krylov expansion with a Lanczos method returning the number of iterations that were computed before beta values fall below `effZero`; relevant parameters stored in `alpha`, `beta`, and `psisave`; elements of `invec` are provided to the `updatefct` on each iteration (maximum `maxiter`); `reorth` implements an attempt to maintani orthogonality or not; `numE` is the number of eigenvalues to optimize; `saveE` is a vector to store the previous eigenvalues; `goal` is the tolerance to converge the eigenvalues; `eigvecs` toggles whether to compute the eigenvectors (true) or Krylov vectors (false); `start` begins the Lanczos sequence at a particular alpha, beta, and starting vector
 """
-function lanczos(invec::R...;Lenv::TensType=[0],Renv::TensType=[0],maxiter::intType = size(invec[2],1),updatefct::Function=makeHpsi,reorth::Bool=false,start::intType=0,goal::W=1E-12,effZero::Real=defzero,retnum::intType=1,alpha::Array{S,1}=Array{Float64,1}(undef,maxiter),beta::Array{S,1}=Array{Float64,1}(undef,maxiter),psisave::TensType=Array{typeof(invec[1]),1}(undef,maxiter),cvg::Bool=false,numE::intType=cvg ? 1 : 0,double::Bool=false, saveE::Array{S,1}=Array{Float64,1}(undef,numE),eigvecs::Bool=true) where {W <: Number, R <: TensType, S <: Number}
+function lanczos(invec::R...;Lenv::TensType=default_boundary,Renv::TensType=default_boundary,maxiter::intType = size(invec[2],1),updatefct::Function=makeHpsi,reorth::Bool=false,start::intType=0,goal::W=1E-12,effZero::Real=defzero,m::intType=1,alpha::Array{S,1}=Array{Float64,1}(undef,maxiter),beta::Array{S,1}=Array{Float64,1}(undef,maxiter),psisave::TensType=Array{typeof(invec[1]),1}(undef,maxiter),cvg::Bool=false,numE::intType=cvg ? 1 : 0,double::Bool=false, saveE::Array{S,1}=Array{Float64,1}(undef,numE),eigvecs::Bool=true) where {W <: Number, R <: TensType, S <: Number}
 
   p = krylov(invec...,Lenv=Lenv,Renv=Renv,maxiter=maxiter,updatefct=updatefct,reorth=reorth,effZero=effZero,alpha=alpha,beta=beta,psisave=psisave,cvg=cvg,numE=numE,saveE=saveE,start=start,eigvecs=eigvecs,goal=goal)
 
@@ -150,10 +149,10 @@ function lanczos(invec::R...;Lenv::TensType=[0],Renv::TensType=[0],maxiter::intT
       psisave = psisave[1:p]
     end
 
-    if retnum == 0
+    if m == 0
       retpsi = psisave
     else
-      retsize = min(p, (double ? 2 : 1 ) * retnum)
+      retsize = min(p, (double ? 2 : 1 ) * m)
       retpsi = Array{eltype(psisave),1}(undef, (double ? 2 : 1 ) * retsize)
 
       retrange = length(retpsi) #cld(length(retpsi),2)
@@ -206,21 +205,20 @@ function lanczos(invec::R...;Lenv::TensType=[0],Renv::TensType=[0],maxiter::intT
 
   return D,retpsi,alpha,beta
 end
-export lanczos
 
 """
-    D,U,alpha,beta = lanczos(psiinvec...[,Lenv=[0],Renv=[0],maxiter=...,updatefct=makeHpsi,reorth=false,effZero=defzero,alpha=...,beta=...,psisave=...,start=0,cvg=false,numE=...,saveE=...,goal=1E-12,eigvecs=true])
+    D,U,alpha,beta = lanczos(psiinvec...[,Lenv=default_boundary,Renv=default_boundary,maxiter=...,updatefct=makeHpsi,reorth=false,effZero=defzero,alpha=...,beta=...,psisave=...,start=0,cvg=false,numE=...,saveE=...,goal=1E-12,eigvecs=true])
 
 For `psi` (an `AbstractArray`), generates the energies contained in `D`and vectors `U` from a krylov expansion with a Lanczos method returning the number of iterations that were computed before beta values fall below `effZero`; relevant parameters stored in `alpha`, `beta`, and `psisave`; elements of `invec` are provided to the `updatefct` on each iteration (maximum `maxiter`); `reorth` implements an attempt to maintani orthogonality or not; `numE` is the number of eigenvalues to optimize; `saveE` is a vector to store the previous eigenvalues; `goal` is the tolerance to converge the eigenvalues; `eigvecs` toggles whether to compute the eigenvectors (true) or Krylov vectors (false); `start` begins the Lanczos sequence at a particular alpha, beta, and starting vector
 """
-function lanczos(psi::AbstractArray,invec::AbstractArray...;Lenv::TensType=[0],Renv::TensType=[0],maxiter::intType = prod(w->size(invec[1],w),1:ndims(invec[1])-1),retnum::intType=1,goal::W=1E-12,updatefct::Function=makeHpsi,reorth::Bool=false,effZero::Real=defzero,alpha::Array{S,1}=Array{Float64,1}(undef,maxiter),beta::Array{S,1}=Array{Float64,1}(undef,maxiter),psisave::TensType=Array{typeof(psi),1}(undef,maxiter),start::intType=0,cvg::Bool=false,double::Bool=false,numE::intType=cvg ? 1 : 0,saveE::Array{S,1}=Array{Float64,1}(undef,numE)) where {S <: Number, W <: Number}
+function lanczos(psi::AbstractArray,invec::AbstractArray...;Lenv::TensType=default_boundary,Renv::TensType=default_boundary,maxiter::intType = prod(w->size(invec[1],w),1:ndims(invec[1])-1),m::intType=1,goal::W=1E-12,updatefct::Function=makeHpsi,reorth::Bool=false,effZero::Real=defzero,alpha::Array{S,1}=Array{Float64,1}(undef,maxiter),beta::Array{S,1}=Array{Float64,1}(undef,maxiter),psisave::TensType=Array{typeof(psi),1}(undef,maxiter),start::intType=0,cvg::Bool=false,double::Bool=false,numE::intType=cvg ? 1 : 0,saveE::Array{S,1}=Array{Float64,1}(undef,numE)) where {S <: Number, W <: Number}
   changevec = ntuple(w->tens(invec[w]),length(invec))
   if eltype(psisave) <: denstens
     newpsisave = psisave
   else
     newpsisave = Array{tens{eltype(psi)},1}(undef,length(psisave))
   end
-  D,retpsi = lanczos(tens(psi),changevec...,Lenv=Lenv,Renv=Renv,maxiter=maxiter,retnum=retnum,updatefct=updatefct,reorth=reorth,effZero=effZero,alpha=alpha,beta=beta,psisave=newpsisave,start=start,numE=numE,saveE=saveE)
+  D,retpsi = lanczos(tens(psi),changevec...,Lenv=Lenv,Renv=Renv,maxiter=maxiter,m=m,updatefct=updatefct,reorth=reorth,effZero=effZero,alpha=alpha,beta=beta,psisave=newpsisave,start=start,numE=numE,saveE=saveE)
 
   true_retpsi = Array{typeof(psi),1}(undef,length(retpsi))
 

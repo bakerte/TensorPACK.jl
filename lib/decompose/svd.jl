@@ -46,7 +46,6 @@ function svd(AA::AbstractArray;cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=
 
     return Array(U),D,Array(V),truncerr,sumD
 end
-export svd
 
 """
     U,D,V,truncerr,newmag = svd(A[,cutoff=0.,m=0,mag=0.,minm=2,nozeros=true,a=size(A,1),b=size(A,2),power=2,effZero=defzero,keepdeg=false,inplace=false,decomposer=libsvd,leftflux=false])
@@ -121,27 +120,30 @@ function svd(AA::denstens;power::Number=2,cutoff::Float64 = 0.,leftflux::Bool=fa
       end
     end
 
-    Utrunc = tens((a,length(Dtrunc)),Utrunc)
-    Vtrunc = tens((length(Dtrunc),b),Vtrunc)
+    Utrunc = tens([a,length(Dtrunc)],Utrunc)
+    Vtrunc = tens([length(Dtrunc),b],Vtrunc)
 
   elseif thism < sizeD
-    Vtrunc = tens((length(D),b),Vt)
+    Vtrunc = tens([length(D),b],Vt)
     Vtrunc = Vtrunc[interval,:]
 
-#    Dtrunc = D[1:length(interval)]
-#    U = U[:,interval]
-    Dtrunc = D
+
+    Utrunc = tens([a,length(D)],U)
+    Utrunc = Utrunc[:,interval]
+
+    Dtrunc = D[interval]
+#=
+#    Dtrunc = D
     for w = length(D):-1:length(interval)+1
-      pop!(Dtrunc)
+#      pop!(Dtrunc)
       for x = 1:a
         pop!(U)
       end
     end
-    Utrunc = tens((a,length(interval)),U)
+    =#
   else
-    Utrunc,Dtrunc,Vtrunc = tens((a,length(D)),U),D,tens((length(D),b),Vt)
+    Utrunc,Dtrunc,Vtrunc = tens([a,length(D)],U),D,tens([length(D),b],Vt)
   end
-
   return Utrunc,Diagonal(Dtrunc),Vtrunc,truncerr,sumD
 end
 
@@ -358,7 +360,6 @@ function svd!(AA::TensType,vecA::Array{Array{W,1},1};a::Integer=findsize(AA,vecA
   return svd(AA,vecA,a=a,b=b,power = power,cutoff=cutoff,m=m,mag=mag,minm=minm,
                 nozeros=nozeros,keepdeg=keepdeg,decomposer=libsvd!)
 end
-export svd!
 
 #       +------------------------+
 #>------| Quantum number version |---------<
@@ -824,7 +825,6 @@ function symsvd(AA::TNobj,order::Array{Array{B,1},1};cutoff::Float64 = 0.,m::Int
   S1 = sqrt!(D)
   return U*S1,S1*V,truncerr,mag
 end
-export symsvd
 
 
 
@@ -845,7 +845,8 @@ end
 Performs a Hadamard operation on` `A` (`denstens` or `Array`) and `B` (`denstens` or `Array`) to produce `C` (which effectively multiplies all elements in order by each other to make the new matrix)
 """
 function hadamardprod(F::Union{AbstractArray,denstens},S::Union{AbstractArray,denstens}) #where {W <: Number, R <: Number}
-  return tens(size(S),[F[w]*S[w] for w = 1:length(F)])
+  newsize = [size(S,w) for w = 1:ndims(S)]
+  return tens(newsize,[F[w]*S[w] for w = 1:length(F)])
 end
 #=
 function hadamardprod(F::tens{W},S::tens{R}) where {W <: Number, R <: Number}
@@ -894,7 +895,7 @@ end
 
 Performs a Hadamard operation on two `qarray`s `A` and `B` to produce `C` (which effectively multiplies all elements in order by each other to make the new matrix)
 """
-function makeF(s::Diagonal)
+function makeF(s::diagonal)
   F = Float64[i == j ? 0 : 1/(s[j]^2-s[i]^2) for i = 1:length(s), j = 1:length(s)]
   return F
 end

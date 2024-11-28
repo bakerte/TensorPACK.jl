@@ -64,4 +64,3 @@ function polar(AA::TensType,group::Array{Array{W,1},1};
 
   return leftTensor,rightTensor,D,truncerr,newmag
 end
-export polar

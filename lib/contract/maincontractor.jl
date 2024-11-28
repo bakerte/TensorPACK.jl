@@ -184,7 +184,6 @@ function findnotcons(nA::Integer,iA::NTuple{N,intType}) where N
   end
   return notconvec
 end
-export findnotcons
 
 """
     C = maincontractor!(conjA,conjB,A,iA,B,iB,Z...;alpha=1,beta=1)
@@ -220,8 +219,16 @@ function maincontractor!(conjA::Bool,conjB::Bool,A::densTensType,iA::intvecType,
   Lsize,innersizeL = getsizes(A,iA)
   Rsize,innersizeR = getsizes(B,iB)
 
-  AAsizes = Aremain == 0 && Bremain == 0 ? (intType(0),) : ntuple(w->makesize(w,A,iA,B,iB),Aremain+Bremain)
-
+  if Aremain == 0 && Bremain == 0
+    AAsizes = nullsize
+  else
+    AAsizes = Array{intType,1}(undef,Aremain+Bremain)
+    for w = 1:Aremain+Bremain
+      AAsizes[w] = makesize(w,A,iA,B,iB)
+    end
+#    intType[makesize(w,A,iA,B,iB) for w = 1:Aremain+Bremain] #ntuple(w->makesize(w,A,iA,B,iB),Aremain+Bremain)
+  end
+  
   if Aperm && Bperm
     mulA = conjA && eltype(A) <: Complex && !AnopermL ? conj(A) : A
     mulB = conjB && eltype(B) <: Complex && !BnopermR ? conj(B) : B
@@ -245,7 +252,7 @@ function maincontractor!(conjA::Bool,conjB::Bool,A::densTensType,iA::intvecType,
     type_alpha = convert(outType,alpha)
     type_beta = convert(outType,beta)
     out = libmult(transA,transB,type_alpha,mulA,mulB,type_beta,Z[1],Lsize,innersizeL,innersizeR,Rsize)
-  elseif isapprox(alpha,1)
+  elseif abs(alpha-1) < 1E-8 #isapprox(alpha,1)
 
     out = libmult(transA,transB,mulA,mulB,Lsize,innersizeL,innersizeR,Rsize)
   else
@@ -354,7 +361,6 @@ function getinds(currQtens::qarray, vec::Union{Array{intType,1},NTuple{N,intType
 
   return con, notcon
 end
-export getinds
 
 """
     mulblockA,mulblockB = checkblocks(Aqind,Bqind,A,B,inputA,inputB,Aind=2,Bind=1)
@@ -534,7 +540,7 @@ function permq(A::Qtens{W,Q},iA::Array{intType,1}) where {W <: Number, Q <: Qnum
   end
 
   nopermR = !nopermL && length(iA) == length(A.currblock[2]) && issorted(A.currblock[2])
-  #println(nopermR)
+
   if nopermR
     w =length(iA)
     end_dim = length(A.QnumMat)
@@ -591,7 +597,7 @@ function maincontractor(conjA::Bool,conjB::Bool,QtensA::Qtens{W,Q},vecA::Tuple,Q
 
   outType = W == R ? W : typeof(W(1) * R(1))
 
-  usealpha = !isapprox(alpha,1)
+  usealpha = abs(alpha-1) > 1E-8 #!isapprox(alpha,1)
 
   numQNs = length(commonblocks)
 
@@ -601,7 +607,7 @@ function maincontractor(conjA::Bool,conjB::Bool,QtensA::Qtens{W,Q},vecA::Tuple,Q
     Ztwo = [i + length(notconA) for i = 1:length(notconB)]
     Z = changeblock(Zed,Zone,Ztwo)
     Zcommonblocks = matchblocks((conjA,false),A,Zed,ind=(2,1))
-    type_beta = eltype(beta) == outType && !isapprox(beta,1) ? beta : convert(outType,beta)
+    type_beta = eltype(beta) == outType && #=!isapprox(beta,1)=# abs(alpha-1) > 1E-8  ? beta : convert(outType,beta)
     type_alpha = typeof(alpha) == outType ? alpha : convert(outType,alpha)
   elseif usealpha
     type_alpha = typeof(alpha) == outType ? alpha : convert(outType,alpha)

@@ -40,4 +40,3 @@ function nullspace(A::TensType; left::Bool=false,atol::Real = 0.0, rtol::Real = 
   outTens = left ? U[:,minpos:minpos] : V[minpos:minpos,:]
   return outTens
 end
-export nullspace

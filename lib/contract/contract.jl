@@ -50,7 +50,7 @@ julia> contract(A,2,B,1,Z,alpha=2.,beta=5)
 
 See also: [`ccontract`](@ref) [`contractc`](@ref) [`ccontractc`](@ref)
 """
-function contract(A::TensType,iA::intvecType,B::TensType,iB::intvecType,Z::TensType...;alpha::Number=eltype(A)(1),beta::Number=eltype(A)(1))
+function contract(A::Union{TensType,diagonal},iA::intvecType,B::Union{TensType,diagonal},iB::intvecType,Z::Union{TensType,diagonal}...;alpha::Number=eltype(A)(1),beta::Number=eltype(A)(1))
   if typeof(A) <: diagonal || typeof(B) <: diagonal
     out = diagcontract!(false,false,A,convIn(iA),B,convIn(iB),Z...,alpha=alpha,beta=beta,inplace=false)
     return out
@@ -67,7 +67,7 @@ same as `contract(A,iA,B,iB)` but `iB` is over all indices.
 
 See also: [`ccontract`](@ref) [`contractc`](@ref) [`ccontractc`](@ref)
 """
-function contract(A::TensType,iA::intvecType,B::TensType,Z::TensType...;alpha::Number=eltype(A)(1),beta::Number=eltype(A)(1))
+function contract(A::Union{TensType,diagonal},iA::intvecType,B::Union{TensType,diagonal},Z::Union{TensType,diagonal}...;alpha::Number=eltype(A)(1),beta::Number=eltype(A)(1))
   iB = ntuple(w->w,ndims(B))
   return contract(A,iA,B,iB,Z...,alpha=alpha,beta=beta)
 end

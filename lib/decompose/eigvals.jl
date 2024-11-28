@@ -44,7 +44,6 @@ function eigvals(alpha::Array{W,1},beta::Array{W,1}) where W <: Number
   D,U = libeigen(alpha,beta,job='N')
   return D
 end
-export eigvals
 
 """
     D = eigvals!(A)
@@ -81,4 +80,3 @@ function eigvals!(alpha::Array{W,1},beta::Array{W,1}) where W <: Number
   D,U = libeigen(alpha,beta,job='N')
   return D
 end
-export eigvals!

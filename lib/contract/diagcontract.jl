@@ -68,7 +68,7 @@ end
 """
     C = diagcontract!(conjA,conjB,A,iA,B,iB[,Z,alpha=1,beta=1,inplace=true])
 
-Generalization of a*x+y but for tensors (`C` = `alpha` * `A` * `B` + `beta` * `Z`) over indices `iA` and `iB` where `A` is a `TensType` type and `B` is a `Diagonal`
+Generalization of a*x+y but for tensors (`C` = `alpha` * `A` * `B` + `beta` * `Z`) over indices `iA` and `iB` where `A` is a `TensType` type and `B` is a `diagonal`
 
 See also: [`maincontractor`](@ref)
 """
@@ -120,12 +120,11 @@ function diagcontract!(conjA::Bool,conjB::Bool,A::Union{denstens,Array},iA::intv
   end
   return out
 end
-export diagcontract!
 
 """
     C = diagcontract!(conjA,conjB,A,iA,B,iB[,Z,alpha=1,beta=1,inplace=true])
 
-Generalization of a*x+y but for tensors (`C` = `alpha` * `A` * `B` + `beta` * `Z`) over indices `iA` and `iB` where `A` is a `Diagonal` type and `B` is a `Diagonal`
+Generalization of a*x+y but for tensors (`C` = `alpha` * `A` * `B` + `beta` * `Z`) over indices `iA` and `iB` where `A` is a `diagonal` type and `B` is a `diagonal`
 
 See also: [`maincontractor`](@ref)
 """
@@ -144,16 +143,15 @@ function diagcontract!(conjA::Bool,conjB::Bool,A::Diagonal{W},iA::intvecType,B::
     out[w] = Lfct(A[w])*Rfct(B[w])
   end
 
-  answer = diagonal(out)
+  answer = Diagonal(out)
   if length(Z) == 1
     answer += Z[1]
   end
   return answer
 end
-export diagcontract!
 
 #=
-function diagcontract(A::Diagonal{W},iA::intvecType,B::densTensType,iB::intvecType,Z::densTensType...;alpha::Number=eltype(A)(1),beta::Number=eltype(A)(1),inplace::Bool=false) where W <: Number
+function diagcontract(A::diagonal{W},iA::intvecType,B::densTensType,iB::intvecType,Z::densTensType...;alpha::Number=eltype(A)(1),beta::Number=eltype(A)(1),inplace::Bool=false) where W <: Number
   return diagcontract!(A,iA,B,iB,Z...,alpha=alpha,beta=beta,inplace=inplace)
 end
 =#

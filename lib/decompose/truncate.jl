@@ -87,7 +87,7 @@ function truncate(D::Array{W,1}...;m::Integer=0,minm::Integer=2,mag::Float64=0.,
     end
 
     if nozeros
-      while ordered_bigD[pstart] < effZero
+      while ordered_bigD[pstart] < effZero #&& pstart > 2
         pstart -= 1
       end
     end

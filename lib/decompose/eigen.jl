@@ -87,7 +87,6 @@ function eigen(AA::Array{W,G},B::Array{W,R}...;cutoff::Float64 = 0.,m::Integer =
 
   return Diagonal(Dtrunc),Utrunc,truncerr,sumD
 end
-export eigen
 
 """
     D,U,truncerr,mag = eigen(A[,B,cutoff=0.,m=0,mag=0.,a=size(A,1),b=size(A,2),minm=2,leftflux=false,nozeros=false,power=1,effZero=defzero,keepdeg=false,transpose=false,decomposer=libeigen,rev=true])
@@ -173,7 +172,6 @@ function eigen!(AA::Union{Array{W,2},tens{W}},B::Array{W,2}...;cutoff::Float64 =
                 transpose::Bool=false,decomposer::Function=libeigen!,rev::Bool=true) where {W <: Number}
   return eigen(AA,B...,cutoff=cutoff,m=m,mag=mag,minm=minm,nozeros=nozeros,power=power,effZero=effZero,a=a,b=b,keepdeg=keepdeg,transpose=transpose,decomposer=decomposer,rev=rev)
 end
-export eigen!
 
 """
     D,U,truncerr,mag = eigen(A,vecA[,B,cutoff=0.,m=0,mag=0.,a=size(A,1),b=size(A,2),minm=2,leftflux=false,nozeros=false,power=1,effZero=defzero,keepdeg=false,transpose=false,decomposer=libeigen,rev=true])

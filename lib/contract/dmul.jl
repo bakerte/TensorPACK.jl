@@ -31,7 +31,7 @@ end
 
 Contraction of a `Array` `X` onto a `diagonal` type `Y`; output `Z` replaces `X`
 """
-function dmul!(Y::Array{R,N},X::Diagonal{W}) where {R <: Number, N, W <: Number}
+function dmul!(Y::AbstractArray{R,N},X::Diagonal{W}) where {R <: Number, N, W <: Number}
   longdim = cld(length(Y),size(X,1))
   for y = 1:size(X,1)
     zval = longdim*(y-1)
@@ -82,7 +82,7 @@ end
 
 Contraction of a `diagonal` `X` onto a `Array` type `Y`; output `Z` replaces `Y`
 """
-function dmul!(X::Diagonal{R},Y::Array{W,N}) where {R <: Number, W <: Number, N}
+function dmul!(X::Diagonal{R},Y::AbstractArray{W,N}) where {R <: Number, W <: Number, N}
   longdim = cld(length(Y),size(X,1))
   for y = 1:longdim
     tempind = size(X,1)*(y-1)
@@ -111,7 +111,6 @@ function dmul(X::densTensType,Y::Diagonal{R}) where {R <: Number}
   out = dmul!(copy(X),Y)
   return out
 end
-export dmul!
 
 """
     Z = dmul!(X,Y)

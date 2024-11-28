@@ -94,7 +94,6 @@ Find trace of a matrix `A` (any `TensType` but sensical if only two indices)
 function trace!(A::TensType)
   return sum(w->A[w,w],1:size(A,1))
 end
-export trace!
 
 """
     C = trace(A,iA)
@@ -118,7 +117,6 @@ julia> trace(A,[[1,3],[2,4]])
 function trace(A::TensType,iA::R...) where R <: Union{Array{P,1},Array{Array{P,1},1},Array{NTuple{2,P},1}} where P <: Integer
   return trace!(copy(A),iA...)
 end
-export trace
 
 
 
@@ -258,7 +256,6 @@ function trace(A::TNobj,inds::Array{W,1}) where W <: Union{String,Integer}
   return trace(A,[inds])
 end
 =#
-export trace
 #=
 function trace(A::TNobj,inds::Array{Array{W,1},1}) where W <: Union{String,Integer}
   return trace(A,inds)

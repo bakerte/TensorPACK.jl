@@ -109,7 +109,6 @@ See also: [`svd`](@ref) [`eigen`](@ref)
 function qr!(AA::densTensType;decomposer::Function=libqr!,leftflux::Bool=false,a::Integer=size(AA,1),b::Integer=size(AA,2))
   return qr(AA,decomposer=decomposer,a=a,b=b)
 end
-export qr,qr!
 
 
 
@@ -219,7 +218,6 @@ function qr(QtensA::Qtens{W,Q};a::Integer=size(QtensA,1),b::Integer=size(QtensA,
   V = makeV(nQN,keepq,outV,A,finalinds,newqindexR,newqindexRsum,leftflux,Rinds)
   return U,V,0.,1. #truncerr,mag
 end
-export qr
 
 function libqr(QtensA::Qtens{W,Q},a::Integer,b::Integer) where {W <: Number, Q <: Qnum}
   return qr(QtensA,a=a,b=b)
@@ -247,7 +245,6 @@ See also: [`svd`](@ref) [`eigen`](@ref)
 function qr!(QtensA::Qtens{W,Q};leftflux::Bool=false,a::Integer=1,b::Integer=1,decomposer::Function=libqr) where {W <: Number, Q <: Qnum}
   return qr(QtensA,leftflux=leftflux,decomposer=decomposer,a=a,b=b)
 end
-export qr!
 
 function libqr!(QtensA::Qtens{W,Q},a::Integer,b::Integer) where {W <: Number, Q <: Qnum}
   return qr(QtensA,a=a,b=b)
