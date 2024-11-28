@@ -27,7 +27,7 @@ Convert `diagonal` `M` to julia `Array` (`G`)
 
 See: [`diagonal`](@ref) [`Array`](@ref)
 """
-function Array(M::diagonal{W}) where W <: Number
+function Array(M::Diagonal{W}) where W <: Number
   return LinearAlgebra.Diagonal(M.T)
 end
 
@@ -37,7 +37,7 @@ end
 
 Convert `dtens` `M` to julia `Array` (`G`)
 
-See: [`diagonal`](@ref) [`Array`](@ref) [`tens`](@ref)
+See: [`Diagonal`](@ref) [`Array`](@ref) [`tens`](@ref)
 """
 function Array(A::dtens)
   return Array(A[0]),Array(A[1])

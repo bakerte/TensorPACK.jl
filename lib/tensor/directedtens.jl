@@ -14,16 +14,16 @@
 
 constructor for named tensor `Qt` for a `directedtens`
 """
-function directedtens(Qt::nametens) #where W <: TensType
+function directedtens(Qt::TNobj) #where W <: TensType
   arrows = Int8[0 for i = 1:ndims(Qt)]
-  return directedtens(Qt,arrows)
+  return directedtens(Qt.N,arrows)
 end
 
-function directedtens(Qt::nametens,arrows::Array{intType,1};regTens::Bool=false,conj::Bool=false)
+function directedtens(Qt::TNobj,arrows::Array{W,1};regTens::Bool=false,conj::Bool=false) where W <: Integer
   if eltype(arrows) != Int8
     arrows = convert(Array{Int8,1},arrows)
   end
-  return directedtens(Qt,arrows,conj)
+  return directedtens(Qt.N,arrows,conj)
 end
 
 """
@@ -31,7 +31,7 @@ end
 
 constructor for named tensor from a tensor `Qt` and vector of index names `namez`. `arrows` is a container with -1, 0, or 1 in all entries. -1 means this index goes to one level below, 0 maintains the level, and 1 increments to a tensor on the next level
 """
-function directedtens(Qt::TensType,namez::Array{String,1},arrows::Array{intType,1};regTens::Bool=false,conj::Bool=false)
+function directedtens(Qt::allTens,namez::Array{String,1},arrows::Array{W,1};regTens::Bool=false,conj::Bool=false) where W <: Integer
   if eltype(arrows) != Int8
     arrows = convert(Array{Int8,1},arrows)
   end
@@ -43,7 +43,7 @@ end
 
 constructor for named tensor from a tensor `Qt` and vector of index names `string` where an integer is added onto `string` to make the full name of the index
 """
-function directedtens(Qt::T,namez::String,arrows::Array{B,1};regTens::Bool=false,conj::Bool=false) where {T <: TensType, B <: Integer}
+function directedtens(Qt::allTens,namez::String,arrows::Array{B,1};regTens::Bool=false,conj::Bool=false) where {B <: Integer}
   return directedtens(Qt,namez,conj,arrows)
 end
 

@@ -14,7 +14,7 @@
 
 constructor for named tensor from a tensor `Qt` and vector of index names `namez`
 """
-function nametens(Qt::TensType,namez::Array{String,1};regTens::Bool=false,conj::Bool=false)#,arrows::Array{Bool,1},conj::Bool;regTens::Bool=false)
+function nametens(Qt::Union{TensType,diagonal},namez::Array{String,1};regTens::Bool=false,conj::Bool=false)#,arrows::Array{Bool,1},conj::Bool;regTens::Bool=false)
   if (regTens && typeof(Qt) <: AbstractArray) || typeof(Qt) <: qarray
     newQt = Qt
   elseif typeof(Qt) <: diagonal
@@ -24,6 +24,15 @@ function nametens(Qt::TensType,namez::Array{String,1};regTens::Bool=false,conj::
   end
 
   return nametens{typeof(newQt)}(newQt,namez,conj)
+end
+
+"""
+    nametens(Qt)
+
+Converts any `directedtens` to a `nametens` by recycling the fields in `directedtens`
+"""
+function nametens(Qt::directedtens)
+  return nametens(Qt.N,Qt.names,Qt.conj)
 end
 
 """

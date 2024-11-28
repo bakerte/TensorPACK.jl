@@ -19,25 +19,26 @@ Regular tensor type; defined as `tens{W}` for W <: Number
 + `T::Array{W,1}`: tensor reshaped into a vector
 """
 mutable struct tens{W <: Number} <: denstens
-  size::NTuple{G,intType} where G #Tuple{intType,Vararg{intType}} #Array{intType,1} #Tuple #Tuple{intType,Vararg{intType}}
+  size::Array{intType,1}
   T::Array{W,1}
 end
 
 """
-    diagonal{W}
+    Diagonal{W}
 
-Diagonal tensor type; defined as `diagonal{W}` for W <: Number
+Diagonal tensor type; defined as `Diagonal{W}` for W <: Number
 
 # Fields:
 + `T::Array{W,1}`: Diagonal of a square matrix given as a vector
 
-See also: [`Diagonal`](@ref)
+See also: [`diagonal`](@ref)
 """
-struct diagonal{W <: Number} <: denstens
+struct Diagonal{W} <: diagonal where W <: Number
   T::Array{W,1}
 end
-export diagonal
+export Diagonal
 
+#=
 """
     Diagonal
 
@@ -47,6 +48,7 @@ See also: [`diagonal`](@ref)
 """
 Diagonal = diagonal
 export Diagonal
+=#
 
 """
     diagm
@@ -55,7 +57,7 @@ Alias for `diagonal`
 
 See also: [`diagonal`](@ref)
 """
-diagm = diagonal
+diagm = Diagonal
 export diagm
 
 
@@ -123,8 +125,8 @@ end
 
 storage type for automatic differentiation
 """
-mutable struct dtens#={W,R}=# #<: denstens #where {W <: TensType, R <: TensType}
-  d::Tuple#{W,R} #zero is one!
+mutable struct dtens{W <: Tuple} #where W #={W,R}=# #<: denstens #where {W <: TensType, R <: TensType}
+  d::W #{W,W} #{W,R} #zero is one!
 end
 
 
@@ -133,7 +135,7 @@ end
 
 stores a value (`val`) and a gradient (`grad`) for each number. 
 """
-struct dualnum{W <: Number} #<: Number
+struct dualnum{W <: Number}# <: Number
   val::W
   grad::W
 end

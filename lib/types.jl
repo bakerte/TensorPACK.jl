@@ -20,6 +20,16 @@ abstract type denstens end
 export denstens
 
 """
+    diagonal
+
+Abstract type for diagonal matrices
+
+See also: [`Diagonal`](@ref)
+"""
+abstract type diagonal end
+export diagonal
+
+"""
     qarray
 
 Abstract type for either `Qtensors`
@@ -49,6 +59,14 @@ See also: [`Qtens`](@ref) [`denstens`](@ref) [`directedtens`](@ref) [`nametens`]
 """
 const TensType = Union{qarray,denstens,AbstractArray}
 export TensType
+
+"""
+    allTens
+
+Abstract type for `TensType` and `TNobj` both
+"""
+const allTens = Union{TensType,TNobj}
+export allTens
 
 """
     densTensType

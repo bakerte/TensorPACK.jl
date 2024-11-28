@@ -14,7 +14,7 @@
 
 Creates a tensor `C` containing both values (`A`) and derivatives (`B`) useful for automatic differenation
 """
-function dtens(A::W,B::R) where {W <: TensType, R <: TensType}
+function dtens(A::Union{TensType,diagonal},B::Union{TensType,diagonal})
   return dtens((A,B))
 end
 
@@ -23,6 +23,6 @@ end
 
 Creates a tensor `C` containing both values (`A`) and creates a second tensor of derivatives useful for automatic differenation
 """
-function dtens(A::W) where W <: TensType
+function dtens(A::Union{TensType,diagonal})
   return dtens((A,ones(A)))
 end

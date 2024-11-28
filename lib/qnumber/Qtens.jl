@@ -100,7 +100,7 @@ Creates empty `Qtens` with array type `datatype` (default Float64), quantum numb
 
 See also: [`equalblocks`](@ref) [`undefMat`](@ref)
 """
-function Qtens(Qlabels::Array{Array{Q,1},1};datatype::DataType=Float64,currblock::currblockTypes=equalblocks(Qlabels),flux::Q=Q(),blockfct::Function=undefMat) where Q <: Qnum
+function Qtens(Qlabels::Array{Array{Q,1},1};type::DataType=Float64,currblock::currblockTypes=equalblocks(Qlabels),flux::Q=Q(),blockfct::Function=undefMat) where Q <: Qnum
 
   pLinds = currblock[1]
   pRinds = currblock[2]
@@ -130,14 +130,14 @@ function Qtens(Qlabels::Array{Array{Q,1},1};datatype::DataType=Float64,currblock
     finalQNs += rows[q] > 0 && columns[q] > 0
   end
 
-  newblocks = Array{Array{datatype,2},1}(undef,finalQNs)
+  newblocks = Array{Array{type,2},1}(undef,finalQNs)
   newind = Array{NTuple{2,Array{intType,2}},1}(undef,finalQNs)
   finalQblocksum = Array{NTuple{2,Q},1}(undef,finalQNs)
   counter = 0
   @inbounds for q = 1:length(rows)
     if rows[q] > 0 && columns[q] > 0
       counter += 1
-      newblocks[counter] = blockfct(datatype,rows[q],columns[q])
+      newblocks[counter] = blockfct(type,rows[q],columns[q])
       newind[counter] = (Lindexes[q],Rindexes[q])
       finalQblocksum[counter] = newQblocksum[q]
     end
@@ -149,41 +149,41 @@ function Qtens(Qlabels::Array{Array{Q,1},1};datatype::DataType=Float64,currblock
   end
 
   newcurrblock = (currblock[1],currblock[2])
-  return Qtens{datatype,Q}(newsize, newblocks, newind, newcurrblock, finalQblocksum, finalQnumMat, QnumSum, flux)
+  return Qtens{type,Q}(newsize, newblocks, newind, newcurrblock, finalQblocksum, finalQnumMat, QnumSum, flux)
 end
 
 """
-    Qt = Qtens(Qlabels,arrows[,datatype=Float64,flux=Q(),currblock=equalblocks,blockfct=undefMat])
+    Qt = Qtens(Qlabels,arrows[,type=Float64,flux=Q(),currblock=equalblocks,blockfct=undefMat])
 
-Creates empty `Qtens` with array type `datatype` (default Float64), quantum number labels given by `Qlabels` and arrow convention `arrows`; initial blocks of the `qarray` are given by `equalblocks` function and blocks are initialized with `undefMat`; initial flux value is whatever zero is defined for the input quantum number type
+Creates empty `Qtens` with array type `type` (default Float64), quantum number labels given by `Qlabels` and arrow convention `arrows`; initial blocks of the `qarray` are given by `equalblocks` function and blocks are initialized with `undefMat`; initial flux value is whatever zero is defined for the input quantum number type
 
 See also: [`equalblocks`](@ref) [`undefMat`](@ref)
 """
-function Qtens(Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};datatype::DataType=Float64,currblock::currblockTypes=equalblocks(Qlabels),flux::Q=Q(),blockfct::Function=undefMat) where Q <: Qnum
+function Qtens(Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};type::DataType=Float64,currblock::currblockTypes=equalblocks(Qlabels),flux::Q=Q(),blockfct::Function=undefMat) where Q <: Qnum
   newQlabels = Array{Q,1}[arrows[a] ? Qlabels[a] : inv.(Qlabels[a]) for a = 1:length(arrows)]
-  return Qtens(newQlabels,datatype=datatype,currblock=currblock,flux=flux,blockfct=blockfct)
+  return Qtens(newQlabels,type=type,currblock=currblock,flux=flux,blockfct=blockfct)
 end
 
 """
-    Qt = Qtens(datatype,Qlabels,arrows[,flux=Q(),currblock=equalblocks,blockfct=undefMat])
+    Qt = Qtens(type,Qlabels,arrows[,flux=Q(),currblock=equalblocks,blockfct=undefMat])
 
-Creates empty `Qtens` with array type `datatype` (default Float64), quantum number labels given by `Qlabels` and arrow convention `arrows`; initial blocks of the `qarray` are given by `equalblocks` function and blocks are initialized with `undefMat`; initial flux value is whatever zero is defined for the input quantum number type
+Creates empty `Qtens` with array type `type` (default Float64), quantum number labels given by `Qlabels` and arrow convention `arrows`; initial blocks of the `qarray` are given by `equalblocks` function and blocks are initialized with `undefMat`; initial flux value is whatever zero is defined for the input quantum number type
 
 See also: [`equalblocks`](@ref) [`undefMat`](@ref)
 """
-function Qtens(datatype::DataType,Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};currblock::currblockTypes=equalblocks(Qlabels),flux::Q=Q(),blockfct::Function=undefMat) where Q <: Qnum
-  return Qtens(Qlabels,arrows,datatype=datatype,currblock=currblock,flux=flux,blockfct=blockfct)
+function Qtens(type::DataType,Qlabels::Array{Array{Q,1},1}, arrows::Array{Bool,1};currblock::currblockTypes=equalblocks(Qlabels),flux::Q=Q(),blockfct::Function=undefMat) where Q <: Qnum
+  return Qtens(Qlabels,arrows,type=type,currblock=currblock,flux=flux,blockfct=blockfct)
 end
 
 """
-    Qt = Qtens(datatype,Qlabels[,flux=Q(),currblock=equalblocks,blockfct=undefMat])
+    Qt = Qtens(type,Qlabels[,flux=Q(),currblock=equalblocks,blockfct=undefMat])
 
-Creates empty `Qtens` with array type `datatype` (default Float64), quantum number labels given by `Qlabels` and arrow convention `arrows`; initial blocks of the `qarray` are given by `equalblocks` function and blocks are initialized with `undefMat`; initial flux value is whatever zero is defined for the input quantum number type
+Creates empty `Qtens` with array type `type` (default Float64), quantum number labels given by `Qlabels` and arrow convention `arrows`; initial blocks of the `qarray` are given by `equalblocks` function and blocks are initialized with `undefMat`; initial flux value is whatever zero is defined for the input quantum number type
 
 See also: [`equalblocks`](@ref) [`undefMat`](@ref)
 """
-function Qtens(datatype::DataType,Qlabels::Array{Array{Q,1},1};currblock::currblockTypes=equalblocks(Qlabels),flux::Q=Q(),blockfct::Function=undefMat) where Q <: Qnum
-  return Qtens(Qlabels,datatype=datatype,currblock=currblock,flux=flux,blockfct=blockfct)
+function Qtens(type::DataType,Qlabels::Array{Array{Q,1},1};currblock::currblockTypes=equalblocks(Qlabels),flux::Q=Q(),blockfct::Function=undefMat) where Q <: Qnum
+  return Qtens(Qlabels,type=type,currblock=currblock,flux=flux,blockfct=blockfct)
 end
 
 """
@@ -297,10 +297,10 @@ end
 
 Creates a dense `operator` `Qt` as a Qtensor with quantum numbers `QnumMat` on each index (`Array{Array{Q,1},1}`) according to arrow convention `Arrows` and all elements equal to `zero` are not included (default 0)
 """
-function Qtens(Op::R,Qlabels::Array{Array{Q,1},1},Arrows::U...;zero::Number=0.,currblock::currblockTypes=([i for i = 1:ndims(Op)-1],[ndims(Op)]),datatype::DataType=eltype(Op)) where {Q <: Qnum, R <: densTensType, U <: Union{Bool,Array{Bool,1}}}
+function Qtens(Op::R,Qlabels::Array{Array{Q,1},1},Arrows::U...;zero::Number=0.,currblock::currblockTypes=([i for i = 1:ndims(Op)-1],[ndims(Op)]),type::DataType=eltype(Op)) where {Q <: Qnum, R <: densTensType, U <: Union{Bool,Array{Bool,1}}}
   theseArrows = typeof(Arrows) <: Bool ? Arrows : (Arrows[1]...,)
   newQnumMat = [theseArrows[q] ? Qlabels[q] : inv.(Qlabels[q]) for q = 1:length(Qlabels)]
-  return Qtens(Op,newQnumMat;zero=zero,currblock=currblock,datatype=datatype)
+  return Qtens(Op,newQnumMat;zero=zero,currblock=currblock,type=type)
 end
 
 """
@@ -332,16 +332,29 @@ end
 
 Creates set of dense `operator`s (`Qt`) as a Qtensor with identical quantum numbers `Qlabel` on each index (`Array{Q,1}`) according to arrow convention `Arrows` and all elements equal to `zero` are not included (default 0). Will conjugate the second index (assume rank-2 input for `operator`)
 """
-function Qtens(Op::densTensType,Qlabels::Array{Array{Q,1},1};zero::R=eltype(Op)(0),currblock::currblockTypes=([i for i = 1:ndims(Op)-1],[ndims(Op)]),datatype::DataType=eltype(Op),blockfct::Function=undefMat) where {Q <: Qnum, R <: Number}
-  outtype = datatype
+function Qtens(Op::densTensType,Qlabels::Array{Q,1};zero::R=eltype(Op)(0),currblock::currblockTypes=([i for i = 1:ndims(Op)-1],[ndims(Op)]),type::DataType=eltype(Op),blockfct::Function=undefMat) where {Q <: Qnum, R <: Number}
+
+  if ntuple(w->length(Qlabels),ndims(Op)) != size(Op)
+    error("Input correct quantum numbers as a vector of vector of quantum numbers")
+  end
+
+  return Qtens(Op,[Qlabels],zero=zero,currblock=currblock,type=type,blockfct=blockfct)
+end
+
+"""
+    Qt = Qtens(operator,Qlabel,[,Arrows,zero=])
+
+Creates set of dense `operator`s (`Qt`) as a Qtensor with identical quantum numbers `Qlabel` on each index (`Array{Q,1}`) according to arrow convention `Arrows` and all elements equal to `zero` are not included (default 0). Will conjugate the second index (assume rank-2 input for `operator`)
+"""
+function Qtens(Op::densTensType,Qlabels::Array{Array{Q,1},1};zero::R=eltype(Op)(0),currblock::currblockTypes=([i for i = 1:ndims(Op)-1],[ndims(Op)]),type::DataType=eltype(Op),blockfct::Function=undefMat) where {Q <: Qnum, R <: Number}
   if isapprox(norm(Op),0)
-    return zeros(Qlabels,datatype=outtype,currblock=currblock)
+    return zeros(Qlabels,type=type,currblock=currblock)
   end
 
   pLinds = currblock[1]
   pRinds = currblock[2]
   
-  sizes = size(Op)
+  sizes = tupsize(Op)
 
   Op_mat = reshape(Array(Op),[pLinds,pRinds])
 
@@ -364,7 +377,7 @@ function Qtens(Op::densTensType,Qlabels::Array{Array{Q,1},1};zero::R=eltype(Op)(
   pos = savepos
   invflux = sum(w->Qlabels[w][pos[w]],1:length(pos))
 
-  Qt = Qtens(Qlabels,datatype=outtype,flux=invflux,currblock=currblock)
+  Qt = Qtens(Qlabels,type=type,flux=invflux,currblock=currblock)
 
   Lsizes = sizes[pLinds]
   Rsizes = sizes[pRinds]
@@ -412,9 +425,9 @@ Creates a dense `operator` as a Qtensor with quantum numbers `Qlabels` common to
 
 See also: [`densTensType`](@ref)
 """
-function Qtens(operator::Union{tens{W},Array{W,N}},Qlabels::Array{Q,1},arrows::U;zero::Number=0.,currblock::currblockTypes=([i for i = 1:ndims(Op)-1],[ndims(Op)]),datatype::DataType=eltype(Op),blockfct::Function=undefMat) where {Q <: Qnum, U <: Union{Bool,Array{Bool,1}}, W <: Number, N}
+function Qtens(operator::Union{tens{W},Array{W,N}},Qlabels::Array{Q,1},arrows::U;zero::Number=0.,currblock::currblockTypes=([i for i = 1:ndims(Op)-1],[ndims(Op)]),type::DataType=eltype(Op),blockfct::Function=undefMat) where {Q <: Qnum, U <: Union{Bool,Array{Bool,1}}, W <: Number, N}
   newQlabels = Array{Q,1}[arrows[a] ? Qlabels[a] : inv.(Qlabels[a]) for a = 1:length(arrows)]
-  return Qtens(operator,newQlabels,zero=zero,currblock=currblock,datatype=datatype,blockfct=blockfct)
+  return Qtens(operator,newQlabels,zero=zero,currblock=currblock,type=type,blockfct=blockfct)
 end
 
 """
@@ -422,9 +435,9 @@ end
 
 `A` is a Qtensor; makes shell of a `A` with only meta-data (empty blocks); used mainly for copies
 """
-function Qtens(A::Qtens{W,Q};zero::Number=0.,currblock::currblockTypes=A.currblock,datatype::DataType=eltype(A),blockfct::Function=undefMat) where {W <: Number, Q <: Qnum}
+function Qtens(A::Qtens{W,Q};zero::Number=0.,currblock::currblockTypes=A.currblock,type::DataType=eltype(A),blockfct::Function=undefMat) where {W <: Number, Q <: Qnum}
   newQlabels = fullQnumMat(A)
-  return Qtens(newQlabels,#=zero=zero,=#currblock=currblock,datatype=datatype,blockfct=blockfct,flux=A.flux)
+  return Qtens(newQlabels,#=zero=zero,=#currblock=currblock,type=type,blockfct=blockfct,flux=A.flux)
 end
 
 """

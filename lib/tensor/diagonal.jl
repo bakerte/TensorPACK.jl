@@ -10,13 +10,13 @@
 #
 
 """
-    A = diagonal{W}(P)
+    A = Diagonal{W}(P)
 
 Converts `diagonal` type `P` (element type `Z`) into a diagonal of element type `W`
 """
-function diagonal{W}(P::diagonal{Z}) where {W <: Number, Z <: Number}
+function Diagonal{W}(P::Diagonal{Z}) where {W <: Number, Z <: Number}
   if W != Z
-    newtens = diagonal{W}(convert(Array{W,1},P.T))
+    newtens = Diagonal{W}(convert(Array{W,1},P.T))
   else
     newtens = P
   end
@@ -24,20 +24,20 @@ function diagonal{W}(P::diagonal{Z}) where {W <: Number, Z <: Number}
 end
 
 """
-    A = diagonal(alpha,beta)
+    A = Diagonal(alpha,beta)
 
 Converts arrays of numbers `alpha` (diagonal column) and `beta` (off-diagonal elements) into a tridiagonal matrix
 """
-function diagonal(alpha::Array{W,1},beta::Array{W,1}) where W <: Real
+function Diagonal(alpha::Array{W,1},beta::Array{W,1}) where W <: Real
   return Base.SymTridiagonal(alpha,beta)
 end
 
 """
-    M = diagonal(alpha,beta)
+    M = Diagonal(alpha,beta)
 
 Converts arrays of arrays (either `Array{W,2}` or `tens{W}`) numbers `alpha` (diagonal column) and `beta` (off-diagonal elements) into a block-tridiagonal matrix
 """
-function diagonal(alpha::Array{W,1},beta::Array{W,1}) where W <: Union{Array{S,2},tens{S}} where S <: Number
+function Diagonal(alpha::Array{W,1},beta::Array{W,1}) where W <: Union{Array{S,2},tens{S}} where S <: Number
   g = size(alpha[1],1)
   p = 0
   while p < length(alpha) && isassigned(alpha,p+1)

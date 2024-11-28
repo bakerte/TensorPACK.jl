@@ -9,13 +9,15 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
+const nullsize = intType[0] #(intType(0),)
+
 """
     G = tens([type=Float64])
 
 Initializes an empty tensor `G` with no indices
 """
 function tens(;type::DataType=Float64)
-  return tens{type}((intType(0),),type[])
+  return tens{type}(nullsize,type[])
 end
 
 """
@@ -24,7 +26,7 @@ end
 Initializes an empty tensor `G` with no indices of data-type `type`
 """
 function tens(type::DataType)
-  return tens{type}((intType(0),),type[])
+  return tens{type}(nullsize,type[])
 end
 
 """
@@ -59,7 +61,7 @@ end
 
 Trivial convertion of denstens `A` to itself
 """
-function tens{W}(A::diagonal{Z}) where {W <: Number, Z <: Number}
+function tens{W}(A::Diagonal{Z}) where {W <: Number, Z <: Number}
   if Z != W
     outtens = tens(LinearAlgebra.diagm(convert(Array{W,1},A.T)))
   else
@@ -82,8 +84,9 @@ Converts tensor `P` into a `denstens` and converts to type `W` for output tensor
 
 See also: [`denstens`](@ref)
 """
-function tens(G::DataType,P::AbstractArray{W,N}) where W <: Number where N
-  sizeP = ntuple(w->size(P,w),N)
+function tens(G::DataType,P::AbstractArray)
+  N = ndims(P)
+  sizeP = [size(P,w) for w = 1:N]#ntuple(w->size(P,w),N)
   #sizeP = ntuple(w->size(P,w),ndims(P)) #size of P to a vector
   vecP = reshape(P,prod(sizeP))
   if G != eltype(P) #converts types if they do not match
@@ -133,12 +136,8 @@ Converts tensor `P` into a `denstens` (`G`) of the same type
 
 See also: [`denstens`](@ref)
 """
-function tens(P::Array{W,N}) where {W <: Number, N}
-  return tens(W,P)
-end
-
 function tens(P::AbstractArray{W,N}) where {W <: Number, N}
-  return tens(eltype(P),Array(P))
+  return tens(W,Array(P))
 end
 
 """
@@ -259,6 +258,7 @@ end
 
 
 
+const default_boundary = tens(Float64)
 
 
 
