@@ -176,7 +176,7 @@ end
 """
   G = *(A,num)
 
-Mutiplies a tensor `A` by a number `num` with output `G`
+Mutiplies a `TensType` `A` by a number `num` with output `G`
 
 See also: [`mult!`](@ref)
 """
@@ -199,10 +199,21 @@ end
 """
   G = *(num,A)
 
-Mutiplies a tensor `A` by a number `num` with output `G`. Ensures commutativity of the operation
+Mutiplies a `TensType` (or `Diagonal`) `A` by a number `num` with output `G`. Ensures commutativity of the operation
+
+See also: [`mult!`](@ref) [`allTensType`](@ref)
+"""
+function *(M::Union{TensType,Diagonal}, num::Number)
+  return num * M
+end
+
+"""
+  G = *(num,A)
+
+Mutiplies a `Diagonal` tensor `A` by a number `num` with output `G`
 
 See also: [`mult!`](@ref)
 """
-function *(M::TensType, num::Number)
-  return num * M
+function *(num::T, M::Diagonal) where T <: Number
+  return Diagonal(num * M.T)
 end

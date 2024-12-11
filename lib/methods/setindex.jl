@@ -63,7 +63,7 @@ function setindex!(B::Array{W,N},A::Diagonal{W},a::genColType...) where {W <: Nu
   end
   nothing
 end
-
+#=
 """
     setindex!(B,A,a...)
 
@@ -74,6 +74,7 @@ function setindex!(B::Array{W,N},A::tens{W},a::genColType...) where {W <: Number
   B[a...] = G
   nothing
 end
+=#
 #=
 function setindex!(B::tens{W},A::W,a::Integer...) where W <: Number
   @inbounds index = a[end]-1

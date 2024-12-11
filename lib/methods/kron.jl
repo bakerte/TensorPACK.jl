@@ -63,12 +63,21 @@ function kron(M1::TensType,i::intType,Ns::intType)
 end
 
 """
-    C = kron(Op,i,Ns,F)
+    C = kron(F,Op,i,Ns)
 
-Creates the kronecker product of an input operator `Op` on site `i` of an `Ns` site system with a trailing operator `F`
+Creates the kronecker product of an input operator `Op` (`denstens`) on site `i` of an `Ns` site system with a trailing operator `F`
 """
 function kron(F::TensType,M1::TensType,i::intType,Ns::intType)
   return kron(F,Ns,(M1,i))
+end
+
+"""
+    C = kron(F,Op,i,Ns)
+
+Creates the kronecker product of an input operator `Op` (Array) on site `i` of an `Ns` site system with a trailing operator `F`
+"""
+function kron(F::Array,M1::Array,i::intType,Ns::intType)
+  return kron(tens(F),Ns,(tens(M1),i))
 end
 
 #=
