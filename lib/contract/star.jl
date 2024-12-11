@@ -60,7 +60,7 @@ end
 
 Computes the contraction of array `A` with `B` of type `denstens`
 """
-function *(X::Array,Y::denstens)
+function *(X::AbstractArray,Y::denstens)
   return tens(X)*Y
 end
 
@@ -69,7 +69,7 @@ end
 
 Computes the contraction of array `B` with `A` of type `denstens`
 """
-function *(X::denstens,Y::Array)
+function *(X::denstens,Y::AbstractArray)
   return X*tens(Y)
 end
 
