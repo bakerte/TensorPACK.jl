@@ -1,14 +1,14 @@
 name = "TensorPACK"
 uuid = "31531b1e-8b04-434d-b24f-20dc49cbf098"
 authors = ["Thomas E. Baker"]
-version = "0.8.2"
+version = "0.9.0"
 
 [compat]
-julia = "1.10.0"
-LinearAlgebra = "1.10.0"
-Distributed = "1.10.0"
-Printf = "1.10.0"
-Serialization = "1.10.0"
+julia = "1.11.0"
+LinearAlgebra = "1.11.0"
+Distributed = "1.11.0"
+Printf = "1.11.0"
+Serialization = "1.11.0"
 
 [deps]
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
