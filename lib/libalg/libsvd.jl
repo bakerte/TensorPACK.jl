@@ -35,6 +35,10 @@ const inplaceChar = 'O'
         return libsvd!(copy(A),m,n,job=job)
     end
 
+    function libsvd(A::Memory{$elty},m::Integer,n::Integer;job::Char='S') #LinearAlgebra.LAPACK.gesdd!
+        return libsvd!(copy(A),m,n,job=job)
+    end
+
     function libsvd(A::tens{$elty},m::Integer,n::Integer;job::Char='S') #LinearAlgebra.LAPACK.gesdd!
       return libsvd!(copy(A.T),m,n,job=job)
     end
@@ -48,8 +52,55 @@ const inplaceChar = 'O'
     end
       
     #generalized
-    function libsvd!(A::AbstractMatrix{$elty}, m::Integer, n::Integer, B::AbstractMatrix{$elty};jobu::AbstractChar='S', jobv::AbstractChar='S', jobq::AbstractChar='Q',fct::Function=gesvd!)
+    function libsvd!(A::Union{Memory{$elty},AbstractMatrix{$elty}}, m::Integer, n::Integer, B::Union{Memory{$elty},AbstractMatrix{$elty}};jobu::AbstractChar='S', jobv::AbstractChar='S', jobq::AbstractChar='Q',fct::Function=gesvd!)
       return fct(A, m, n, B;jobu=jobu, jobv=jobv, jobq=jobq)
     end
+
+
+
+
+
+#fast SVD
+    function libfsvd!(A::AbstractArray{$elty,N},m::Integer,n::Integer;job::Char=inplaceChar,fct::Function=gesdd!) where N
+      return fct(A,m,n,job=job)
+    end
+
+    function libfsvd!(A::tens{$elty},m::Integer,n::Integer;job::Char=inplaceChar,fct::Function=gesdd!)
+      return fct(A,m,n,job=job)
+    end
+
+    function libfsvd!(A::AbstractMatrix{$elty};job::Char=inplaceChar)
+        return libfsvd!(A,size(A,1),size(A,2),job=job)
+    end
+
+    function libfsvd!(A::tens{$elty};job::Char=inplaceChar)
+        return libfsvd!(A.T,size(A,1),size(A,2),job=job)
+    end
+
+    function libfsvd(A::Array{$elty,N},m::Integer,n::Integer;job::Char='S') where N #LinearAlgebra.LAPACK.gesdd!
+        return libfsvd!(copy(A),m,n,job=job)
+    end
+
+    function libfsvd(A::Memory{$elty},m::Integer,n::Integer;job::Char='S') #LinearAlgebra.LAPACK.gesdd!
+        return libfsvd!(copy(A),m,n,job=job)
+    end
+
+    function libfsvd(A::tens{$elty},m::Integer,n::Integer;job::Char='S') #LinearAlgebra.LAPACK.gesdd!
+      return libfsvd!(copy(A.T),m,n,job=job)
+    end
+
+    function libfsvd(A::AbstractMatrix{$elty};job::Char='S')
+        return libfsvd!(copy(A),size(A,1),size(A,2),job=job)
+    end
+
+    function libfsvd(A::tens{$elty};job::Char='S')
+        return libfsvd!(copy(A.T),size(A,1),size(A,2),job=job)
+    end
+      
+    #generalized
+    function libfsvd!(A::Union{Memory{$elty},AbstractMatrix{$elty}}, m::Integer, n::Integer, B::Union{Memory{$elty},AbstractMatrix{$elty}};jobu::AbstractChar='S', jobv::AbstractChar='S', jobq::AbstractChar='Q',fct::Function=gesdd!)
+      return fct(A, m, n, B;jobu=jobu, jobv=jobv, jobq=jobq)
+    end
+    
   end
 end

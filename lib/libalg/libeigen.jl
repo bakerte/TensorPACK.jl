@@ -13,7 +13,7 @@ for elty in (:Float32,:Float64,:ComplexF32,:ComplexF64)
   @eval begin
 
     #tridiagonal
-    function libeigen!(dv::AbstractVector{$elty}, ev::AbstractVector{$elty},n::Integer; job::Char='V', rank::Integer=2,fct::Function=stev!)
+    function libeigen!(dv::Union{AbstractVector{$elty},Memory{$elty}}, ev::Union{AbstractVector{$elty},Memory{$elty}},n::Integer; job::Char='V', rank::Integer=2,fct::Function=stev!)
       if n < length(dv)
         out = fct(dv[1:n], ev[1:n], n, job=job, rank=rank)
       else
@@ -22,11 +22,11 @@ for elty in (:Float32,:Float64,:ComplexF32,:ComplexF64)
       return out
     end
 
-    function libeigen!(dv::AbstractVector{$elty}, ev::AbstractVector{$elty};job::Char='V', rank::Integer=2) #stev!
+    function libeigen!(dv::Union{AbstractVector{$elty},Memory{$elty}}, ev::Union{AbstractVector{$elty},Memory{$elty}};job::Char='V', rank::Integer=2) #stev!
       return libeigen!(dv,ev,length(dv),job=job,rank=rank)
     end
 
-    function libeigen(dv::AbstractVector{$elty}, ev::AbstractVector{$elty},n::Integer; job::Char='V', rank::Integer=2) #stev!
+    function libeigen(dv::Union{AbstractVector{$elty},Memory{$elty}}, ev::Union{AbstractVector{$elty},Memory{$elty}},n::Integer; job::Char='V', rank::Integer=2) #stev!
       if n < length(dv)
         out = libeigen!(dv[1:n],ev[1:n],n,job=job,rank=rank)
       else
@@ -35,16 +35,16 @@ for elty in (:Float32,:Float64,:ComplexF32,:ComplexF64)
       return out
     end
 
-    function libeigen(dv::AbstractVector{$elty}, ev::AbstractVector{$elty};job::Char='V', rank::Integer=2) #stev!
+    function libeigen(dv::Union{AbstractVector{$elty},Memory{$elty}}, ev::Union{AbstractVector{$elty},Memory{$elty}};job::Char='V', rank::Integer=2) #stev!
       return libeigen!(copy(dv),copy(ev),length(dv),job=job,rank=rank)
     end
 
     #symmetric/Hermitian
-    function libeigen!(A::Union{AbstractMatrix{$elty},Vector{$elty}},n::Integer;job::Char='V',uplo::Char='U',fct::Function=syev!)
+    function libeigen!(A::Union{AbstractMatrix{$elty},Vector{$elty},Memory{$elty}},n::Integer;job::Char='V',uplo::Char='U',fct::Function=syev!)
       return fct(A,n,job=job,uplo=uplo)
     end
 
-    function libeigen!(A::AbstractMatrix{$elty};job::Char='V',uplo::Char='U') #syev!
+    function libeigen!(A::Union{AbstractMatrix{$elty},Memory{$elty}};job::Char='V',uplo::Char='U') #syev!
       return libeigen!(A,size(A,1),job=job,uplo=uplo)
     end
 
@@ -60,7 +60,7 @@ for elty in (:Float32,:Float64,:ComplexF32,:ComplexF64)
       return libeigen!(copy(A),size(A,1),job=job,uplo=uplo)
     end
 
-    function libeigen(A::Union{AbstractMatrix{$elty},Vector{$elty}},a::Integer;job::Char='V',uplo::Char='U') #syev!
+    function libeigen(A::Union{AbstractMatrix{$elty},Vector{$elty},Memory{$elty}},a::Integer;job::Char='V',uplo::Char='U') #syev!
       return libeigen!(copy(A),a,job=job,uplo=uplo)
     end
 

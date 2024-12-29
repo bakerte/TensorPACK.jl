@@ -23,6 +23,10 @@ function liblq!(A::Array{W,P},a::Integer,b::Integer;m::Integer=min(a,b)) where {
   return L,Q
 end
 
+function liblq!(A::Memory{W},a::Integer,b::Integer;m::Integer=min(a,b)) where {W <: Number}
+  return liblq!(convert(Array{W,1},A),a,b,m=m)
+end
+
 function liblq(A::Array{W,2},a::Integer,b::Integer;m::Integer=min(a,b)) where W <: Number
   return liblq!(copy(A),a,b,m=m)
 end

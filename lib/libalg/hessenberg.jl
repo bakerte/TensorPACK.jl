@@ -18,12 +18,44 @@ function libUpperHessenberg!(A::Array{W,P};a::Integer=size(A,1),b::Integer=size(
   return libUpperHessenberg!(A,a,b,tau=tau,m=m)
 end
 
+
 function libUpperHessenberg!(A::Array{W,P},a::Integer,b::Integer,tau::Array{W,1};m::Integer=length(tau)) where {W <: Number, P}
   return libUpperHessenberg!(A,a,b,tau=tau,m=m)
 end
 
 function libUpperHessenberg!(A::Array{W,P},a::Integer,b::Integer;tau::Array{W,1}=Array{W,1}(undef,min(a,b)),m::Integer=length(tau)) where {W <: Number, P}
   G,tau = geqrf!(A,a,b,tau)
+
+  R = P == 1 ? Array{W,1}(undef,m*b) : Array{W,2}(undef,m,b)
+  for y = 1:b
+    thisind = m*(y-1)
+    thisotherind = a*(y-1)
+    @inbounds @simd for x = 1:min(y,m)
+      R[x + thisind] = A[x + thisotherind]
+    end
+    @inbounds @simd for x = y+1:m
+      R[x + thisind] = 0
+    end
+  end
+  return R
+end
+
+function libUpperHessenberg!(A::Memory{W};a::Integer=size(A,1),b::Integer=size(A,2),tau::Memory{W}=Memory{W}(undef,min(a,b)),m::Integer=length(tau)) where {W <: Number}
+  return libUpperHessenberg!(A,a,b,tau=tau,m=m)
+end
+
+function libUpperHessenberg!(A::Memory{W},a::Integer,b::Integer,tau::Memory{W};m::Integer=length(tau)) where {W <: Number}
+  return libUpperHessenberg!(A,a,b,tau=tau,m=m)
+end
+
+#function libUpperHessenberg!(A::Array{W,P},a::Integer,b::Integer;tau::Array{W,1}=Array{W,1}(undef,min(a,b)),m::Integer=length(tau)) where {W <: Number, P}
+function libUpperHessenberg!(A::Memory{W},a::Integer,b::Integer;tau::Memory{W}=Memory{W}(undef,min(a,b)),m::Integer=length(tau)) where {W <: Number}
+
+  Z = convert(Array{W,1},A)
+  Y = convert(Array{W,1},tau)
+  P = 1
+
+  G,tau = geqrf!(Z,a,b,Y)
 
   R = P == 1 ? Array{W,1}(undef,m*b) : Array{W,2}(undef,m,b)
   for y = 1:b
@@ -53,6 +85,37 @@ end
 
 function libLowerHessenberg!(A::Array{W,P},a::Integer,b::Integer;tau::Array{W,1}=Array{W,1}(undef,min(a,b)),m::Integer=length(tau)) where {W <: Number, P}
   G,tau = gelqf!(A,a,b,tau)
+
+  L = P == 1 ? Array{W,1}(undef,a*m) : Array{W,2}(undef,a,m)
+  for y = 1:m
+    thisind = a*(y-1)
+    @inbounds @simd for x = 1:y-1
+      L[x+thisind] = 0
+    end
+    @inbounds @simd for x = y:a
+      L[x+thisind] = A[x+thisind]
+    end
+  end
+  return L
+end
+
+
+function libLowerHessenberg!(A::Memory{W};a::Integer=size(A,1),b::Integer=size(A,2),tau::Memory{W}=Memory{W}(undef,min(a,b)),m::Integer=length(tau)) where {W <: Number}
+  return libLowerHessenberg!(A,a,b,tau=tau,m=m)
+end
+
+function libLowerHessenberg!(A::Memory{W},a::Integer,b::Integer,tau::Memory{W};m::Integer=length(tau)) where {W <: Number}
+  return libLowerHessenberg!(A,a,b,tau=tau,m=m)
+end
+
+function libLowerHessenberg!(A::Memory{W},a::Integer,b::Integer;tau::Memory{W}=Memory{W}(undef,min(a,b)),m::Integer=length(tau)) where {W <: Number}
+
+
+  Z = convert(Array{W,1},A)
+  Y = convert(Array{W,1},tau)
+  P = 1
+
+  G,tau = gelqf!(Z,a,b,Y)
 
   L = P == 1 ? Array{W,1}(undef,a*m) : Array{W,2}(undef,a,m)
   for y = 1:m

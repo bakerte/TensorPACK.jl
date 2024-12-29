@@ -37,3 +37,7 @@ function libqr!(A::Array{W,P},a::Integer,b::Integer;m::Integer=min(a,b)) where {
   Q = libQRmake!(A,a,b,tau,sizetau) #orgqr
   return Q,R
 end
+
+function libqr!(A::Memory{W},a::Integer,b::Integer;m::Integer=min(a,b)) where {W <: Number}
+  return libqr!(convert(Array{W,1},A),a,b,m=m)
+end

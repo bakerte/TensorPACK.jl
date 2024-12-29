@@ -757,7 +757,7 @@ for (gesvd, gesdd, ggsvd, elty, relty) in
       function gesdd!(A::AbstractArray{$elty,N},m::Integer,n::Integer;job::Char='O') where N
           minmn  = min(m, n)
           
-#=
+
           if N == 2
             if job == 'A'
               U  = Array{$elty,2}(undef, m, m)
@@ -774,26 +774,25 @@ for (gesvd, gesdd, ggsvd, elty, relty) in
               VT = Array{$elty,2}(undef, n, 0)
             end
           else
-            =#
             if job == 'A'
-              U  = Array{$elty,1}(undef, m*m)
-              VT = Array{$elty,1}(undef, n*n)
+              U  = Memory{$elty}(undef, m*m)
+              VT = Memory{$elty}(undef, n*n)
             elseif job == 'S'
-              U  = Array{$elty,1}(undef, m*minmn)
-              VT = Array{$elty,1}(undef, minmn*n)
+              U  = Memory{$elty}(undef, m*minmn)
+              VT = Memory{$elty}(undef, minmn*n)
             elseif job == 'O'
               test = m >= n
-              U  = Array{$elty,1}(undef, m*(test ? 0 : m))
-              VT = Array{$elty,1}(undef, minmn*(test ? n : 0))
+              U  = Memory{$elty}(undef, m*(test ? 0 : m))
+              VT = Memory{$elty}(undef, minmn*(test ? n : 0))
             else #if job == 'N'
-              U  = Array{$elty,1}(undef, 0)
-              VT = Array{$elty,1}(undef, 0)
+              U  = Memory{$elty}(undef, 0)
+              VT = Memory{$elty}(undef, 0)
             end
-#          end
+          end
 
           work   = Vector{$elty}(undef, 1)
           lwork  = BlasInt(-1)
-          S      = Array{$relty,1}(undef, minmn)
+          S      = Memory{$relty}(undef, minmn)
           cmplx  = eltype(A)<:Complex
           if cmplx
               rwork = Vector{$relty}(undef, #=job == 'N' ? 7*minmn : =# minmn*max(5*minmn+7, 2*max(m,n)+2*minmn+1))
@@ -962,7 +961,7 @@ for (gesvd, gesdd, ggsvd, elty, relty) in
 #chkstride1(A)
 #m, n   = size(A)
 #minmn  = min(m, n)
-S      = Array{$relty,1}(undef, minmn)
+S = Vector{$relty}(undef, minmn)
 
 if N == 2
   if job == 'A'
@@ -980,17 +979,17 @@ if N == 2
   end
 else
   if job == 'A'
-    U  = Array{$elty,1}(undef,m*m)
-    VT = Array{$elty,1}(undef,n*n)
+    U  = Memory{$elty}(undef,m*m)
+    VT = Memory{$elty}(undef,n*n)
   elseif job == 'S'
-    U  = Array{$elty,1}(undef,m*minmn)
-    VT = Array{$elty,1}(undef,minmn*n)
+    U  = Memory{$elty}(undef,m*minmn)
+    VT = Memory{$elty}(undef,minmn*n)
   elseif job == 'O'
-    U  = Array{$elty,1}(undef,m*(jobu == 'O' ? 0 : m))
-    VT = Array{$elty,1}(undef,minmn*(jobvt == 'S' ? n : 0))
+    U  = Memory{$elty}(undef,m*(jobu == 'O' ? 0 : m))
+    VT = Memory{$elty}(undef,minmn*(jobvt == 'S' ? n : 0))
   else #if job == 'N'
-    U  = Array{$elty,1}(undef,0)
-    VT = Array{$elty,1}(undef,0)
+    U  = Memory{$elty}(undef,0)
+    VT = Memory{$elty}(undef,0)
   end
 end
 
@@ -1033,9 +1032,9 @@ end
 if jobu == 'O'
    one,two,three = A, S, VT
 elseif jobvt == 'O'
-    one,two,three = U, S, A
+   one,two,three = U, S, A
 else
-    one,two,three = U, S, VT
+   one,two,three = U, S, VT
 
 end
 
