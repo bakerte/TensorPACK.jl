@@ -69,12 +69,12 @@ end
 converts both of `A` and `B` to `denstens` (`G` and `K`) if they are not already and the types are both between `denstens` (potential with different element types)
 """
 function checkType(A::tens{W},B::tens{G}) where {W <: Number, G <: Number}
-#  if W != G
+  if W != G
     outType = typeof(eltype(A)(1)*eltype(B)(1))
     nA,nB = tens{outType}(A),tens{outType}(B)
-#  else
-#    nA,nB = A,B
-#  end
+  else
+    nA,nB = A,B
+  end
   return nA,nB
 end
 

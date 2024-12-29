@@ -60,7 +60,7 @@ Permute dimensions of a `diagonal` in-place (no equivalent, but returns value so
 
 See also: [`permutedims`](@ref)
 """
-function permutedims!(M::diagonal, vec::Union{Array,Tuple})
+function permutedims!(M::diagonal, vec::Union{Array,Tuple,Memory})
   return M
 end
 
@@ -71,7 +71,7 @@ Permute dimensions of a `diagonal` with either vector or tuple input
 
 See also: [`permutedims`](@ref)
 """
-function permutedims(M::diagonal, vec::Union{Array,Tuple})
+function permutedims(M::diagonal, vec::Union{Array,Tuple,Memory})
   return M
 end
 
@@ -82,7 +82,7 @@ Permutes dimensions of `A` (identical usage to dense `size` call) for a `densten
 
 See also: [`permutedims!`](@ref)
 """
-function permutedims(M::tens{W}, vec::Array{P,1}) where {W <: Number, P <: intType}
+function permutedims(M::tens{W}, vec::Union{Memory{P},Array{P,1}}) where {W <: Number, P <: intType}
   return permutedims(M,(vec...,))
 end
 
@@ -93,7 +93,7 @@ Permutes dimensions of `A` (identical usage to dense `size` call) for an Array
 
 See also: [`permutedims!`](@ref)
 """
-function permutedims(M::Array{W,G}, vec::Array{P,1}) where {W <: Number, P <: intType, G}
+function permutedims(M::Array{W,G}, vec::Union{Memory{P},Array{P,1}}) where {W <: Number, P <: intType, G}
   return permutedims(M,(vec...,))
 end
 
@@ -125,7 +125,7 @@ Permute dimensions of an input Array `A` output to array `B` (any rank) with per
 
 See also: [`permutedims`](@ref)
 """
-function permutedims!(P::Array{W,R},A::Array{W,R},iA::Union{Array{intType,1},NTuple{G,intType}},Asizes::Union{Array{intType,1},NTuple{G,intType}},newsizes::Union{Array{intType,1},NTuple{G,intType}}) where {W <: Number, G, R}
+function permutedims!(P::Union{Array{W,R},Memory{W}},A::Union{Array{W,R},Memory{W}},iA::Union{Array{intType,1},NTuple{G,intType}},Asizes::Union{Array{intType,1},NTuple{G,intType},Memory{intType}},newsizes::Union{Array{intType,1},NTuple{G,intType},Memory{intType}}) where {W <: Number, G, R}
   startind = 0
   @inbounds while startind < G && iA[startind+1] == startind+1
     startind += 1
@@ -212,13 +212,17 @@ function permutedims(A::tens{W},iA::NTuple{G,intType}) where {W <: Number, G}
     out = A
   else
     Asizes = size(A) #ntuple(w->size(A,w),G)
-    newsizes = [Asizes[iA[w]] for w = 1:length(iA)] #ntuple(w->Asizes[iA[w]],G)
+    newsizes = Memory{intType}(undef,length(iA))
+    for w = 1:length(newsizes)
+      newsizes[w] = Asizes[iA[w]]
+    end
+#    newsizes = [Asizes[iA[w]] for w = 1:length(iA)] #ntuple(w->Asizes[iA[w]],G)
 
     psize = 1
     @inbounds @simd for w = 1:G
       psize *= Asizes[w]
     end
-    P = Array{W,1}(undef,psize)
+    P = Memory{W}(undef,psize)
 
     permutedims!(P,A.T,iA,Asizes,newsizes)
 

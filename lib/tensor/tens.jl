@@ -63,11 +63,19 @@ Trivial convertion of denstens `A` to itself
 """
 function tens{W}(A::Diagonal{Z}) where {W <: Number, Z <: Number}
   if Z != W
-    outtens = tens(LinearAlgebra.diagm(convert(Array{W,1},A.T)))
+    outtens = tens(LinearAlgebra.diagm(convert(Memory{W},A.T)))
   else
     outtens = tens(A)
   end
   return outtens
+end
+
+function tens(size::Vector{intType},T::Memory{W}) where W <: Number
+  return tens{W}(convert(Memory{intType},size),T)
+end
+
+function tens(size::Vector{intType},T::Vector{W}) where W <: Number
+  return tens{W}(convert(Memory{intType},size),convert(Memory{W},T))
 end
 
 #=
@@ -160,7 +168,7 @@ See also: [`denstens`](@ref)
 """
 function tens{W}(P::tens{Z}) where {W <: Number, Z <: Number}
   if W != Z
-    newtens = tens{W}(P.size,convert(Array{W,1},P.T))
+    newtens = tens{W}(P.size,convert(Memory{W},P.T))
   else
     newtens = P
   end

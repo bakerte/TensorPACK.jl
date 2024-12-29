@@ -79,7 +79,7 @@ end
 
 Function boundary to load in first tensor in a direct sum into C (Array) from `denstens` or Array `A`; `finalsize` is the size of the resulting tensor as a vector or tuple; `Asize` is the size of `A` as a vector or tuple
 """
-function Aloop!(C::Union{Array{W,G},Array{W,1}},A::Union{tens{W},Array{W,G}},finalsize::Union{NTuple{G,intType},Array{intType,1}},Asize::Union{Array{intType,1},NTuple{G,intType}}) where {G, W <: Number}
+function Aloop!(C::Union{Array{W,G},Array{W,1}},A::Union{tens{W},Array{W,G}},finalsize::Union{NTuple{G,intType},Array{intType,1}},Asize::Union{Array{intType,1},NTuple{G,intType},Memory{intType}}) where {G, W <: Number}
 
   nA = ndims(A)
 
@@ -119,7 +119,7 @@ end
 
 Function boundary to load in second tensor in a direct sum into C (Array) from `denstens` or Array `B`; `finalsize` is the size of the resulting tensor as a vector or tuple; `inds` are the indices that are expanded; `Asize` is the size of `A` as a vector or tuple
 """
-function Bloop!(C::Union{Array{W,R},Array{W,1}},B::Union{tens{W},Array{W,R}},finalsize::Union{NTuple{R,intType},Array{intType,1}},Bsize::Union{Array{intType,1},NTuple{R,intType}},inds::NTuple{G,intType},Asize::Union{Array{intType,1},NTuple{R,intType}}) where {R, G, W <: Number}
+function Bloop!(C::Union{Array{W,R},Array{W,1}},B::Union{tens{W},Array{W,R}},finalsize::Union{NTuple{R,intType},Array{intType,1}},Bsize::Union{Array{intType,1},NTuple{R,intType},Memory{intType}},inds::NTuple{G,intType},Asize::Union{Array{intType,1},NTuple{R,intType},Memory{intType}}) where {R, G, W <: Number}
 
 
 

@@ -42,7 +42,7 @@ Eigensolver routine with truncation (output to `D` and `U` just as `LinearAlgebr
 
 See also: [`svd`](@ref) [`libeigen`](@ref)
 """
-function eigen(AA::Array{W,G},B::Array{W,R}...;cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,a::Integer=size(AA,1),b::Integer=size(AA,2),minm::Integer=2,nozeros::Bool=false,leftflux::Bool=false,power::Number=1,effZero::Real=defzero,keepdeg::Bool=false,transpose::Bool=false,decomposer::Function=libeigen,rev::Bool=true) where {W <: Number, G, R}
+function eigen(AA::Union{Array{W,G},Memory{W}},B::Union{Array{W,R},Memory{W}}...;cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,a::Integer=size(AA,1),b::Integer=size(AA,2),minm::Integer=2,nozeros::Bool=false,leftflux::Bool=false,power::Number=1,effZero::Real=defzero,keepdeg::Bool=false,transpose::Bool=false,decomposer::Function=libeigen,rev::Bool=true) where {W <: Number, G, R}
 
   Dsq,U = decomposer(AA,a,B...)
 

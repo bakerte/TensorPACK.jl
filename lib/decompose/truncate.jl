@@ -30,7 +30,7 @@ All parameters can be set in `svd` or `eigen` or similar
 
 See also: [`svd`](@ref) [`eigen`](@ref) [`defzero`](@ref)
 """
-function truncate(D::Array{W,1}...;m::Integer=0,minm::Integer=2,mag::Float64=0.,cutoff::Real=0.,effZero::Real=defzero,nozeros::Bool=true,power::Number=2,keepdeg::Bool=true,rev::Bool=false) where W <: Number
+function truncate(D::Union{Array{W,1},Memory{W}}...;m::Integer=0,minm::Integer=2,mag::Float64=0.,cutoff::Real=0.,effZero::Real=defzero,nozeros::Bool=true,power::Number=2,keepdeg::Bool=true,rev::Bool=false) where W <: Number
 
   nQNs = length(D)
   sizeD = 0

@@ -139,7 +139,7 @@ end
 
 Returns the product of all the dimensions of a tensor for given edges `E` (Vector)
 """
-function get_cost(edges::Array{intType,1}) #where G 
+function get_cost(edges::Union{Memory{intType},Array{intType,1}}) #where G 
 	cost = 1
 	for edge_dim in edges
 		cost *= edge_dim
@@ -278,7 +278,7 @@ end
 
 Obtains the rank of a tensor(does not count indices with dimension of 1)
 """
-function effective_rank(dimensions::Array{intType,1}) #where G
+function effective_rank(dimensions::Union{Memory{intType},Array{intType,1}}) #where G
 	nrank = 0
 	# does not consider dimension of value 1 to contribute to the rank
 	for i in dimensions
@@ -622,7 +622,7 @@ end
 Removes value in dictionary `shared_edges` in order to grab the first index of the resulting dictionary in a subsequent step (removing costs no extra allocations). `next_pos` is the position of the input tensor that is to be removed.
 `next_names` are the names of the indices of the tensor to remove
 """
-function update_edges(next_names::Vector{String},next_pos::intType, shared_edges::Dict{String,Vector{intType}})
+function update_edges(next_names::Union{Vector{String},Memory{String}},next_pos::intType, shared_edges::Dict{String,Vector{intType}})
 	for edge in next_names
 		adjacent = shared_edges[edge]
 

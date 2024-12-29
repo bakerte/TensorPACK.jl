@@ -58,7 +58,7 @@ Generates a matrix (`G`) with dimensions `ldim`x`rdim` with data type `W`. Can a
 See: [`eye`](@ref)
 """
 function eye(W::DataType,ldim::Integer,rdim::Integer;addone::Bool=false,addRightDim::Bool=false)#,loadleft::Bool=true)
-  oneval = W(1)
+#  oneval = W(1)
   if addone
     if addRightDim
       newsize = [ldim,rdim,1]
@@ -68,10 +68,19 @@ function eye(W::DataType,ldim::Integer,rdim::Integer;addone::Bool=false,addRight
   else
     newsize = [ldim,rdim]
   end
-  Id = zeros(W,prod(newsize))
+
+  Id = Memory{W}(undef,prod(newsize))
   stop = min(ldim,rdim) #loadleft ? ldim : rdim
   @inbounds @simd for i = 1:stop
-    Id[i + ldim*(i-1)] = oneval
+    Id[i + ldim*(i-1)] = W(1) #oneval
+  end
+  @inbounds @simd for i = 2:stop
+    for j = i + ldim*(i-2):i + ldim*(i-1)-1
+      Id[j] = W(0)
+    end
+  end
+  @inbounds @simd for w = stop + ldim*(stop-1)+1:length(Id)
+    Id[w] = W(0)
   end
   return tens(newsize,Id)
 end

@@ -89,7 +89,7 @@ Converts input tensor `A` to its matrix equivalent `pA` with left indices contai
 """
 function prepareT(A::densTensType,Lvec::Union{Array{intType,1},NTuple{K,intType}},Rvec::Union{Array{intType,1},NTuple{P,intType}},conjvar::Bool) where {K,P}
 
-  newdimsA = Array{intType,1}(undef,ndims(A))
+  newdimsA = Memory{intType}(undef,ndims(A))
   counter = 0
   @inbounds @simd for w = 1:length(Lvec)
     counter += 1
@@ -193,8 +193,7 @@ Contraction function (`alpha`*`A`*`B`+`beta`*`Z`) and can conjugate A (`conjA`) 
 See also: [`maincontractor`](@ref)
 """
 function maincontractor!(conjA::Bool,conjB::Bool,A::densTensType,iA::intvecType,B::densTensType,iB::intvecType,Z::densTensType...;alpha::Number=1,beta::Number=1)
-
-
+  
   if ndims(A) < maximum(iA)
     error("too many indices input ",size(A)," for ",iA)
   end

@@ -17,7 +17,7 @@ Convert `denstens` `M` to julia `Array` (`G`)
 See: [`denstens`](@ref) [`Array`](@ref)
 """
 function Array(M::tens{W}) where W <: Number
-  return reshape!(M.T, size(M))
+  return reshape!(convert(Array{W,1},M.T), tupsize(M))
 end
 
 """

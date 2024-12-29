@@ -26,9 +26,18 @@ end
 """
     A = network(Qts[,level=0])
 
-constructor to generates a network of `Array`s that stores a vector of named tensors `Qts`
+constructor to takes Arrays that stores a `network` of named tensors `Qts`
 """
 function network(Qts::W;level::Integer=0) where W <: Array
+  return network(convert(Memory{eltype(Qts)},Qts),level)
+end
+
+"""
+    A = network(Qts[,level=0])
+
+constructor to takes Memory that stores a `network` of named tensors `Qts`
+"""
+function network(Qts::W;level::Integer=0) where W <: Memory
   return network(Qts,level)
 end
 

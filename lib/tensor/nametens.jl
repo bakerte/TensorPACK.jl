@@ -14,7 +14,7 @@
 
 constructor for named tensor from a tensor `Qt` and vector of index names `namez`
 """
-function nametens(Qt::Union{TensType,diagonal},namez::Array{String,1};regTens::Bool=false,conj::Bool=false)#,arrows::Array{Bool,1},conj::Bool;regTens::Bool=false)
+function nametens(Qt::Union{TensType,diagonal},namez::Union{Array{String,1},Memory{String}};regTens::Bool=false,conj::Bool=false)#,arrows::Array{Bool,1},conj::Bool;regTens::Bool=false)
   if (regTens && typeof(Qt) <: AbstractArray) || typeof(Qt) <: qarray
     newQt = Qt
   elseif typeof(Qt) <: diagonal

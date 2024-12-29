@@ -158,6 +158,32 @@ end
 """
   G = reshape(M,S[,merge=])
 
+Reshape for `denstens` from new size `S`--an array--with output `G`
+
+Note: `merge` is not useful for this input but is useful to have for flexibility of code for using quantum number symmetries
+
+See also: [`reshape!`](@ref)
+"""
+function reshape(M::Memory{W}, S::Memory{intType};merge::Bool=false) where W <: Number
+  return reshape(convert(Array{W,1},M),S...)
+end
+
+"""
+  G = reshape!(M,S[,merge=])
+
+Reshape for `denstens` from new size `S`--an array--with output `G`
+
+Note: `merge` is not useful for this input but is useful to have for flexibility of code for using quantum number symmetries
+
+See also: [`reshape`](@ref)
+"""
+function reshape!(M::Memory{W}, S::intType...;merge::Bool=false) where W <: Number
+  return reshape(convert(Array{W,1},M),S...)
+end
+
+"""
+  G = reshape(M,S[,merge=])
+
 Reshape for `Array` from new size `S`--an array--with output `G`
 
 Note: `merge` is not useful for this input but is useful to have for flexibility of code for using quantum number symmetries

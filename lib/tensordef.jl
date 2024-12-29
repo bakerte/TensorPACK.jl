@@ -19,8 +19,8 @@ Regular tensor type; defined as `tens{W}` for W <: Number
 + `T::Array{W,1}`: tensor reshaped into a vector
 """
 mutable struct tens{W <: Number} <: denstens
-  size::Array{intType,1}
-  T::Array{W,1}
+  size::Memory{intType}
+  T::Memory{W}
 end
 
 """
@@ -34,7 +34,7 @@ Diagonal tensor type; defined as `Diagonal{W}` for W <: Number
 See also: [`diagonal`](@ref)
 """
 struct Diagonal{W} <: diagonal where W <: Number
-  T::Array{W,1}
+  T::Memory{W}
 end
 export Diagonal
 
@@ -80,7 +80,7 @@ named tensor with tensor of type `W` and type of names `B`
 """
 mutable struct nametens{W} <: TNobj where W <: TensType
   N::W
-  names::Array{String,1}
+  names::Memory{String}
   conj::Bool
 end
 
@@ -101,9 +101,9 @@ See also: [`nametens`](@ref)
 """
 mutable struct directedtens{W} <: TNobj where W <: TensType
   N::W
-  names::Array{String,1}
+  names::Memory{String}
   conj::Bool
-  arrows::Array{Int8,1}
+  arrows::Memory{Int8}
 end
 
 """
@@ -115,7 +115,7 @@ Generates a network of TNobjs that stores more than one named tensor
 + `net::NTuple{N,W}`: A network of named tensors
 """
 mutable struct network{W} <: TNnetwork where W  <: TNobj
-  net::Array{W,1}
+  net::Memory{W}
   level::intType
 end
 

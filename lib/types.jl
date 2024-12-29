@@ -57,7 +57,7 @@ Abstract type for either Qtensors or AbstractArrays or dense tensors, directed t
 
 See also: [`Qtens`](@ref) [`denstens`](@ref) [`directedtens`](@ref) [`nametens`](@ref)
 """
-const TensType = Union{qarray,denstens,AbstractArray}
+const TensType = Union{qarray,denstens,AbstractArray,Memory}
 export TensType
 
 """

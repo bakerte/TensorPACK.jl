@@ -9,20 +9,203 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
+
+"""
+    set_copyloop(x,p,forefactor,prefactor,backfactor,w,newT,A,copy_forefactor,copy_prefactor,copy_backfactor)
+
+Helper function for function `tens_getindex` which obtains indices from tensors for input `x` (a vector or tuple of integers) which corresponds to the current position of the largest index in the tensor, `p` an integer corresopnding to the length of the input `x`, `forefactor` is the factor of all the sizes and positions multiplied together before the selected index, `backfactor` is the multiplication of all of the sizes of the indices and positions after the selected index, `prefactor` is the sizes before the indexes before the selected index, `w` is a counter to record where in the copied tensor we are, `newT` is the Array to copy elements to, `A` is the input `denstens`, `copy_forefactor` same as `forefactor` but for the copied tensor, `copy_prefactor` is the same as `prefactor` but for the copied tensor, and `copy_backfactor` is the same as the `backfactor` but for the copied tensor
+"""
+function set_copyloop!(x::Union{UnitRange{intType},StepRange{intType},Vector,Tuple{intType,Vararg{intType}}},p::Integer,w::Integer,newT::Union{Memory{W},Array{W,P}},A::Union{Array{W,P},tens{W}},copy_forefactor::Integer,copy_prefactor::Integer,copy_backfactor::Integer) where {W <: Number, P}
+  @inbounds @simd for r = 1:p
+    y = copy_forefactor + copy_prefactor * (x[r]-1 + copy_backfactor) #pos2ind(pos,sizeA)
+    newT[y] = A[w + r - 1]
+  end
+  return p
+end
+
+"""
+    set_copyloop(x,p,forefactor,prefactor,backfactor,w,newT,A,copy_forefactor,copy_prefactor,copy_backfactor)
+
+Helper function for function `tens_getindex` which obtains indices from tensors for input `x` (a UnitRange, integer, Colon, or StepRange) which corresponds to the current position of the largest index in the tensor, `p` an integer corresopnding to the length of the input `x`, `forefactor` is the factor of all the sizes and positions multiplied together before the selected index, `backfactor` is the multiplication of all of the sizes of the indices and positions after the selected index, `prefactor` is the sizes before the indexes before the selected index, `w` is a counter to record where in the copied tensor we are, `newT` is the Array to copy elements to, `A` is the input `denstens`, `copy_forefactor` same as `forefactor` but for the copied tensor, `copy_prefactor` is the same as `prefactor` but for the copied tensor, and `copy_backfactor` is the same as the `backfactor` but for the copied tensor
+"""
+function set_copyloop!(x::Union{intType,Colon},p::Integer,w::Integer,newT::Union{Memory{W},Array{W,P}},A::Union{Array{W,P},tens{W}},copy_forefactor::Integer,copy_prefactor::Integer,copy_backfactor::Integer) where {W <: Number, P}
+  @inbounds @simd for r = 0:p-1
+    y = copy_forefactor + copy_prefactor * (r + copy_backfactor)
+    newT[y] = A[w + r]
+  end
+  return p
+end
+
+"""
+    set_simple_copyloop(x,p,forefactor,prefactor,backfactor,w,newT,A,copy_forefactor,copy_prefactor,copy_backfactor)
+
+Helper function for function `tens_getindex` which obtains indices from tensors for input `x` (a vector or tuple of integers) which corresponds to the current position of the largest index in the tensor, `p` an integer corresopnding to the length of the input `x`, `forefactor` is the factor of all the sizes and positions multiplied together before the selected index, `backfactor` is the multiplication of all of the sizes of the indices and positions after the selected index, `prefactor` is the sizes before the indexes before the selected index, `w` is a counter to record where in the copied tensor we are, `newT` is the Array to copy elements to, `A` is the input `denstens`
+"""
+function set_simple_copyloop!(x::Union{UnitRange{intType},StepRange{intType},Vector,Tuple{intType,Vararg{intType}}},p::Integer,backfactor::Integer,w::Integer,newT::Union{Memory{W},tens{W},Array{W,S}},A::Union{Array{W,R},Memory{W},tens{W}}) where {R, S, W <: Number}
+  @inbounds @simd for r = 1:p
+    w += 1
+    y = x[r] + backfactor #pos2ind(pos,sizeA)
+    newT[y] = A[w]
+  end
+  return p
+end
+
+"""
+    set_simple_copyloop(x,p,forefactor,prefactor,backfactor,w,newT,A,copy_forefactor,copy_prefactor,copy_backfactor)
+
+Helper function for function `tens_getindex` which obtains indices from tensors for input `x` (a UnitRange, integer, Colon, or StepRange) which corresponds to the current position of the largest index in the tensor, `p` an integer corresopnding to the length of the input `x`, `forefactor` is the factor of all the sizes and positions multiplied together before the selected index, `backfactor` is the multiplication of all of the sizes of the indices and positions after the selected index, `prefactor` is the sizes before the indexes before the selected index, `w` is a counter to record where in the copied tensor we are, `newT` is the Array to copy elements to, `A` is the input `denstens`
+"""
+function set_simple_copyloop!(x::Union{intType,Colon},p::Integer,backfactor::Integer,w::Integer,newT::Union{Memory{W},tens{W},Array{W,S}},A::Union{Array{W,R},Memory{W},tens{W}}) where {R, S, W <: Number}
+  @inbounds @simd for r = 1:p
+    w += 1
+    y = r + backfactor #pos2ind(pos,sizeA)
+    newT[y] = A[w]
+  end
+  return p
+end
+
+
+
 """
     setindex!(B,A,a...)
 
 Takes elements from `A` (`denstens`) and puts them into `B` (`denstens`) along elements given by `a` (`genColType`)
 """
-function setindex!(B::tens{W},A::tens{W},a::genColType...) where W <: Number
-  G = Array(B)
-  G[a...] = A
-  @inbounds @simd for w = 1:length(G)
-    B.T[w] = G[w]
+function setindex!(B::Union{Array{W,R},tens{W}},A::tens{W},a::genColType...) where {R, W <: Number}
+
+  G = length(a)
+
+  minmaxvals = Array{NTuple{2,intType},1}(undef,G)
+
+  for w = 1:G
+    if typeof(a[w]) <: Colon
+      minmaxvals[w] = (1,size(A,w))
+    elseif typeof(a[w]) <: Vector
+      minmaxvals[w] = (1,length(a[w]))
+    else
+      minmaxvals[w] = (minimum(a[w]),maximum(a[w]))
+    end
+  end
+
+  copy_lengths = [minmaxvals[w][2]-minmaxvals[w][1]+1 for w = 1:length(minmaxvals)]
+  maxlength = maximum(copy_lengths)
+
+  d1 = 1  
+  while d1 <= length(a) && copy_lengths[d1] != maxlength
+    d1 += 1
+  end
+
+
+  newT = B #typeof(B) <: denstens ? B.T : B
+
+  count_vectors = 0
+  for w = 1:length(a)
+    count_vectors += typeof(a[w]) <: Vector || typeof(a[w]) <: Tuple
+  end
+
+  if count_vectors > 0
+    whichVectors = Array{intType,1}(undef,count_vectors)
+    counter = 0
+    w = 0
+    while w < length(a) && counter < count_vectors
+      w += 1
+      if typeof(a[w]) <: Vector || typeof(a[w]) <: Tuple
+        counter += 1
+        whichVectors[counter] = w
+      end
+    end
+  end
+  
+  sizeA = tupsize(A)
+
+  pos = Array{intType,1}(undef,G)
+  for w = 2:length(pos)
+    pos[w] = minmaxvals[w][1]
+  end
+  pos[1] = 0
+
+  if count_vectors > 0
+    legacypos = Array{intType,1}(undef,G)
+  else
+    legacypos = pos
+  end
+
+  if d1 > 1
+#    prefactor = 1
+#    @inbounds @simd for h = d1-1:-1:1
+#      prefactor *= sizeA[h]
+#    end
+
+    copy_prefactor = 1
+    @inbounds @simd for h = d1-1:-1:1
+      copy_prefactor *= B.size[h]
+    end
+  end
+
+  savepos = Array{intType,1}(undef,length(minmaxvals))
+
+  w = 0
+  while w < length(A)
+    position_incrementer!(pos,minmaxvals)
+    pos[d1] = 1
+
+
+
+    if count_vectors > 0
+      @inbounds @simd for w = 1:length(legacypos)
+        legacypos[w] = pos[w]
+      end
+
+      @inbounds @simd for p = 1:count_vectors
+        x = whichVectors[p]
+        legacypos[x] = a[x][pos[x]]
+      end
+    end
+
+    copy_backfactor = 0
+    @inbounds @simd for g = length(legacypos):-1:d1+1
+      copy_backfactor *= B.size[g]
+      copy_backfactor += legacypos[g]
+      copy_backfactor -= 1
+    end
+    copy_backfactor *= B.size[d1]
+
+    if d1 > 1
+
+      copy_forefactor = legacypos[d1-1]
+      @inbounds @simd for w = d1-2:-1:1
+        copy_forefactor -= 1
+        copy_forefactor *= B.size[w]
+        copy_forefactor += legacypos[w]
+      end
+
+      w += set_copyloop!(a[d1],copy_lengths[d1],w,newT,A,copy_forefactor,copy_prefactor,copy_backfactor)
+    else
+        w += set_simple_copyloop!(a[d1],copy_lengths[d1],copy_backfactor,w,newT,A)
+    end
+
+    pos[d1] = minmaxvals[d1][2]
+
   end
   nothing
 end
 
+function setindex!(B::tens{W},A::Array{W,R},a::genColType...) where {R, W <: Number}
+  return setindex!(B,tens(A),a...)
+end
+
+#=
+"""
+    setindex!(B,A,a...)
+
+Takes elements from `A` (`denstens`) and puts them into `B` (Array) along elements given by `a` (`genColType`)
+"""
+function setindex!(B::Array{W,S},A::tens{W},a::genColType...) where {R, S, W <: Number}
+end
+=#
+
+
+#=
 """
     setindex!(B,A,a...)
 
@@ -36,7 +219,7 @@ function setindex!(B::tens{W},A::Array{W,N},a::genColType...) where {W <: Number
   end
   nothing
 end
-
+=#
 """
     setindex!(B,A,a...)
 
@@ -63,6 +246,16 @@ function setindex!(B::Array{W,N},A::Diagonal{W},a::genColType...) where {W <: Nu
   end
   nothing
 end
+
+
+
+
+
+
+
+
+
+
 #=
 """
     setindex!(B,A,a...)

@@ -38,6 +38,8 @@ SVD routine with truncation for Julia `Arrays`
 + 'V': A unitary matrix (U*D*V is A)
 + `truncerr`: total truncation error (L-2 norm)
 + `mag`: magnitude of the output tensor
+
+See also: ['fsvd'](@ref) ['svd!'](@ref) ['fsvd!'](@ref)
 """
 function svd(AA::AbstractArray;cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,a::Integer = size(AA,1),b::Integer=size(AA,2),leftflux::Bool=false,
               minm::Integer=2,nozeros::Bool=true,power::Number=2,effZero::Real=defzero,keepdeg::Bool=false,inplace::Bool=false,
@@ -67,7 +69,7 @@ SVD routine with truncation for Julia `denstens`
 + `power`: power of the eigenvalues to perform truncation (default: L-2 norm)
 + `effZero`: effective value of zero
 + `keepdeg`: `false` is a pure truncation, `true` does not truncate a degenerate value if represented on the last truncated value
-+ `decomposer`: library function to perform decomposition
++ `decomposer`: library function to perform decomposition (libsvd)
 + `inplace`: option to run an in-place SVD (may not be as stable)
 
 #Outputs:
@@ -76,6 +78,8 @@ SVD routine with truncation for Julia `denstens`
 + 'V': A unitary matrix (U*D*V is A)
 + `truncerr`: total truncation error (L-2 norm)
 + `mag`: magnitude of the output tensor
+
+See also: ['fsvd'](@ref) ['svd!'](@ref) ['fsvd!'](@ref)
 """
 function svd(AA::denstens;power::Number=2,cutoff::Float64 = 0.,leftflux::Bool=false,
           m::Integer = 0,mag::Float64=0.,minm::Integer=2,nozeros::Bool=true,
@@ -92,7 +96,7 @@ function svd(AA::denstens;power::Number=2,cutoff::Float64 = 0.,leftflux::Bool=fa
   if thism < minm #&& m > minm
     maxm = max(1,minm)
 
-    Utrunc = Array{eltype(U),1}(undef,a*maxm)
+    Utrunc = Memory{eltype(U)}(undef,a*maxm)
     @inbounds @simd for z = 1:a*thism
       Utrunc[z] = U[z]
     end
@@ -100,7 +104,7 @@ function svd(AA::denstens;power::Number=2,cutoff::Float64 = 0.,leftflux::Bool=fa
       Utrunc[z] = 0
     end
 
-    Dtrunc = Array{eltype(D),1}(undef,maxm)
+    Dtrunc = Memory{eltype(D)}(undef,maxm)
     @inbounds @simd for z = 1:thism
       Dtrunc[z] = D[z]
     end
@@ -108,7 +112,7 @@ function svd(AA::denstens;power::Number=2,cutoff::Float64 = 0.,leftflux::Bool=fa
       Dtrunc[z] = 0
     end
 
-    Vtrunc = Array{eltype(Vt),1}(undef,maxm*b)
+    Vtrunc = Memory{eltype(Vt)}(undef,maxm*b)
     for y = 1:b
       thisind = length(D)*(y-1)
       thisotherind = maxm*(y-1)
@@ -120,15 +124,25 @@ function svd(AA::denstens;power::Number=2,cutoff::Float64 = 0.,leftflux::Bool=fa
       end
     end
 
-    Utrunc = tens([a,length(Dtrunc)],Utrunc)
-    Vtrunc = tens([length(Dtrunc),b],Vtrunc)
+    Usize = Memory{intType}(undef,2)
+    Usize[1],Usize[2] = a,length(Dtrunc)
+    Utrunc = tens(Usize,Utrunc)
+
+
+    Vsize = Memory{intType}(undef,2)
+    Vsize[1],Vsize[2] = length(Dtrunc),b
+    Vtrunc = tens(Vsize,Vtrunc)
 
   elseif thism < sizeD
-    Vtrunc = tens([length(D),b],Vt)
+    Vsize = Memory{intType}(undef,2)
+    Vsize[1],Vsize[2] = length(D),b
+    Vtrunc = tens(Vsize,Vt)
     Vtrunc = Vtrunc[interval,:]
 
 
-    Utrunc = tens([a,length(D)],U)
+    Usize = Memory{intType}(undef,2)
+    Usize[1],Usize[2] = a,length(D)
+    Utrunc = tens(Usize,U)
     Utrunc = Utrunc[:,interval]
 
     Dtrunc = D[interval]
@@ -142,7 +156,12 @@ function svd(AA::denstens;power::Number=2,cutoff::Float64 = 0.,leftflux::Bool=fa
     end
     =#
   else
-    Utrunc,Dtrunc,Vtrunc = tens([a,length(D)],U),D,tens([length(D),b],Vt)
+    Vsize = Memory{intType}(undef,2)
+    Vsize[1],Vsize[2] = length(D),b
+
+    Usize = Memory{intType}(undef,2)
+    Usize[1],Usize[2] = a,length(D)
+    Utrunc,Dtrunc,Vtrunc = tens(Usize,U),D,tens(Vsize,Vt)
   end
   return Utrunc,Diagonal(Dtrunc),Vtrunc,truncerr,sumD
 end
@@ -167,7 +186,7 @@ in-place SVD routine with truncation for Julia `Arrays` or `denstens`
 + `power`: power of the eigenvalues to perform truncation (default: L-2 norm)
 + `effZero`: effective value of zero
 + `keepdeg`: `false` is a pure truncation, `true` does not truncate a degenerate value if represented on the last truncated value
-+ `decomposer`: library function to perform decomposition
++ `decomposer`: library function to perform decomposition (libsvd!)
 + `inplace`: option to run an in-place SVD (may not be as stable)
 
 #Outputs:
@@ -176,6 +195,8 @@ in-place SVD routine with truncation for Julia `Arrays` or `denstens`
 + 'V': A unitary matrix (U*D*V is A)
 + `truncerr`: total truncation error (L-2 norm)
 + `mag`: magnitude of the output tensor
+
+See also: ['fsvd'](@ref) ['svd'](@ref) ['fsvd!'](@ref)
 """
 function svd!(AA::densTensType;power::Number=2,cutoff::Float64 = 0.,
           m::Integer = 0,mag::Float64=0.,minm::Integer=2,nozeros::Bool=true,leftflux::Bool=false,
@@ -222,8 +243,17 @@ function getorder(AA::densTensType,vecA::Array{Array{W,1},1}) where W <: Integer
   end
   rAA = typeof(AA) <: denstens || ndims(AB) == 2 ? AB : reshape(AB,a,b)
 
-  Lsizes = [size(AA,vecA[1][i]) for i = 1:length(vecA[1])] 
-  Rsizes = [size(AA,vecA[2][i]) for i = 1:length(vecA[2])] 
+  Lsizes = Memory{intType}(undef,length(vecA[1]))
+  @inbounds @simd for i = 1:length(vecA[1])
+    Lsizes[i] = size(AA,vecA[1][i])
+  end
+  Rsizes = Memory{intType}(undef,length(vecA[2]))
+  @inbounds @simd for i = 1:length(vecA[2])
+    Rsizes[i] = size(AA,vecA[2][i])
+  end
+
+#  Lsizes = [size(AA,vecA[1][i]) for i = 1:length(vecA[1])] 
+#  Rsizes = [size(AA,vecA[2][i]) for i = 1:length(vecA[2])] 
   return rAA,Lsizes,Rsizes,a,b
 end
 
@@ -265,8 +295,17 @@ function getorder(AA::qarray,vecA::Array{Array{W,1},1}) where W <: Integer
     b *= size(AA,vecA[2][w])
   end
 
-  Lsizes = [size(AA,vecA[1][i]) for i = 1:length(vecA[1])]#ntuple(i->size(AA,vecA[1][i]),length(vecA[1]))
-  Rsizes = [size(AA,vecA[2][i]) for i = 1:length(vecA[2])]#ntuple(i->size(AA,vecA[2][i]),length(vecA[2]))
+  Lsizes = Memory{intType}(undef,length(vecA[1]))
+  @inbounds @simd for i = 1:length(vecA[1])
+    Lsizes[i] = size(AA,vecA[1][i])
+  end
+  Rsizes = Memory{intType}(undef,length(vecA[2]))
+  @inbounds @simd for i = 1:length(vecA[2])
+    Rsizes[i] = size(AA,vecA[2][i])
+  end
+
+#  Lsizes = [size(AA,vecA[1][i]) for i = 1:length(vecA[1])]#ntuple(i->size(AA,vecA[1][i]),length(vecA[1]))
+#  Rsizes = [size(AA,vecA[2][i]) for i = 1:length(vecA[2])]#ntuple(i->size(AA,vecA[2][i]),length(vecA[2]))
   return rAA,Lsizes,Rsizes,a,b
 end
 
@@ -982,4 +1021,170 @@ rA = reshape(A[1],a,b)
 
   return dtens(U,dU),dtens(D,dD),dtens(V,dV),truncerr,sumD
   #can reassemble dA = dU*dD*dVt...in principle
+end
+
+
+
+
+
+
+
+
+
+"""
+    U,D,V,truncerr,newmag = fsvd(A[,cutoff=0.,m=0,mag=0.,minm=2,nozeros=true,a=size(A,1),b=size(A,2),power=2,effZero=defzero,keepdeg=false,inplace=true,decomposer=libsvd!,leftflux=false])
+
+(fast) SVD routine (using Divide and Conquer) with truncation for Julia `Arrays` or `denstens`
+
+#Inputs:
++ `A`: Any `TensType` in the library
+
+#Optional named inputs:
++ `a`: total size of the first group
++ `b`: total size of the second group
++ `cutoff`: total amount to truncate the eigenvalue decomposition
++ `m`: number of many body states to keep (`D` is an `m`x`m` matrix); value 0 is keep all
++ `mag`: magnitude of the input matrix (computed automatically be default, sets truncation parameters)
++ `minm`: will pad `D` with zeros if smaller size than `minm`
++ `nozeros`: removes all zero values from the decomposition
++ `leftflux`: where to attach total flux value to quantum number symmetry if applicable
++ `power`: power of the eigenvalues to perform truncation (default: L-2 norm)
++ `effZero`: effective value of zero
++ `keepdeg`: `false` is a pure truncation, `true` does not truncate a degenerate value if represented on the last truncated value
++ `decomposer`: library function to perform decomposition (libfsvd)
++ `inplace`: option to run an in-place SVD (may not be as stable)
+
+#Outputs:
++ `U`: A unitary matrix
++ `D`: A diagonal matrix containing eigenvalues
++ 'V': A unitary matrix (U*D*V is A)
++ `truncerr`: total truncation error (L-2 norm)
++ `mag`: magnitude of the output tensor
+
+See also: ['svd'](@ref) ['svd!'](@ref) ['fsvd!'](@ref)
+"""
+function fsvd(AA::denstens;power::Number=2,cutoff::Float64 = 0.,leftflux::Bool=false,
+  m::Integer = 0,mag::Float64=0.,minm::Integer=2,nozeros::Bool=true,
+  effZero::Number=defzero,keepdeg::Bool=false,decomposer::Function=libfsvd,
+  a::Integer = size(AA,1),b::Integer=size(AA,2),inplace::Bool=false)
+  return svd(AA,power=power,cutoff=cutoff,m=m,mag=mag,minm=minm,nozeros=nozeros,
+          effZero=effZero,inplace=inplace,keepdeg=keepdeg,a=a,b=b,decomposer=decomposer)
+end
+
+"""
+    U,D,V,truncerr,newmag = fsvd!(A[,cutoff=0.,m=0,mag=0.,minm=2,nozeros=true,a=size(A,1),b=size(A,2),power=2,effZero=defzero,keepdeg=false,inplace=true,decomposer=libsvd!,leftflux=false])
+
+in-place (fast) SVD routine (using Divide and Conquer) with truncation for Julia `Arrays` or `denstens`
+
+#Inputs:
++ `A`: Any `TensType` in the library
+
+#Optional named inputs:
++ `a`: total size of the first group
++ `b`: total size of the second group
++ `cutoff`: total amount to truncate the eigenvalue decomposition
++ `m`: number of many body states to keep (`D` is an `m`x`m` matrix); value 0 is keep all
++ `mag`: magnitude of the input matrix (computed automatically be default, sets truncation parameters)
++ `minm`: will pad `D` with zeros if smaller size than `minm`
++ `nozeros`: removes all zero values from the decomposition
++ `leftflux`: where to attach total flux value to quantum number symmetry if applicable
++ `power`: power of the eigenvalues to perform truncation (default: L-2 norm)
++ `effZero`: effective value of zero
++ `keepdeg`: `false` is a pure truncation, `true` does not truncate a degenerate value if represented on the last truncated value
++ `decomposer`: library function to perform decomposition (libfsvd!)
++ `inplace`: option to run an in-place SVD (may not be as stable)
+
+#Outputs:
++ `U`: A unitary matrix
++ `D`: A diagonal matrix containing eigenvalues
++ 'V': A unitary matrix (U*D*V is A)
++ `truncerr`: total truncation error (L-2 norm)
++ `mag`: magnitude of the output tensor
+
+See also: ['svd'](@ref) ['svd!'](@ref) ['fsvd'](@ref)
+"""
+function fsvd!(AA::densTensType;power::Number=2,cutoff::Float64 = 0.,
+  m::Integer = 0,mag::Float64=0.,minm::Integer=2,nozeros::Bool=true,leftflux::Bool=false,
+  effZero::Number=defzero,keepdeg::Bool=false,decomposer::Function=libfsvd!,inplace::Bool=true,
+  a::Integer = size(AA,1),b::Integer=size(AA,2))
+  return svd(AA,power=power,cutoff=cutoff,m=m,mag=mag,minm=minm,nozeros=nozeros,
+          effZero=effZero,inplace=inplace,keepdeg=keepdeg,a=a,b=b,decomposer=decomposer)
+end
+
+"""
+    U,D,V,truncerr,mag = svd(AA,vecA[,cutoff=0.,m=0,mag=0.,minm=2,nozeros=true,power=2,effZero=defzero,keepdeg=false,inplace=true,decomposer=libsvd,leftflux=false,a=findsize(AA,vecA[1]),b=findsize(AA,vecA[2])])
+
+Reshapes `AA` for `svd` and then unreshapes U and V matrices on return; `vecA` is of the form [[1,2],[3,4,5]] and must be length 2 with the elements representing the grouped indices for the left and right sets of the SVD for use in unreshaping later
+
+#Inputs:
++ `A`: Any `TensType` in the library
++ `vecA`: a vector containing two vectors signifying the two groups for the SVD
+
+#Optional named inputs:
++ `cutoff`: total amount to truncate the eigenvalue decomposition
++ `m`: number of many body states to keep (`D` is an `m`x`m` matrix); value 0 is keep all
++ `mag`: magnitude of the input matrix (computed automatically be default, sets truncation parameters)
++ `minm`: will pad `D` with zeros if smaller size than `minm`
++ `nozeros`: removes all zero values from the decomposition
++ `leftflux`: where to attach total flux value to quantum number symmetry if applicable
++ `power`: power of the eigenvalues to perform truncation (default: L-2 norm)
++ `effZero`: effective value of zero
++ `keepdeg`: `false` is a pure truncation, `true` does not truncate a degenerate value if represented on the last truncated value
++ `decomposer`: library function to perform decomposition
++ `inplace`: option to run an in-place SVD (may not be as stable)
+
+#Outputs:
++ `U`: A unitary matrix
++ `D`: A diagonal matrix containing eigenvalues
++ 'V': A unitary matrix (U*D*V is A)
++ `truncerr`: total truncation error (L-2 norm)
++ `mag`: magnitude of the output tensor
+"""
+function fsvd(AA::TensType,vecA::Array{Array{W,1},1};a::Integer=findsize(AA,vecA[1]),b::Integer=findsize(AA,vecA[2]),
+            cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,minm::Integer=2,nozeros::Bool=true,leftflux::Bool=false,
+            power::Number=2,effZero::Number=defzero,
+            keepdeg::Bool=false,decomposer::Function=libfsvd) where {W <: Integer}
+  AB,Lsizes,Rsizes,a,b = getorder(AA,vecA)
+
+  U,D,V,truncerr,newmag = fsvd(AB,a=a,b=b,power = power,cutoff=cutoff,m=m,mag=mag,minm=minm,nozeros=nozeros,keepdeg=keepdeg,decomposer=decomposer,effZero=effZero)
+
+  outU = unreshape!(U,Lsizes...,size(D,1))
+  outV = unreshape!(V,size(D,2),Rsizes...)
+  return outU,D,outV,truncerr,newmag
+end
+
+"""
+    U,D,V,truncerr,mag = svd!(AA,vecA[,cutoff=0.,m=0,mag=0.,minm=2,nozeros=true,power=2,effZero=defzero,keepdeg=false,inplace=true,decomposer=libsvd,leftflux=false,a=findsize(AA,vecA[1]),b=findsize(AA,vecA[2])])
+
+Reshapes `AA` for `svd!` and then unreshapes U and V matrices on return; `vecA` is of the form [[1,2],[3,4,5]] and must be length 2 with the elements representing the grouped indices for the left and right sets of the SVD for use in unreshaping later; in-place operations
+
+#Inputs:
++ `A`: Any `TensType` in the library
++ `vecA`: a vector containing two vectors signifying the two groups for the SVD
+
+#Optional named inputs:
++ `cutoff`: total amount to truncate the eigenvalue decomposition
++ `m`: number of many body states to keep (`D` is an `m`x`m` matrix); value 0 is keep all
++ `mag`: magnitude of the input matrix (computed automatically be default, sets truncation parameters)
++ `minm`: will pad `D` with zeros if smaller size than `minm`
++ `nozeros`: removes all zero values from the decomposition
++ `leftflux`: where to attach total flux value to quantum number symmetry if applicable
++ `power`: power of the eigenvalues to perform truncation (default: L-2 norm)
++ `effZero`: effective value of zero
++ `keepdeg`: `false` is a pure truncation, `true` does not truncate a degenerate value if represented on the last truncated value
++ `decomposer`: library function to perform decomposition
++ `inplace`: option to run an in-place SVD (may not be as stable)
+
+#Outputs:
++ `U`: A unitary matrix
++ `D`: A diagonal matrix containing eigenvalues
++ 'V': A unitary matrix (U*D*V is A)
++ `truncerr`: total truncation error (L-2 norm)
++ `mag`: magnitude of the output tensor
+"""
+function fsvd!(AA::TensType,vecA::Array{Array{W,1},1};a::Integer=findsize(AA,vecA[1]),b::Integer=findsize(AA,vecA[2]),
+            cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,minm::Integer=2,nozeros::Bool=true,
+            power::Number=2,keepdeg::Bool=false,decomposer::Function=libfsvd!) where {W <: Integer}
+  return svd(AA,vecA,a=a,b=b,power = power,cutoff=cutoff,m=m,mag=mag,minm=minm,
+                nozeros=nozeros,keepdeg=keepdeg,decomposer=decomposer)
 end

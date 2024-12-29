@@ -56,6 +56,26 @@ function tensorcombination(M::Array{W,N}...;alpha::NTuple{R,W}=ntuple(i->W(1),le
 end
 
 """
+  G = tensorcombination(M...[,alpha=(1,1,1...),fct=*])
+
+Performs a linear combination of the input Memory `M` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.
+
+The input function `fct` can be altered. For example,  A/2 + B/3 is tensorcombinaton(A,B,alpha=(2,3),fct=/).
+"""
+function tensorcombination(M::Memory{W}...;alpha::NTuple{R,W}=ntuple(i->W(1),length(M)),fct::Function=*) where {W <: Number, R}
+  nterms = min(length(M),length(alpha))
+  newTensor = Memory{W}(undef,prod(size(M[1])))
+  for i = 1:length(M[1])
+    out = W(0)
+    @inbounds @simd for k = 1:nterms
+      out += fct(M[k][i],alpha[k])
+    end
+    newTensor[i] = out
+  end
+  return newTensor
+end
+
+"""
   G = tensorcombination(alpha,M...[,fct=*])
 
 Performs a linear combination of the input `denstens` `M` with coefficients `alpha` to output tensor `G`.  For example, `A*2 + B*3` is `tensorcombinaton(A,B,alpha=(2,3))`.

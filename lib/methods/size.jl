@@ -14,7 +14,7 @@
 
 Outputs tuple `G` representing the size of a `denstens` `A` (identical usage to `Array` `size` call)
 
-See also: [`tupsize`](@ref) [`denstens`](@ref) [`Array`](@ref)
+See also: [`tupsize`](@ref) [`vecsize`](@ref)
 """
 function size(A::denstens)
   return A.size
@@ -32,6 +32,21 @@ function tupsize(A::Union{TensType,diagonal})
 end
 
 """
+    G = vecsize(A)
+
+Returns size of input tensor `A` but as a vector
+
+See also: [`size`](@ref) [`denstens`](@ref) [`Array`](@ref)
+"""
+function vecsize(A::Union{TensType,diagonal})
+  output = Array{intType,1}(undef,ndims(A))
+  for w = 1:ndims(A)
+    output[w] = A.size[w]
+  end
+  return output
+end
+
+"""
     G = size(A)
 
 Outputs tuple `G` representing the size of a `diagonal` `A`
@@ -39,7 +54,9 @@ Outputs tuple `G` representing the size of a `diagonal` `A`
 See also: [`denstens`](@ref) [`Array`](@ref)
 """
 function size(A::diagonal)
-  return (length(A),length(A))
+  output = Memory{intType}(undef,2)
+  output[1] = output[2] = length(A)
+  return output
 end
 
 """
@@ -134,10 +151,5 @@ end
 size of `qarray` `A`
 """
 function size(A::qarray)
-
-#  println(A)
-
-#  println(ndims(A))
-
   return ntuple(w->size(A,w),ndims(A))
 end

@@ -43,7 +43,7 @@ end
 
 Increments a vector (but no entry over `sizes`) by one step.  Will change contents of `pos`.
 """
- function position_incrementer!(pos::Array{G,1},sizes::Union{Array{G,1},Tuple{G,Vararg{G}}}) where G <: intType
+ function position_incrementer!(pos::Array{G,1},sizes::Union{Array{G,1},Tuple{G,Vararg{G}},Memory{G}}) where G <: intType
   w = 1
   @inbounds pos[w] += 1
   @inbounds while w < length(sizes) && pos[w] > sizes[w]
@@ -137,7 +137,7 @@ Note: This function is purposefully not defined with a vector input. The reason 
 
 See also: [`pos2ind!`](@ref) [`tupsize`](@ref)
 """
- function pos2ind(currpos::NTuple{G,P},S::NTuple{G,P}) where {G, P <: Integer}
+ function pos2ind(currpos::NTuple{G,P},S::Union{Memory{P},NTuple{G,P}}) where {G, P <: Integer}
   x = 0
   @inbounds @simd for i = G:-1:2
     x += currpos[i]-1
