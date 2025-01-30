@@ -67,7 +67,7 @@ Gets the size of index `i` of a `denstens` `A` (identical usage to `Array` `size
 See also: [`denstens`](@ref) [`Array`](@ref)
 """
 function size(A::denstens,i::Integer)::intType
-  return A.size[i]
+  return i > ndims(A) ? 1 : A.size[i]
 end
 
 """

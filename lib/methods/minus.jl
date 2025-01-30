@@ -59,6 +59,23 @@ function -(B::diagonal,A::Matrix{W}) where W <: Number
   return C
 end
 
+
+"""
+    C = -(A,B)
+
+Subtracts a `diagonal` `A` to a `diagonal` `B`
+"""
+function -(B::diagonal,A::diagonal)
+  #=
+  C = copy(A)
+  for w = 1:size(C,1)
+    C[w,w] += B[w]
+  end
+  =#
+  return Diagonal(B.T - A.T)
+end
+
+
 ###############
 # Subtraction #
 ###############

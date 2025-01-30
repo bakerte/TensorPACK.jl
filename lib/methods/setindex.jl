@@ -15,10 +15,10 @@
 
 Helper function for function `tens_getindex` which obtains indices from tensors for input `x` (a vector or tuple of integers) which corresponds to the current position of the largest index in the tensor, `p` an integer corresopnding to the length of the input `x`, `forefactor` is the factor of all the sizes and positions multiplied together before the selected index, `backfactor` is the multiplication of all of the sizes of the indices and positions after the selected index, `prefactor` is the sizes before the indexes before the selected index, `w` is a counter to record where in the copied tensor we are, `newT` is the Array to copy elements to, `A` is the input `denstens`, `copy_forefactor` same as `forefactor` but for the copied tensor, `copy_prefactor` is the same as `prefactor` but for the copied tensor, and `copy_backfactor` is the same as the `backfactor` but for the copied tensor
 """
-function set_copyloop!(x::Union{UnitRange{intType},StepRange{intType},Vector,Tuple{intType,Vararg{intType}}},p::Integer,w::Integer,newT::Union{Memory{W},Array{W,P}},A::Union{Array{W,P},tens{W}},copy_forefactor::Integer,copy_prefactor::Integer,copy_backfactor::Integer) where {W <: Number, P}
+function set_copyloop!(x::Union{UnitRange{intType},StepRange{intType},Vector,Tuple{intType,Vararg{intType}}},p::Integer,w::Integer,newT::Union{Memory{W},tens{W},Array{W,P}},A::Union{Array{W,P},tens{W}},copy_forefactor::Integer,copy_prefactor::Integer,copy_backfactor::Integer) where {W <: Number, P}
   @inbounds @simd for r = 1:p
     y = copy_forefactor + copy_prefactor * (x[r]-1 + copy_backfactor) #pos2ind(pos,sizeA)
-    newT[y] = A[w + r - 1]
+    newT[y] = A[w + r]
   end
   return p
 end
@@ -28,10 +28,12 @@ end
 
 Helper function for function `tens_getindex` which obtains indices from tensors for input `x` (a UnitRange, integer, Colon, or StepRange) which corresponds to the current position of the largest index in the tensor, `p` an integer corresopnding to the length of the input `x`, `forefactor` is the factor of all the sizes and positions multiplied together before the selected index, `backfactor` is the multiplication of all of the sizes of the indices and positions after the selected index, `prefactor` is the sizes before the indexes before the selected index, `w` is a counter to record where in the copied tensor we are, `newT` is the Array to copy elements to, `A` is the input `denstens`, `copy_forefactor` same as `forefactor` but for the copied tensor, `copy_prefactor` is the same as `prefactor` but for the copied tensor, and `copy_backfactor` is the same as the `backfactor` but for the copied tensor
 """
-function set_copyloop!(x::Union{intType,Colon},p::Integer,w::Integer,newT::Union{Memory{W},Array{W,P}},A::Union{Array{W,P},tens{W}},copy_forefactor::Integer,copy_prefactor::Integer,copy_backfactor::Integer) where {W <: Number, P}
+function set_copyloop!(x::Union{intType,Colon},p::Integer,w::Integer,newT::Union{Memory{W},tens{W},Array{W,P}},A::Union{Array{W,P},tens{W}},copy_forefactor::Integer,copy_prefactor::Integer,copy_backfactor::Integer) where {W <: Number, P}
   @inbounds @simd for r = 0:p-1
+#    println(r," ",copy_forefactor," ",copy_prefactor," ",copy_backfactor)
     y = copy_forefactor + copy_prefactor * (r + copy_backfactor)
-    newT[y] = A[w + r]
+#    println(y," ",w," ",r)
+    newT[y] = A[w + r + 1]
   end
   return p
 end
