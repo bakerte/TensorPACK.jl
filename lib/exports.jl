@@ -156,3 +156,6 @@ export svd!
 export symsvd
 export svdvals
 
+
+export ⊕,⊗
+
