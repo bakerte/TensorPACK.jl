@@ -19,8 +19,8 @@ function kron(Ns::Integer, Mterm::Tuple{R,S}...;dim::Array{S}=[size(Mterm[(w-1) 
   final  =  1
   for i = 1:Ns
       if i in posvec
-        index = findfirst(w->i==posvec[w],1:length(posvec))
-        final = kron(final, Array(Mterm[index][1]))
+        index = findall(w->i==posvec[w],1:length(posvec))
+        final = kron(final, prod(w->Array(Mterm[w][1]),index))
       else
         id = Array(eye(dim[i]))
         final = LinearAlgebra.kron(final, id)
@@ -40,8 +40,8 @@ function kron(F::Union{denstens,diagonal,qarray}, Ns::Integer,Mterm::Tuple{R,S}.
   minpos = minimum(posvec)
   for i = 1:Ns
       if i in posvec
-        index = findfirst(w->i==posvec[w],1:length(posvec))
-        final = kron(final, Array(Mterm[index][1]))
+        index = findall(w->i==posvec[w],1:length(posvec))
+        final = kron(final, prod(w->Array(Mterm[w][1]),index))
       elseif i < minpos
         arrayF = Array(F)
         final = LinearAlgebra.kron(final, arrayF)
