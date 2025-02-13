@@ -15,7 +15,7 @@
 Takes the kronecker product over `Ns` sites of any number of operators given in a tuple `M` (2 elements: operator, site to be applied) with dimensions on each site `dim`
 """
 function kron(Ns::Integer, Mterm::Tuple{R,S}...;dim::Array{S}=[size(Mterm[(w-1) % length(Mterm) + 1][1],1) for w = 1:Ns]) where {R <: TensType, S <: Integer}
-  posvec = [Mterm[w][2] for w = 1:length(Mterm)]
+  posvec = [checkType(Mterm[w][2]) for w = 1:length(Mterm)]
   final  =  1
   for i = 1:Ns
       if i in posvec
@@ -35,7 +35,7 @@ end
 Takes the kronecker product over `Ns` sites of any number of operators given in a tuple `M` (2 elements: operator, site to be applied) with dimensions on each site `dim`
 """
 function kron(F::Union{denstens,diagonal,qarray}, Ns::Integer,Mterm::Tuple{R,S}...;dim::Array{S}=[size(Mterm[(w-1) % length(Mterm) + 1][1],1) for w = 1:Ns]) where {R <: TensType, S <: Integer}
-  posvec = [Mterm[w][2] for w = 1:length(Mterm)]
+  posvec = [checkType(Mterm[w][2]) for w = 1:length(Mterm)]
   final  =  1
   minpos = minimum(posvec)
   for i = 1:Ns
@@ -187,4 +187,13 @@ Kroneckers diagonal type `B` by `TensType` `A`
 """
 function kron(A::TensType,B::diagonal)
   return kron(A,Array(B))
+end
+
+"""
+    ⊗(A,B)
+
+Computes `A` ⊗ `B` (Kronecker product) for two input tensor types
+"""
+function ⊗(A::Union{TensType,diagonal},B::Union{TensType,diagonal})
+  return kron(A,B)
 end

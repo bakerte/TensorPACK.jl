@@ -249,9 +249,14 @@ function directsum!(A::TensType,B::TensType...;group::Array{W,1}=[1,2],fct::Func
 end
 
 
+"""
+  ⊕(A,B...)
 
-
-
+Computes `A` ⊕ `B` (direct sum) of two input matrices (can extend `B` to any number of inputs)
+"""
+function ⊕(A::TensType,B::TensType...)
+  return directsum(A,B...)
+end
 
 
 

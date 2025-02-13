@@ -52,7 +52,7 @@ end
 Converts arrays of numbers `alpha` (diagonal column) and `beta` (off-diagonal elements) into a tridiagonal matrix
 """
 function Diagonal(alpha::Array{W,1},beta::Array{W,1}) where W <: Real
-  return Base.SymTridiagonal(alpha,beta)
+  return LinearAlgebra.SymTridiagonal(alpha,beta)
 end
 
 """
@@ -80,4 +80,22 @@ function Diagonal(alpha::Array{W,1},beta::Array{W,1}) where W <: Union{Array{S,2
     M[interval,intervaln] = beta[n-1]
   end
   return M
+end
+
+"""
+    A = Diagonal(alpha,beta)
+
+Converts arrays of numbers `alpha` (diagonal column) and `beta` (off-diagonal elements) into a tridiagonal matrix
+"""
+function diagonal(alpha::Array{W,1},beta::Array{W,1}) where W <: Real
+  return Diagonal(alpha,beta)
+end
+
+"""
+    M = Diagonal(alpha,beta)
+
+Converts arrays of arrays (either `Array{W,2}` or `tens{W}`) numbers `alpha` (diagonal column) and `beta` (off-diagonal elements) into a block-tridiagonal matrix
+"""
+function diagonal(alpha::Array{W,1},beta::Array{W,1}) where W <: Union{Array{S,2},tens{S}} where S <: Number
+  return Diagonal(alpha,beta)
 end

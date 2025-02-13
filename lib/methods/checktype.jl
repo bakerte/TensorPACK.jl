@@ -134,3 +134,12 @@ function checkType(A::Qtens{W,Q},B::Qtens{G,Q}) where {W <: Number, G <: Number,
   return Qtens(outType,A),Qtens(outType,B)
 end
 
+"""
+    x = checkType(x)
+
+converts number of `x` to the same output number for ease of use
+"""
+function checkType(A::Number)
+  return A
+end
+
