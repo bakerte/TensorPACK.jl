@@ -59,6 +59,22 @@ function -(B::diagonal,A::Matrix{W}) where W <: Number
   return C
 end
 
+"""
+    C = +(A,B)
+
+Subtracts a `diagonal` `A` to a `denstens` `B`
+"""
+function -(B::diagonal,A::tens{W}) where W <: Number
+  C = copy(A)
+  for y = 1:size(C,2)
+    w = size(C,1)*(y-1)
+    @inbounds @simd for x = 1:size(C,1)
+      C[x+w] = -C[x+w] + B[x,y]
+    end
+  end
+  return C
+end
+
 
 """
     C = -(A,B)
