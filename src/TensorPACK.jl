@@ -41,6 +41,8 @@ and define functions as `LinearAlgebra.svd` to use functions from that package.
 """
 module TensorPACK
 
+using StrassOPen
+
 const TENPACK = TensorPACK
 export TENPACK
 
