@@ -1,3 +1,6 @@
+<img width="828" alt="tenpack_logo" src="https://github.com/user-attachments/assets/34404a79-64d2-416c-a072-80a18a59a077" />
+
+
 # TENPACK (TensorPACK.jl)
 Tensor Linear Algebra Package in Julia
 
