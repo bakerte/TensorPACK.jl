@@ -14,51 +14,37 @@
 #         +--------------------------+
 
 
-function libmult(transA::AbstractChar,transB::AbstractChar,A::TensType,B::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer)
+function libmult(transA::AbstractChar,transB::AbstractChar,A::TensType,B::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer;use_strassen::Bool=true,safe_innerdim::Float64=0.5,strass_crossover::Int64=4096,level::Int64=1)
   alpha = typeof(eltype(A)(1)*eltype(B)(1))(1)
-  return libmult(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
+  return libmult(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize,use_strassen=use_strassen,safe_innerdim=safe_innerdim,strass_crossover=strass_crossover,level=level)
 end
 
-const strassen_bool = true
-const min_strassensize_singlethread = 100
-const safe_innerdim = 0.5
-const strass_crossover = 2^12
-
-function strassen_choice(transA::AbstractChar,transB::AbstractChar,alpha::Number,A::TensType,B::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer)
-  numthreads = Threads.nthreads()
-  if numthreads == 1
-    Aouterdim = size(A,1) > min_strassensize_singlethread
-    Ainnerdim = size(A,2) > min_strassensize_singlethread
-    Bouterdim = size(B,1) > min_strassensize_singlethread
-    Binnerdim = size(B,2) > min_strassensize_singlethread
-    res = Aouterdim && Ainnerdim && Bouterdim && Binnerdim
-  else
-    if transA == 'N' && transB == 'N'
-      res = (size(A,1) > strass_crossover || size(B,2) > strass_crossover) && size(A,2) > size(A,1)*safe_innerdim
-    elseif transA != 'N' && transB == 'N'
-      res = (size(A,2) > strass_crossover || size(B,2) > strass_crossover) && size(A,1) > size(A,2)*safe_innerdim
-    elseif transA == 'N' && transB != 'N'
-      res = (size(A,1) > strass_crossover || size(B,1) > strass_crossover) && size(A,2) > size(A,1)*safe_innerdim
-    end
+function strassen_choice(transA::AbstractChar,transB::AbstractChar,A::TensType,B::TensType,safe_innerdim::Float64=0.5,strass_crossover::Int64=4096)
+  if transA == 'N' && transB == 'N'
+    res = (size(A,1) >= strass_crossover || size(B,2) >= strass_crossover) && size(A,2) > size(A,1)*safe_innerdim
+  elseif transA != 'N' && transB == 'N'
+    res = (size(A,2) >= strass_crossover || size(B,2) >= strass_crossover) && size(A,1) > size(A,2)*safe_innerdim
+  elseif transA == 'N' && transB != 'N'
+    res = (size(A,1) >= strass_crossover || size(B,1) >= strass_crossover) && size(A,2) > size(A,1)*safe_innerdim
   end
   return res
 end
 
-function libmult(transA::AbstractChar,transB::AbstractChar,alpha::Number,A::TensType,B::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer)
-  if strassen_bool
-    out = matmul(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
+function libmult(transA::AbstractChar,transB::AbstractChar,alpha::Number,A::TensType,B::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer;use_strassen::Bool=true,safe_innerdim::Float64=0.5,strass_crossover::Int64=4096,level::Int64=1)
+  if use_strassen && strassen_choice(transA,transB,A,B,safe_innerdim,strass_crossover)
+    out = tens(StrassOPen.strassen(transA,transB,alpha,Matrix(reshape(A.T, (Lsize, innersizeL))),Matrix(reshape(B.T, (innersizeR, Rsize))),n=level)).T
   else
-    out = strassen(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
+    out = matmul(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
   end
   return out
 end
 
-function libmult(transA::AbstractChar,transB::AbstractChar,alpha::Number,A::TensType,B::TensType,beta::Number,Z::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer)
-  if strassen_bool
-    out = matmul(transA,transB,alpha,A,B,beta,Z,Lsize,innersizeL,innersizeR,Rsize)
-  else
-    out = strassen(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
+function libmult(transA::AbstractChar,transB::AbstractChar,alpha::Number,A::TensType,B::TensType,beta::Number,Z::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer;use_strassen::Bool=true,safe_innerdim::Float64=0.5,strass_crossover::Int64=4096,level::Int64=1)
+  if use_strassen && strassen_choice(transA,transB,A,B,safe_innerdim,strass_crossover)
+    out = tens(StrassOPen.strassen(transA,transB,alpha,Matrix(reshape(A.T, (Lsize, innersizeL))),Matrix(reshape(B.T, (innersizeR, Rsize))),n=level)).T
     tensorcombination!(out,Z,alpha=(typeof(beta)(1),beta))
+  else
+    out = matmul(transA,transB,alpha,A,B,beta,Z,Lsize,innersizeL,innersizeR,Rsize)
   end
   return out
 end
