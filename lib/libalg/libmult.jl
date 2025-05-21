@@ -31,8 +31,12 @@ function strassen_choice(transA::AbstractChar,transB::AbstractChar,A::TensType,B
 end
 
 function libmult(transA::AbstractChar,transB::AbstractChar,alpha::Number,A::TensType,B::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer;use_strassen::Bool=true,safe_innerdim::Float64=0.5,strass_crossover::Int64=4096,level::Int64=1)
-  if use_strassen && strassen_choice(transA,transB,A,B,safe_innerdim,strass_crossover)
-    out = tens(StrassOPen.strassen(transA,transB,alpha,Matrix(reshape(A.T, (Lsize, innersizeL))),Matrix(reshape(B.T, (innersizeR, Rsize))),n=level)).T
+  if use_strassen
+    if strassen_choice(transA,transB,A,B,safe_innerdim,strass_crossover)
+      out = tens(StrassOPen.strassen(transA,transB,alpha,Matrix(reshape(A.T, (Lsize, innersizeL))),Matrix(reshape(B.T, (innersizeR, Rsize))),n=level)).T
+    else
+      out = matmul(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
+    end
   else
     out = matmul(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
   end
@@ -40,9 +44,13 @@ function libmult(transA::AbstractChar,transB::AbstractChar,alpha::Number,A::Tens
 end
 
 function libmult(transA::AbstractChar,transB::AbstractChar,alpha::Number,A::TensType,B::TensType,beta::Number,Z::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer;use_strassen::Bool=true,safe_innerdim::Float64=0.5,strass_crossover::Int64=4096,level::Int64=1)
-  if use_strassen && strassen_choice(transA,transB,A,B,safe_innerdim,strass_crossover)
-    out = tens(StrassOPen.strassen(transA,transB,alpha,Matrix(reshape(A.T, (Lsize, innersizeL))),Matrix(reshape(B.T, (innersizeR, Rsize))),n=level)).T
-    tensorcombination!(out,Z,alpha=(typeof(beta)(1),beta))
+  if use_strassen
+    if strassen_choice(transA,transB,A,B,safe_innerdim,strass_crossover)
+      out = tens(StrassOPen.strassen(transA,transB,alpha,Matrix(reshape(A.T, (Lsize, innersizeL))),Matrix(reshape(B.T, (innersizeR, Rsize))),n=level)).T
+      tensorcombination!(out,Z,alpha=(typeof(beta)(1),beta))
+    else
+      out = matmul(transA,transB,alpha,A,B,beta,Z,Lsize,innersizeL,innersizeR,Rsize)
+    end
   else
     out = matmul(transA,transB,alpha,A,B,beta,Z,Lsize,innersizeL,innersizeR,Rsize)
   end
