@@ -21,26 +21,26 @@ end
 
 function strassen_choice(transA::AbstractChar,transB::AbstractChar,A::TensType,B::TensType,safe_innerdim::Float64=0.5,strass_crossover::Int64=4096)
   if transA == 'N' && transB == 'N'
-    res = (size(A,1) >= strass_crossover || size(B,2) >= strass_crossover) && size(A,2) > size(A,1)*safe_innerdim
+    return ((size(A,1) >= strass_crossover || size(B,2) >= strass_crossover) && size(A,2) > size(A,1)*safe_innerdim)
   elseif transA != 'N' && transB == 'N'
-    res = (size(A,2) >= strass_crossover || size(B,2) >= strass_crossover) && size(A,1) > size(A,2)*safe_innerdim
+    return ((size(A,2) >= strass_crossover || size(B,2) >= strass_crossover) && size(A,1) > size(A,2)*safe_innerdim)
   elseif transA == 'N' && transB != 'N'
-    res = (size(A,1) >= strass_crossover || size(B,1) >= strass_crossover) && size(A,2) > size(A,1)*safe_innerdim
+    return ((size(A,1) >= strass_crossover || size(B,1) >= strass_crossover) && size(A,2) > size(A,1)*safe_innerdim)
+  else
+    return ((size(A,2) >= strass_crossover || size(B,1) >= strass_crossover) && size(A,1) > size(A,2)*safe_innerdim)
   end
-  return res
 end
 
 function libmult(transA::AbstractChar,transB::AbstractChar,alpha::Number,A::TensType,B::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer;use_strassen::Bool=true,safe_innerdim::Float64=0.5,strass_crossover::Int64=4096,level::Int64=1)
   if use_strassen
     if strassen_choice(transA,transB,A,B,safe_innerdim,strass_crossover)
-      out = tens(StrassOPen.strassen(transA,transB,alpha,Matrix(reshape(A.T, (Lsize, innersizeL))),Matrix(reshape(B.T, (innersizeR, Rsize))),n=level)).T
+      return tens(StrassOPen.strassen(transA,transB,alpha,Matrix(reshape(A.T, (Lsize, innersizeL))),Matrix(reshape(B.T, (innersizeR, Rsize))),n=level)).T
     else
-      out = matmul(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
+      return matmul(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
     end
   else
-    out = matmul(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
+    return matmul(transA,transB,alpha,A,B,Lsize,innersizeL,innersizeR,Rsize)
   end
-  return out
 end
 
 function libmult(transA::AbstractChar,transB::AbstractChar,alpha::Number,A::TensType,B::TensType,beta::Number,Z::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer;use_strassen::Bool=true,safe_innerdim::Float64=0.5,strass_crossover::Int64=4096,level::Int64=1)
@@ -48,13 +48,13 @@ function libmult(transA::AbstractChar,transB::AbstractChar,alpha::Number,A::Tens
     if strassen_choice(transA,transB,A,B,safe_innerdim,strass_crossover)
       out = tens(StrassOPen.strassen(transA,transB,alpha,Matrix(reshape(A.T, (Lsize, innersizeL))),Matrix(reshape(B.T, (innersizeR, Rsize))),n=level)).T
       tensorcombination!(out,Z,alpha=(typeof(beta)(1),beta))
+      return out
     else
-      out = matmul(transA,transB,alpha,A,B,beta,Z,Lsize,innersizeL,innersizeR,Rsize)
+      return matmul(transA,transB,alpha,A,B,beta,Z,Lsize,innersizeL,innersizeR,Rsize)
     end
   else
-    out = matmul(transA,transB,alpha,A,B,beta,Z,Lsize,innersizeL,innersizeR,Rsize)
+    return matmul(transA,transB,alpha,A,B,beta,Z,Lsize,innersizeL,innersizeR,Rsize)
   end
-  return out
 end
 
 
