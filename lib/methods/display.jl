@@ -32,3 +32,13 @@ function display(X::TNobj)
   end
   nothing
 end
+
+"""
+    display(A)
+
+fancy display format for `diagonal` `A` (appears as LinearAlgebra.Diagonal)
+"""
+function display(A::diagonal)
+  display(LinearAlgebra.Diagonal(A.T))
+  nothing
+end

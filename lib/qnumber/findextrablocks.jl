@@ -15,7 +15,8 @@
 Finds blocks that do not match in quantum numbers in a `qarray` `B` with an array of matching indices `commoninds`; returns the blocks not found to be used in several functions where tensors are joined together
 """
 function findextrablocks(B::Qtens{W,Q},commoninds::Array{NTuple{2,intType},1}) where {W <: Number, Q <: Qnum}
-  nB = length(B.T)-length(commoninds)
+  nB = max(length(B.T)-length(commoninds),0)
+
   Bleftover = Array{intType,1}(undef,nB)
 
   counter = 0

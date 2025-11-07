@@ -9,8 +9,6 @@
 # This code is native to the julia programming language (v1.10.4+)
 #
 
-
-
 """
   G = getindex(M,a...)
 
@@ -21,6 +19,11 @@ For example, `A[:,3:6,2,[1,2,4,8]]`
 See also: [`searchindex`](@ref) [`getindex!`](@ref) [`denstens`](@ref) [`genColType`](@ref)
 """
 function getindex(M::Union{denstens,diagonal}, a::genColType...)
+
+#  println("FIRST?")
+
+#  println(a)
+
   return getindex!(M,a...)
 end
 
@@ -320,17 +323,13 @@ Finds selected elements of a `Diagonal` according to integer positions `a` (sear
 See also: [`searchindex`](@ref) [`getindex`](@ref) [`denstens`](@ref) [`genColType`](@ref)
 """
 function getindex!(C::Diagonal{W}, a::genColType) where W <: Number
-#  return diagonal(C.T[a...])
-  i = 0
-  allintegers = true
-  while allintegers && i < length(a)
-    i += 1
-    allintegers = typeof(a[i]) <: Integer
-  end
+
+  allintegers = typeof(a) <: Integer
+
   if allintegers
-    return searchindex(C,a...)
+    return searchindex(C,a)
   else
-    cols = get_denseranges(size(C),a...)
+    cols = get_denseranges((length(C),),a)
     return Diagonal{W}(C.T[cols...])
   end
 end
@@ -338,9 +337,9 @@ end
 """
   G = searchindex(C,a...)
 
-Find element of `C` (`denstens` or `Diagonal`) that corresponds to position `a` and outputs value `G`
+Find element of `C` (`denstens`) that corresponds to position `a` and outputs value `G`
 """
-function searchindex(C::Union{denstens,diagonal},a::Integer...)
+function searchindex(C::denstens,a::Integer...)
   if length(C.T) == 0
     outnum = eltype(C)(0)
   elseif length(a) == 1
@@ -348,6 +347,22 @@ function searchindex(C::Union{denstens,diagonal},a::Integer...)
   else
     w = pos2ind(a,size(C))
     outnum = C.T[w]
+  end
+  return outnum
+end
+
+"""
+  G = searchindex(C,a...)
+
+Find element of `C` (`Diagonal`) that corresponds to position `a` and outputs value `G`
+"""
+function searchindex(C::diagonal,a::Integer...)
+  if length(a) == 1
+    outnum = C.T[a[1]]
+  elseif length(a) == 2
+    outnum = a[1] == a[2] ? searchindex(C,a) : eltype(C)(0)
+  else
+    outnum = eltype(C)(0)
   end
   return outnum
 end

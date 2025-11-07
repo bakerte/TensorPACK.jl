@@ -128,6 +128,12 @@ function ind2pos!(currpos::Array{X,1},x::X,S::Union{NTuple{N,X},Array{X,1}}) whe
  nothing
 end
 
+function ind2pos(x::X,S::Union{NTuple{N,X},Array{X,1}}) where {X <: Integer, N}
+  currpos = Array{X,1}(undef,length(S))
+  ind2pos!(currpos,x,S)
+  return currpos
+end
+
 """
   G = pos2ind(currpos,S)
 

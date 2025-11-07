@@ -16,7 +16,7 @@ Generates a vector `G` for a tensor of size `x` and selected dimensions `y` cont
 
 See: [`genColType`])(@ref) [`getindex!`](@ref)
 """
-function get_denseranges(sizes::Union{Array{intType,1},NTuple{R,intType}},a::genColType...) where R
+function get_denseranges(sizes::Union{Array{intType,1},NTuple{R,intType},Memory{intType}},a::genColType...) where R
   G = length(sizes)
   unitranges = Array{genColType,1}(undef,G)
   @inbounds for i = 1:G

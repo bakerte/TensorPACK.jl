@@ -303,6 +303,7 @@ function joinloop!(A::Qtens{W,Q},B::Qtens{R,Q},commonblocks::Array{NTuple{2,intT
     leftBblock[i] = length(B.QnumMat[B.currblock[1][i]]) 
   end
 
+
   @inbounds for q = 1:length(commonblocks)
     Aqind = commonblocks[q][1]
     Bqind = commonblocks[q][2]
@@ -330,10 +331,12 @@ function joinloop!(A::Qtens{W,Q},B::Qtens{R,Q},commonblocks::Array{NTuple{2,intT
       newT = zeros(Ttype,length(newrow),newcolsize)
 
       newT[Anewrows,1:size(A.T[Aqind],2)] = A.T[Aqind]
-      newT[Bnewrows,size(A.T[Bqind],2)+1:end] = B.T[Bqind]
+
+      newT[Bnewrows,size(A.T[Aqind],2)+1:end] = B.T[Bqind]
 
       A.T[Aqind] = newT
       leftinds = ind2zeropos(newrow,tup_Aleftsize)
+
     else
       A.T[Aqind] = joinindex!([2],A.T[Aqind],B.T[Bqind])
       leftinds = A.ind[Aqind][1]
@@ -358,6 +361,7 @@ function joinloop!(A::Qtens{W,Q},B::Qtens{R,Q},commonblocks::Array{NTuple{2,intT
         newind[r,modg] = Binds[r,g] + origAsize[r]
       end
     end
+
     A.ind[Aqind] = (leftinds,newind)
   end
   nothing
@@ -519,6 +523,7 @@ function joinindex!(bareinds::intvecType,QtensA::Qtens{R,Q},QtensB::Qtens{S,Q};o
   @inbounds @simd for w = 1:length(inds)
     origAsize[w] = length(A.QnumMat[inds[w]])
   end
+
   commonblocks = matchblocks((false,false),A,B,ind=(2,1),matchQN=A.flux)
 
   Bleftover = findextrablocks(B,commonblocks)

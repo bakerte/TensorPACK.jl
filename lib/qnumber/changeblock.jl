@@ -262,13 +262,15 @@ copies parameters from one block structure into another, parallelizing over the 
 function doubleloop_right(newblocks::Array{Array{W,2},1},thisTens::Array{W,2},leftQNs::Array{S,1},LRpos::Bool,basesize::NTuple{P,S},posvecs::Array{Array{S,1},1},
                           thisind_one::Array{S,2},thisind_one_sizetwo::S,Lorigsize::S,thiscurrblock_one::Array{S,1},Linds::NTuple{Z,S},Lbigtosub::Array{S,1},
                           thisind_two::Array{S,2},thisind_two_sizetwo::S,Rorigsize::S,thiscurrblock_two::Array{S,1},Rinds::NTuple{G,S},Rbigtosub::Array{S,1}) where {P, Z, G, W <: Number, S <: Integer}
+
   Threads.@threads for x = 1:thisind_one_sizetwo
-    thisthread = Threads.threadid()
+    thisthread = Threads.threadid()-1
     thispos = posvecs[thisthread]
 
     innerloadpos!(x,Lorigsize,thispos,thiscurrblock_one,thisind_one)
 
     @inbounds for y = 1:thisind_two_sizetwo
+
       inputval = thisTens[x,y]
       innerloadpos!(y,Rorigsize,thispos,thiscurrblock_two,thisind_two)
       
@@ -307,13 +309,17 @@ copies parameters from one block structure into another, parallelizing over the 
 function doubleloop_left(newblocks::Array{Array{W,2},1},thisTens::Array{W,2},leftQNs::Array{S,1},LRpos::Bool,basesize::NTuple{P,S},posvecs::Array{Array{S,1},1},
                           thisind_one::Array{S,2},thisind_one_sizetwo::S,Lorigsize::S,thiscurrblock_one::Array{S,1},Linds::NTuple{Z,S},Lbigtosub::Array{S,1},
                           thisind_two::Array{S,2},thisind_two_sizetwo::S,Rorigsize::S,thiscurrblock_two::Array{S,1},Rinds::NTuple{G,S},Rbigtosub::Array{S,1}) where {P, Z, G, W <: Number, S <: Integer}
+
   Threads.@threads for y = 1:thisind_two_sizetwo
-    thisthread = Threads.threadid()
+
+    thisthread = Threads.threadid()-1
+
     thispos = posvecs[thisthread]
 
     innerloadpos!(y,Rorigsize,thispos,thiscurrblock_two,thisind_two)
 
     @inbounds for x = 1:thisind_one_sizetwo
+
       inputval = thisTens[x,y]
       innerloadpos!(x,Lorigsize,thispos,thiscurrblock_one,thisind_one)
       

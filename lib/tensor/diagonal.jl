@@ -26,6 +26,15 @@ end
 """
     A = Diagonal(P)
 
+Takes as input `P` of a `diagonal` type and returns the same tensor
+"""
+function Diagonal(P::diagonal)
+  return P
+end
+
+"""
+    A = Diagonal(P)
+
 Converts Vector type `P` (element type `Z`) into a diagonal of element type `W`
 """
 function Diagonal(P::Vector{Z}) where {Z <: Number}

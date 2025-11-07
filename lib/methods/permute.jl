@@ -126,6 +126,11 @@ Permute dimensions of an input Array `A` output to array `B` (any rank) with per
 See also: [`permutedims`](@ref)
 """
 function permutedims!(P::Union{Array{W,R},Memory{W}},A::Union{Array{W,R},Memory{W}},iA::Union{Array{intType,1},NTuple{G,intType}},Asizes::Union{Array{intType,1},NTuple{G,intType},Memory{intType}},newsizes::Union{Array{intType,1},NTuple{G,intType},Memory{intType}}) where {W <: Number, G, R}
+
+  if length(Asizes) != length(newsizes)
+    error("Non-matching rank of input tensor for permuted dimensions rule")
+  end
+
   startind = 0
   @inbounds while startind < G && iA[startind+1] == startind+1
     startind += 1

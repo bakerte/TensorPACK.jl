@@ -87,5 +87,6 @@ function matchblocks(LQNs::Array{Q,1},RQNs::Array{Q,1};matchQN::Q=Q()) where Q <
       loadtup!(outAorder,counter,k,Aorder[k])
     end
   end
+
   return outAorder
 end
