@@ -61,3 +61,4 @@ U,D,V = svd(rA,m=40)
 
 Serialization.serialize(file,performancevals)
 
+fulltest

@@ -239,3 +239,4 @@ fulltest &= testfct(testval,"eigen (minm=2000)",performancevals)
 
 Serialization.serialize(file,performancevals)
 
+fulltest

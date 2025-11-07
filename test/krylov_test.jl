@@ -26,9 +26,9 @@ psi = rand(m)
 
 psi,A = tens(psi),tens(A)
 
-D,psisave = lanczos(psi,A,maxiter=m,reorth=true)
+D,psisave = lanczos(psi,A,maxiter=m,m=m,reorth=true)
 
-P = [dot(psisave[i],psisave[j]) for i = 1:length(psisave),j=1:length(psisave)]
+P = [dot(psisave[:,i],psisave[:,j]) for i = 1:length(psisave),j=1:length(psisave)]
 testval = isapprox(sum(w->P[w,w],1:size(P,1)),size(P,1)) && abs(sum(P) - size(P,1)) < 1E-3
 #=
 @btime krylov(psi,A)
@@ -37,10 +37,9 @@ D,U = libeigen(alpha,beta)
 =#
 checkD,checkU = LinearAlgebra.eigen(Array(A))
 
-#display(D-checkD)
 
-testval &= norm(D-checkD) < 1E-8
-fulltest &= testfct(testval,"krylov(tens,tens)")
+testval = "norm(D-Diagonal(checkD)) < 1E-8"
+fulltest &= testfct(testval,"krylov(tens,tens)",performancevals)
 
 
 
@@ -63,11 +62,14 @@ alpha = Vector{Float64}(undef,m)
 beta = Vector{Float64}(undef,m)
 
 n = krylov(psi,A,cvg=true,numE=g,reorth=true,alpha=alpha,beta=beta)
-D,U = libeigen(alpha,beta,n)
+D,U = libeigen(alpha,beta,size(n,2))
 
 checkD,checkU = LinearAlgebra.eigen(Array(A))
 
 #display(D-checkD)
+
+#display(D[1:g])
+#display(checkD[1:g])
 
 testval = "norm(D[1:g]-checkD[1:g]) < 1E-8"
 fulltest &= testfct(testval,"krylov(tens,tens) [cvg=true]",performancevals)
@@ -77,3 +79,4 @@ fulltest &= testfct(testval,"krylov(tens,tens) [cvg=true]",performancevals)
 Serialization.serialize(file,performancevals)
 
 
+fulltest

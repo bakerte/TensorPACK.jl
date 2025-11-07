@@ -338,3 +338,4 @@ fulltest &= testfct(testval,"trace!(tens,[indices])",performancevals)
 
 Serialization.serialize(file,performancevals)
 
+fulltest

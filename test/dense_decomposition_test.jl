@@ -385,3 +385,4 @@ fulltest &= testfct(testval,"lq (minm = $(2*m))")
 
 Serialization.serialize(file,performancevals)
 
+fulltest

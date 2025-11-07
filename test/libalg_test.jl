@@ -181,3 +181,4 @@ global fulltest &= testfct(testval,"libLowerHessenberg!",performancevals)
 
 Serialization.serialize(file,performancevals)
 
+fulltest

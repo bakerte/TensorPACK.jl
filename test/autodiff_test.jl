@@ -68,3 +68,4 @@ fulltest &= testfct(testval,"svd (dtens)",performancevals)
 
 
 Serialization.serialize(file,performancevals)
+fulltest

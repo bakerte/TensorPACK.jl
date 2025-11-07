@@ -89,3 +89,4 @@ if sum(testvec) != length(testvec)
 end
 
 Serialization.serialize(file,performancevals)
+fulltest

@@ -676,3 +676,4 @@ println()
 
 Serialization.serialize(file,performancevals)
 
+fulltest

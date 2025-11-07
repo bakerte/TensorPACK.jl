@@ -31,7 +31,7 @@ println()
 
 C = Diagonal(rand(10))
 
-normtest = "isapprox(norm(C.T),norm(C))"
+normtest = "isapprox(norm(C),norm(C))"
 fulltest &= testfct(normtest,"Diagonal .T field",performancevals)
 
 println()
@@ -121,23 +121,24 @@ rdim = 30 #round(Int64,rand(5:40,1)[1])
 println("  (ldim,rdim) = (",ldim,",",rdim,")")
 A = eye(ComplexF64,ldim,rdim)
 mindim = min(ldim,rdim)
-testval = "size(A) == [ldim,rdim] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)"
+
+testval = "vecsize(A) == [ldim,rdim] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)"
 fulltest &= testfct(testval,"eye",performancevals)
 
 println()
 
 A = eye(ComplexF64,ldim,ldim,addone=true,addRightDim=false)
-testval = size(A) == [1,ldim,ldim]
+testval = vecsize(A) == [1,ldim,ldim]
 testval &= isapprox(sum(A),ldim) && eltype(A) == ComplexF64
 testval &= isapprox(norm(A[1,1:mindim,1:mindim]),sqrt(mindim))
 fulltest &= testfct(testval,"eye (square, left)")
 
 A = eye(ComplexF64,ldim,rdim,addone=true,addRightDim=true)
-testval = "size(A) == [ldim,rdim,1] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim,1]),zeros(mindim,mindim) + LinearAlgebra.I)"
+testval = "vecsize(A) == [ldim,rdim,1] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim,1]),zeros(mindim,mindim) + LinearAlgebra.I)"
 fulltest &= testfct(testval,"eye (square, right)",performancevals)
 
 A = eye(ComplexF64,ldim,rdim)
-testval = "size(A) == [ldim,rdim] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)"
+testval = "vecsize(A) == [ldim,rdim] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)"
 fulltest &= testfct(testval,"eye (rectangular)",performancevals)
 
 println()
@@ -160,17 +161,17 @@ testval &= isapprox(norm(A[1,1:mindim,1:mindim]),sqrt(mindim))
 fulltest &= testfct(testval,"eye (square, left)")
 
 A = eye(ComplexF64,ldim,rdim,addone=true,addRightDim=true)
-testval = "size(A) == [ldim,rdim,1] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim,1]),zeros(mindim,mindim) + LinearAlgebra.I)"
+testval = "vecsize(A) == [ldim,rdim,1] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim,1]),zeros(mindim,mindim) + LinearAlgebra.I)"
 fulltest &= testfct(testval,"eye (square, right)",performancevals)
 
 A = eye(ComplexF64,ldim,rdim)
-testval = "size(A) == [ldim,rdim] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)"
+testval = "vecsize(A) == [ldim,rdim] && isapprox(sum(A),mindim) && eltype(A) == ComplexF64 && isapprox(Array(A[1:mindim,1:mindim]),zeros(mindim,mindim) + LinearAlgebra.I)"
 fulltest &= testfct(testval,"eye (rectangular)",performancevals)
 
 A = rand(ldim,rdim,5,2)
 B = eye(A,[1,2,3])
 
-testval = "isapprox(sum(B),ldim*rdim*5) && size(B) == (ldim,ldim,rdim,rdim,5,5)"
+testval = "isapprox(sum(B),ldim*rdim*5) && tupsize(B) == (ldim,ldim,rdim,rdim,5,5)"
 
 fulltest &= testfct(testval,"eye (index inputs, [1,2,3])",performancevals)
 #=
@@ -410,14 +411,18 @@ B = rand(2,2)
 tB = tens(B)
 
 C = copy(tA)
-tA[1:2,[2,3],3,4,5,6] = tB
-C[1:2,[2,3],3,4,5,6] = B
-A[1:2,2:3,3,4,5,6] = tB
-testval = isapprox(norm(B - Array(tA[1:2,2:3,3,4,5,6])),0)
 
-testval &= isapprox(norm(B - Array(C[1:2,[2,3],3,4,5,6])),0)
-testval &= isapprox(norm(B - A[1:2,2:3,3,4,5,6]),0)
-fulltest &= testfct(testval,"setindex(denstens,integer...)")
+tA[1:2,[2,3],3,4,5,6] = tB
+testval = isapprox(norm(B - Array(tA[1:2,2:3,3,4,5,6])),0)
+fulltest &= testfct(testval,"setindex(denstens,denstens,integer...)")
+
+C[1:2,[2,3],3,4,5,6] = B
+testval = isapprox(norm(B - Array(C[1:2,[2,3],3,4,5,6])),0)
+fulltest &= testfct(testval,"setindex(denstens,Array,integer...)")
+
+A[1:2,2:3,3,4,5,6] = tB
+testval = isapprox(norm(B - A[1:2,2:3,3,4,5,6]),0)
+fulltest &= testfct(testval,"setindex(Array,denstens,integer...)")
 
 println()
 
@@ -725,3 +730,4 @@ fulltest &= testfct(testval,"joinindex(tens,tens,Array)",performancevals)
 
 Serialization.serialize(file,performancevals)
 
+fulltest
