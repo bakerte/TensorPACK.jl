@@ -10,7 +10,7 @@
 #
 
 """
-    D,U,truncerr,mag = eigen(A[,B,cutoff=0.,m=0,mag=0.,a=size(A,1),b=size(A,2),minm=2,leftflux=false,nozeros=false,power=1,effZero=defzero,keepdeg=false,transpose=false,decomposer=libeigen,rev=true])
+    D,U,truncerr,mag = eigen(A[,B,cutoff=0.,m=0,mag=0.,a=size(A,1),b=size(A,2),minm=2,leftflux=false,nozeros=false,power=1,effZero=defzero,keepdeg=false,transpose=false,decomposer=libeigen,rev=false])
 
 Eigensolver routine with truncation (output to `D` and `U` just as `LinearAlgebra`'s function) for Julia `Arrays`; arguments similar to `svd`; can perform generalized eigenvalue problem with `B` overlap matrix
 
@@ -42,7 +42,7 @@ Eigensolver routine with truncation (output to `D` and `U` just as `LinearAlgebr
 
 See also: [`svd`](@ref) [`libeigen`](@ref)
 """
-function eigen(AA::Union{Array{W,G},Memory{W}},B::Union{Array{W,R},Memory{W}}...;cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,a::Integer=size(AA,1),b::Integer=size(AA,2),minm::Integer=2,nozeros::Bool=false,leftflux::Bool=false,power::Number=1,effZero::Real=defzero,keepdeg::Bool=false,transpose::Bool=false,decomposer::Function=libeigen,rev::Bool=true) where {W <: Number, G, R}
+function eigen(AA::Union{Array{W,G},Memory{W}},B::Union{Array{W,R},Memory{W}}...;cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,a::Integer=size(AA,1),b::Integer=size(AA,2),minm::Integer=2,nozeros::Bool=false,leftflux::Bool=false,power::Number=1,effZero::Real=defzero,keepdeg::Bool=false,transpose::Bool=false,decomposer::Function=libeigen,rev::Bool=false) where {W <: Number, G, R}
 
   Dsq,U = decomposer(AA,a,B...)
 
@@ -66,10 +66,10 @@ function eigen(AA::Union{Array{W,G},Memory{W}},B::Union{Array{W,R},Memory{W}}...
     end
 
     Dtrunc = Array{eltype(Dsq),1}(undef,maxm)
-    @inbounds @simd for z = 1:size(D,1)
-      Dtrunc[z] = D[z]
+    @inbounds @simd for z = 1:size(Dsq,1)
+      Dtrunc[z] = Dsq[z]
     end
-    @inbounds @simd for z = size(D,1)+1:maxm
+    @inbounds @simd for z = size(Dsq,1)+1:maxm
       Dtrunc[z] = 0
     end
 
@@ -121,7 +121,7 @@ Eigensolver routine with truncation (output to `D` and `U` just as `LinearAlgebr
 
 See also: [`svd`](@ref)
 """
-function eigen(AA::tens{W},B::tens{W}...;cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,a::Integer=size(AA,1),b::Integer=size(AA,2),minm::Integer=2,nozeros::Bool=false,leftflux::Bool=false,power::Number=1,effZero::Real=defzero,keepdeg::Bool=false,transpose::Bool=false,decomposer::Function=libeigen,rev::Bool=true) where {W <: Number}
+function eigen(AA::tens{W},B::tens{W}...;cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,a::Integer=size(AA,1),b::Integer=size(AA,2),minm::Integer=2,nozeros::Bool=false,leftflux::Bool=false,power::Number=1,effZero::Real=defzero,keepdeg::Bool=false,transpose::Bool=false,decomposer::Function=libeigen,rev::Bool=false) where {W <: Number}
 
   Dsq,U,truncerr,sumD = eigen(AA.T,B...,cutoff=cutoff,m=m,mag=mag,a=a,b=b,minm=minm,nozeros=nozeros,power=power,effZero=effZero,keepdeg=keepdeg,transpose=transpose,decomposer=decomposer,rev=rev)
 
@@ -169,7 +169,7 @@ See also: [`svd`](@ref)
 """
 function eigen!(AA::Union{Array{W,2},tens{W}},B::Array{W,2}...;cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,
                 minm::Integer=2,nozeros::Bool=false,power::Number=1,leftflux::Bool=false,effZero::Float64=defzero,keepdeg::Bool=false,a::Integer=size(AA,1),b::Integer=size(AA,2),
-                transpose::Bool=false,decomposer::Function=libeigen!,rev::Bool=true) where {W <: Number}
+                transpose::Bool=false,decomposer::Function=libeigen!,rev::Bool=false) where {W <: Number}
   return eigen(AA,B...,cutoff=cutoff,m=m,mag=mag,minm=minm,nozeros=nozeros,power=power,effZero=effZero,a=a,b=b,keepdeg=keepdeg,transpose=transpose,decomposer=decomposer,rev=rev)
 end
 
@@ -208,7 +208,7 @@ reshapes `AA` for `eigen` and then unreshapes U matrix on return; `vecA` is of t
 function eigen(AA::TensType,vecA::Array{Array{W,1},1},
                 B::TensType...;cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,
                 minm::Integer=2,nozeros::Bool=false,power::Number=1,leftflux::Bool=false,effZero::Float64=defzero,keepdeg::Bool=false,a::Integer=size(AA,1),b::Integer=size(AA,2),
-                transpose::Bool=false,decomposer::Function=libeigen,rev::Bool=true) where {W <: Number}
+                transpose::Bool=false,decomposer::Function=libeigen,rev::Bool=false) where {W <: Number}
   AB,Lsizes,Rsizes,a,b = getorder(AA,vecA)
   D,U,truncerr,newmag = eigen(AB,B...,a=a,b=b,cutoff=cutoff,m=m,mag=mag,minm=minm,nozeros=nozeros,keepdeg=keepdeg,transpose=transpose,decomposer=decomposer,rev=rev)
   if transpose
@@ -247,7 +247,7 @@ reshapes `AA` for `eigen` and then unreshapes U matrix on return with some in-pl
 + `mag`: magnitude of the output tensor
 """
 function eigen!(AA::TensType,vecA::Array{Array{W,1},1},B::TensType...;cutoff::Float64 = 0.,m::Integer = 0,mag::Float64=0.,minm::Integer=2,nozeros::Bool=false,leftflux::Bool=false,power::Number=1,effZero::Float64=defzero,keepdeg::Bool=false,a::Integer=size(AA,1),b::Integer=size(AA,2),
-  transpose::Bool=false,decomposer::Function=libeigen!,rev::Bool=true) where {W <: Number}
+  transpose::Bool=false,decomposer::Function=libeigen!,rev::Bool=false) where {W <: Number}
   return eigen(AA,vecA,B...,cutoff=cutoff,m=m,mag=mag,a=a,b=b,minm=minm,nozeros=nozeros,power=power,effZero=effZero,keepdeg=keepdeg,transpose=transpose,decomposer=decomposer,rev=rev)
 end
 
@@ -306,7 +306,7 @@ See also: [`svd`](@ref) [`libeigen`](@ref)
 function eigen!(QtensA::Qtens{W,Q};cutoff::Float64 = 0.,m::Integer = 0,effZero::Real=defzero,
               minm::Integer=2,nozeros::Bool=false,leftflux::Bool=false,
               power::Number=1,mag::Float64=0.,
-              decomposer::Function=libeigen!,keepdeg::Bool=false,transpose::Bool=false,rev::Bool=true) where {W <: Number, Q <: Qnum}
+              decomposer::Function=libeigen!,keepdeg::Bool=false,transpose::Bool=false,rev::Bool=false) where {W <: Number, Q <: Qnum}
 
   Tsize = QtensA.size
   Linds = Tsize[1]
@@ -339,7 +339,15 @@ function eigen!(QtensA::Qtens{W,Q};cutoff::Float64 = 0.,m::Integer = 0,effZero::
       end
     end
   end
-
+#=
+  println()
+  println("start: ",nQN," ",norm(QtensA))
+  for q = 1:nQN
+    println(q," ",norm(newD[q]))
+#    println(newD[q])
+  end
+  println()
+=#
   m_intervals,sizeD,truncerr,sumD = truncate(newD...,m=m,minm=minm,mag=mag,cutoff=cutoff,effZero=effZero,nozeros=nozeros,power=power,keepdeg=keepdeg,rev=rev)
 
   thism = 0
@@ -397,8 +405,8 @@ function eigen!(QtensA::Qtens{W,Q};cutoff::Float64 = 0.,m::Integer = 0,effZero::
     end
 
     lastind = 0
-    @inbounds @simd for q = 1:nQN
-      lastind += length(finalinds[q])
+    @inbounds for q = 1:nQN
+      lastind += isassigned(finalinds,q) ? length(finalinds[q]) : 0
     end
 
     @inbounds @simd for w = lastind+1:length(newqindexL)
@@ -429,7 +437,7 @@ function eigen!(QtensA::Qtens{W,Q};cutoff::Float64 = 0.,m::Integer = 0,effZero::
 end
 
 """
-    D,U,truncerr,mag = eigen(A[,cutoff=0.,m=0,mag=0.,a=size(A,1),b=size(A,2),minm=2,leftflux=false,nozeros=false,power=1,effZero=defzero,keepdeg=false,transpose=false,decomposer=libeigen,rev=true])
+    D,U,truncerr,mag = eigen(A[,cutoff=0.,m=0,mag=0.,a=size(A,1),b=size(A,2),minm=2,leftflux=false,nozeros=false,power=1,effZero=defzero,keepdeg=false,transpose=false,decomposer=libeigen,rev=false])
 
 Eigensolver routine with truncation (output to `D` and `U` just as `LinearAlgebra`'s function) for a `Qtens` tensor; arguments similar to `svd`
 
@@ -464,7 +472,7 @@ See also: [`svd`](@ref) [`libeigen`](@ref)
 function eigen(QtensA::Qtens{W,Q};cutoff::Float64 = 0.,m::Integer = 0,a::Integer=size(QtensA,1),b::Integer=size(QtensA,2),
                 minm::Integer=2,nozeros::Bool=false,
                 power::Number=1,leftflux::Bool=false,mag::Float64=0.,effZero::Real=defzero,
-                decomposer::Function=libeigen,keepdeg::Bool=false,transpose::Bool=false,rev::Bool=true) where {W <: Number, Q <: Qnum}
+                decomposer::Function=libeigen,keepdeg::Bool=false,transpose::Bool=false,rev::Bool=false) where {W <: Number, Q <: Qnum}
   return eigen!(QtensA,cutoff=cutoff,m=m,minm=minm,nozeros=nozeros,power=power,effZero=effZero,
                 leftflux=leftflux,mag=mag,decomposer=libeigen,keepdeg=keepdeg,transpose=transpose,rev=rev)
 end
@@ -507,7 +515,7 @@ Generates eigenvalue decomposition of named tensor `A` according to `order`; sam
 function eigen(AA::nametens,order::Array{Array{B,1},1};mag::Number = 0.,cutoff::Number = 0.,
                 m::Integer = 0,name::String="eigind",leftadd::String="L",rightadd::String="R",nozeros::Bool=false,
                 power::Number=1,leftflux::Bool=false,effZero::Real=defzero,
-                decomposer::Function=libeigen,keepdeg::Bool=false,transpose::Bool=false,rev::Bool=true) where B <: String
+                decomposer::Function=libeigen,keepdeg::Bool=false,transpose::Bool=false,rev::Bool=false) where B <: String
 
   D,U,truncerr,newmag = eigen(AA.N,order,mag=mag,cutoff=cutoff,m=m,minm=minm,nozeros=nozeros,power=power,effZero=effZero,leftflux=leftflux,decomposer=libeigen,keepdeg=keepdeg,transpose=transpose,rev=rev)
 

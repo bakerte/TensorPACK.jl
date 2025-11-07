@@ -54,4 +54,4 @@ function liblq end
 
 default value of zero used in truncating decompositions; we truncate (typically) in the square of the density matrix occupation value, so this is (1E-14)^2
 """
-const defzero = 1E-28
+const defzero = 1E-32

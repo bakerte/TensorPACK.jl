@@ -93,6 +93,8 @@ function svd(AA::denstens;power::Number=2,cutoff::Float64 = 0.,leftflux::Bool=fa
   interval = m_intervals[1]
   thism = length(interval)
 
+#  println(thism)
+
   if thism < minm #&& m > minm
     maxm = max(1,minm)
 
@@ -604,6 +606,9 @@ function svd(QtensA::Qtens{W,Q};a::Integer=size(QtensA,1),b::Integer=size(QtensA
 
       if keepq[q]
         newU[q] = newU[q][:,m_intervals[q]]
+
+#        println(q," ",(newD[q]))
+#        println(m_intervals[q])
 
         tempD[q] = Diagonal(newD[q][m_intervals[q]])
         newV[q] = newV[q][m_intervals[q],:]

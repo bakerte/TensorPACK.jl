@@ -30,7 +30,7 @@ All parameters can be set in `svd` or `eigen` or similar
 
 See also: [`svd`](@ref) [`eigen`](@ref) [`defzero`](@ref)
 """
-function truncate(D::Union{Array{W,1},Memory{W}}...;m::Integer=0,minm::Integer=2,mag::Float64=0.,cutoff::Real=0.,effZero::Real=defzero,nozeros::Bool=true,power::Number=2,keepdeg::Bool=true,rev::Bool=false) where W <: Number
+function truncate(D::Union{Array{W,1},Memory{W}}...;m::Integer=0,minm::Integer=2,mag::Float64=0.,cutoff::Real=0.,effZero::Real=defzero,nozeros::Bool=true,power::Number=2,keepdeg::Bool=true,rev::Bool=true) where W <: Number
 
   nQNs = length(D)
   sizeD = 0
@@ -76,18 +76,26 @@ function truncate(D::Union{Array{W,1},Memory{W}}...;m::Integer=0,minm::Integer=2
       order = 1:length(bigD)
       ordered_bigD = bigD
     else
-      order = sortperm(bigD,rev = true)
+      order = sortperm(bigD,rev = rev)
       ordered_bigD = bigD[order]
     end
 
-    pstart,pstop,incr = sizeD,1,-1
+    pstart,pstop,incr = sizeD,minm,-1
 
     if sizeD <= 0
+
+      println(sizeD)
+      println()
+
+      for w = 1:length(D)
+        println(w," ",D[w])
+      end
+
       error("input a tensor into svd of small enough weight that all of it was truncated")
     end
 
     if nozeros
-      while ordered_bigD[pstart] < effZero #&& pstart > 2
+      while ordered_bigD[pstart] < effZero && pstart > pstop
         pstart -= 1
       end
     end
@@ -138,12 +146,16 @@ function truncate(D::Union{Array{W,1},Memory{W}}...;m::Integer=0,minm::Integer=2
         counts[q] = 0
       end
 
-      @inbounds for z = 1:thism
-        r = 1
-        while !(order[z] in qranges[r])
-          r += 1
+      if length(qranges) > 1
+        @inbounds for z = 1:thism
+          r = 1
+          while !(order[z] in qranges[r])
+            r += 1
+          end
+          counts[r] += 1
         end
-        counts[r] += 1
+      else
+        counts[1] = thism
       end
 
     else
@@ -153,9 +165,9 @@ function truncate(D::Union{Array{W,1},Memory{W}}...;m::Integer=0,minm::Integer=2
     end
 
     if rev
-      m_intervals = [length(D[q])-counts[q]+1:length(D[q]) for q = 1:nQNs]
-    else
       m_intervals = [1:counts[q] for q = 1:nQNs]
+    else
+      m_intervals = [length(D[q])-counts[q]+1:length(D[q]) for q = 1:nQNs]
     end
 
   end

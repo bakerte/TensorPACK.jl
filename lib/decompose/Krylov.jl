@@ -14,7 +14,7 @@
 
 Computes `H`*`psi` for two matrices representing the matrix and the wavefunction; `Lenv` and `Renv` are only defined for consistency with other functions
 """
-function makeHpsi(Lenv::TensType,Renv::TensType,psi::TensType,invec::R) where {R <: TensType} #;convec=ntuple(w->w,ndims(psi)-1))
+function makeHpsi(Lenv::TensType,Renv::TensType,psi::TensType,invec::R) where {R <: TensType}
   return makeHpsi(Lenv,Renv,psi,(invec,))
 end
 
@@ -23,8 +23,7 @@ end
 
 Computes H*`psi` (H is the first element of `invec`, a tuple or an array) for two matrices representing the matrix and the wavefunction; `Lenv` and `Renv` are only defined for consistency with other functions
 """
-function makeHpsi(Lenv::TensType,Renv::TensType,psi::TensType,invec::NTuple{G,R}) where {G, R <: TensType} #;convec=ntuple(w->w,ndims(psi)-1))
-#  psi = invec[1]
+function makeHpsi(Lenv::TensType,Renv::TensType,psi::TensType,invec::NTuple{G,R}) where {G, R <: TensType}
   A = invec[1]
   return A*psi
 end
@@ -44,21 +43,34 @@ function krylov(invec::R...;Lenv::TensType=default_boundary,Renv::TensType=defau
   if isapprox(normpsi,0)
     error("Input vector for lanczos has a norm of zero. Can not complete Lanczos iterations")
   end
-
+#  if reorth
+if start == 0
   psi = div!(psi,normpsi)
   prevpsi = psi
 
   convec = ntuple(w->w,ndims(psi))
   mindim = prod(w->size(psi,w),convec)
-  if reorth
+
     retbundlepsi = reshape(psi,size(psi)...,1)
-  end
+else
+
+  convec = ntuple(w->w,ndims(psi)-1)
+  mindim = prod(w->size(psi,w),convec)
+
+  psi,_ = qr(psi,[[1,2,3],[4]])
+  retbundlepsi = psi
+
+  grab_activeinds = [Colon() for i = 1:ndims(psi)-1]
+  prevpsi = retbundlepsi[grab_activeinds...,end-1]
+  psi = retbundlepsi[grab_activeinds...,end]
+end
+#  end
 
   K = eltype(psi)
   n = start
   betatest = true
 
-  while (n < maxiter || maxiter == 0) && n < mindim && betatest
+  while (n < maxiter || maxiter == 0 || start != 0) && n < mindim && betatest
     n += 1
 
 #    if eigvecs
@@ -72,13 +84,14 @@ function krylov(invec::R...;Lenv::TensType=default_boundary,Renv::TensType=defau
     Hpsi = updatefct(Lenv,Renv,psi,keepvec)
 
     alphaval = real(dot(psi,Hpsi))
+#    println(n," ",alphaval," ",reorth," ",betatest)
     if n > length(alpha)
       push!(alpha,alphaval)
     else
       alpha[n] = alphaval
     end
 
-    if (n < maxiter || maxiter == 0)
+    if (n < maxiter || maxiter == 0 || start != 0)
       if n == 1
         coeffs = (K(1),K(-alphaval))
         Hpsi = tensorcombination!(coeffs,Hpsi,psi)
@@ -101,12 +114,16 @@ function krylov(invec::R...;Lenv::TensType=default_boundary,Renv::TensType=defau
       end
       psi = div!(Hpsi,betaval)
 
-      if reorth
+      betatest = abs(betaval) > effZero
+
+#      if reorth
+      if betatest && n < mindim
         rpsi = reshape(psi,size(psi)...,1)
         retbundlepsi = joinindex!(retbundlepsi,rpsi,ndims(retbundlepsi))
       end
+#      end
 
-      betatest = abs(betaval) > effZero
+#      println(betaval," ",effZero," ",betatest)
 
       if cvg && betatest && n >= numE
         D = eigvals(alpha,beta,n)
@@ -128,7 +145,7 @@ function krylov(invec::R...;Lenv::TensType=default_boundary,Renv::TensType=defau
     end
   end
 
-  return n
+  return retbundlepsi
 end
 
 """
@@ -138,11 +155,21 @@ Generates the energies contained in `D`and vectors `U` from a krylov expansion w
 """
 function lanczos(invec::R...;Lenv::TensType=default_boundary,Renv::TensType=default_boundary,maxiter::intType = size(invec[2],1),updatefct::Function=makeHpsi,reorth::Bool=false,start::intType=0,goal::W=1E-12,effZero::Real=defzero,m::intType=1,alpha::Array{S,1}=Array{Float64,1}(undef,maxiter),beta::Array{S,1}=Array{Float64,1}(undef,maxiter),psisave::TensType=Array{typeof(invec[1]),1}(undef,maxiter),cvg::Bool=false,numE::intType=cvg ? 1 : 0,double::Bool=false, saveE::Array{S,1}=Array{Float64,1}(undef,numE),eigvecs::Bool=true) where {W <: Number, R <: TensType, S <: Number}
 
-  p = krylov(invec...,Lenv=Lenv,Renv=Renv,maxiter=maxiter,updatefct=updatefct,reorth=reorth,effZero=effZero,alpha=alpha,beta=beta,psisave=psisave,cvg=cvg,numE=numE,saveE=saveE,start=start,eigvecs=eigvecs,goal=goal)
+  retbundlepsi = krylov(invec...,Lenv=Lenv,Renv=Renv,maxiter=maxiter,updatefct=updatefct,reorth=reorth,effZero=effZero,alpha=alpha,beta=beta,psisave=psisave,cvg=cvg,numE=numE,saveE=saveE,start=start,eigvecs=eigvecs,goal=goal)
+
+  p = size(retbundlepsi,ndims(retbundlepsi))
+#  while p+1 <= length(alpha) && isassigned(alpha,p+1) #=min(length(alpha),length(psisave)) && isassigned(beta,p+1) && isassigned(psisave,p+1)=#
+#    p += 1
+#  end
 
   D,U = libeigen(alpha,beta,p)
 
-#  println(eigvecs)
+  if typeof(retbundlepsi) <: qarray
+    Qlabels = recoverQNs(ndims(retbundlepsi),retbundlepsi)
+    U = Qtens([inv.(Qlabels),Qlabels],U)
+  end
+
+#  println(p," ",size(retbundlepsi)," ",size(U)," ",size(D))
 
   if eigvecs
     if p < length(psisave)
@@ -150,8 +177,20 @@ function lanczos(invec::R...;Lenv::TensType=default_boundary,Renv::TensType=defa
     end
 
     if m == 0
-      retpsi = psisave
+      retpsi = retbundlepsi
+      D = Diagonal(D)
     else
+      retpsi = contractc(retbundlepsi,ndims(retbundlepsi),U,1)
+
+      truncdim = [i for i = 1:min(m,size(retpsi,ndims(retpsi)))]
+      if double
+        truncdim = vcat(truncdim,[size(retpsi,ndims(retpsi))-m+1,size(retpsi,ndims(retpsi))])
+      end
+
+      retpsi = retpsi[[Colon() for x = 1:ndims(retbundlepsi)-1]...,truncdim]
+      D = Diagonal(D[truncdim])
+#=
+
       retsize = min(p, (double ? 2 : 1 ) * m)
       retpsi = Array{eltype(psisave),1}(undef, (double ? 2 : 1 ) * retsize)
 
@@ -195,15 +234,17 @@ function lanczos(invec::R...;Lenv::TensType=default_boundary,Renv::TensType=defa
         end
 
       end
+    =#
     end
   else
-    if p < length(psisave)
-      psisave = psisave[1:p]
-    end
-    retpsi = psisave
+#    if p < length(psisave)
+#      psisave = psisave[1:p]
+#    end
+    D = Diagonal(alpha,beta)
+    retpsi = retbundlepsi
   end
 
-  return D,retpsi,alpha,beta
+  return D,retpsi,alpha,beta,psisave
 end
 
 """
@@ -227,5 +268,5 @@ function lanczos(psi::AbstractArray,invec::AbstractArray...;Lenv::TensType=defau
     true_retpsi[w] = Array(retpsi[w])
   end
 
-  return D,true_retpsi,alpha,beta
+  return D,true_retpsi,alpha,beta,psisave
 end
