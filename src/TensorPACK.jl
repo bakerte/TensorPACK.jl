@@ -67,15 +67,18 @@ export TENPACK
   end
 
   subdir = "methods/"
-  files = ["plus.jl","abs.jl","add.jl","caret.jl","div.jl","log.jl","minus.jl","mult.jl","other.jl","slash.jl","kron.jl","scalar_star.jl","sub.jl","rand.jl","zeros.jl","ones.jl","eye.jl","eltype.jl","size.jl","length.jl","conj.jl","copy.jl","setindex.jl","getindex.jl","reshape.jl","exp.jl","invmat.jl","sqrt.jl","positionindex.jl","tensor_ranges.jl","minmax.jl","transpose.jl","adjoint.jl","directsum.jl","checktype.jl","sum.jl","norm.jl","convIn.jl","permute.jl","tensorcombination.jl","display.jl","print.jl","ndims.jl","dual.jl","rename.jl","swapname.jl","joinTens.jl","dualnum.jl","root.jl","swapgate.jl","det.jl","convertTens.jl"]
+  files = ["plus.jl","abs.jl","add.jl","caret.jl","div.jl","log.jl","minus.jl","mult.jl","other.jl","slash.jl","kron.jl","scalar_star.jl","sub.jl","rand.jl","zeros.jl","ones.jl","eye.jl","eltype.jl","size.jl","length.jl","conj.jl","copy.jl","setindex.jl","getindex.jl","reshape.jl","exp.jl","invmat.jl","sqrt.jl","positionindex.jl","tensor_ranges.jl","minmax.jl","transpose.jl","adjoint.jl","directsum.jl","checktype.jl","sum.jl","norm.jl","convIn.jl","permute.jl","tensorcombination.jl","display.jl","print.jl","ndims.jl","dual.jl","rename.jl","swapname.jl","joinTens.jl","dualnum.jl","root.jl","swapgate.jl","det.jl","convertTens.jl","lastindex.jl"]
   for w = 1:length(files)
     include(libpath*subdir*files[w])
   end
 
+
+
+
   subdir = "qnumber/"
   include(libpath*subdir*"qnum.jl")
 
-  files = [#="orderblocks.jl",=#"QnumList.jl","matchblocks.jl","changeblock.jl","findextrablocks.jl","Qtens.jl","checkflux.jl"]
+  files = [#="orderblocks.jl",=#"QnumList.jl","matchblocks.jl","changeblock.jl","findextrablocks.jl","Qtens.jl","checkflux.jl","getQnum.jl","recoverQNs.jl"]
   for w = 1:length(files)
     include(libpath*subdir*files[w])
   end
