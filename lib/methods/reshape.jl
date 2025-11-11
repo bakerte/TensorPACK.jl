@@ -260,6 +260,58 @@ end
 
 
 
+"""
+  G = reshape!(M,S[,merge=])
+
+Reshape for `diagonal` from new size `S`--an array--with output `G`
+
+Note: `merge` is not useful for this input but is useful to have for flexibility of code for using quantum number symmetries
+
+See also: [`reshape`](@ref) [`diagonal`](@ref)
+"""
+function reshape!(M::Diagonal{W}, S::intType...;merge::Bool=false) where W <: Number
+  return reshape(Array(M),S...)
+end
+
+"""
+  G = reshape(M,S[,merge=])
+
+Reshape for `diagonal` from new size `S`--an array--with output `G`
+
+Note: `merge` is not useful for this input but is useful to have for flexibility of code for using quantum number symmetries
+
+See also: [`reshape`](@ref) [`diagonal`](@ref)
+"""
+function reshape(M::Diagonal{W}, S::intType...;merge::Bool=false) where W <: Number
+  return reshape!(M,S...)
+end
+
+"""
+  G = reshape(M,S[,merge=])
+
+Reshape for `diagonal` from new size `S`--an array--with output `G`
+
+Note: `merge` is not useful for this input but is useful to have for flexibility of code for using quantum number symmetries
+
+See also: [`reshape`](@ref) [`diagonal`](@ref)
+"""
+function reshape(M::Diagonal{W}, S::Union{Array{intType,1},Union{Array{Array{P,1},1},Tuple}};merge::Bool=false) where {W <: Number, P <: intType}
+  return reshape(M,S)
+end
+
+"""
+  G = reshape!(M,S[,merge=])
+
+Reshape for `diagonal` from new size `S`--an array--with output `G`
+
+Note: `merge` is not useful for this input but is useful to have for flexibility of code for using quantum number symmetries
+
+See also: [`reshape`](@ref) [`diagonal`](@ref)
+"""
+function reshape!(M::Diagonal{W}, S::Union{Array{intType,1},Union{Array{Array{P,1},1},Tuple}};merge::Bool=false) where {W <: Number, P <: intType}
+  return reshape!(M,S)
+end
+
 
 """
    reshape!(A,S...)

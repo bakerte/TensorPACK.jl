@@ -237,17 +237,23 @@ generates an identity matrix from tensor `A` with indices `iA`
 
 See also: [`trace`](@ref)
 """
-function eye(A::Qtens{W,Q},iA::Array{P,1}) where {W <: Number, Q <: Qnum, P <: Integer}
-#  lsize,finalsizes = Idhelper(A,iA)
-  lsize = prod(w->size(A,iA[w][1]),1:length(iA))
-  leftsizes = ntuple(w->size(A,iA[w][1]),length(iA))
-
-  finalsizes = (leftsizes...,leftsizes...)
-
-  leftQNs = [[getQnum(iA[w],x,A) for x = 1:size(A,iA[w])] for w = 1:length(iA)]
-  rightQNs = [inv.(leftQNs[a]) for a = 1:length(leftQNs)]
+function eye(A::Qtens{W,Q},iA::Array{P,1}) where {W <: Number, Q <: Qnum, P <: Tuple}
+  leftQNs = [recoverQNs(iA[w][1],A) for w = 1:length(iA)]
+  rightQNs = [recoverQNs(iA[w][2],A) for w = 1:length(iA)]
   newQnumMat = vcat(leftQNs,rightQNs)
-  typeA = eltype(A)
-  Id = Qtens(typeA,newQnumMat,blockfct=eye)
-  return Id
+  return Qtens(newQnumMat,blockfct=eye,type=W)
+end
+
+"""
+    eye(A,iA)
+
+generates an identity matrix from tensor `A` with indices `iA`
+
+See also: [`trace`](@ref)
+"""
+function eye(A::Qtens{W,Q},iA::Array{P,1}) where {W <: Number, Q <: Qnum, P <: Integer}
+  leftQNs = recoverQNs(iA[1],A)
+  rightQNs = recoverQNs(iA[2],A)
+  newQnumMat = vcat([leftQNs],[rightQNs])
+  return Qtens(newQnumMat,blockfct=eye,type=W)
 end

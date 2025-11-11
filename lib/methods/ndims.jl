@@ -66,3 +66,14 @@ Finds the number of dimensions of the `denstens` `A`
 function basedims(A::denstens)
   return ndims(A)
 end
+
+"""
+    B = ndims(A)
+
+Number of dimensions (rank) `B` of a `diagonal` (identical usage to `Array` `ndims` call); returns a value of 2 for `diagonal`
+
+See also: [`diagonal`](@ref) [`Array`](@ref)
+"""
+function ndims(A::diagonal)
+  return 2
+end

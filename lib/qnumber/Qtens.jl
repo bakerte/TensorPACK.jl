@@ -137,7 +137,8 @@ function Qtens(Qlabels::Array{Array{Q,1},1};type::DataType=Float64,currblock::cu
   @inbounds for q = 1:length(rows)
     if rows[q] > 0 && columns[q] > 0
       counter += 1
-      newblocks[counter] = blockfct(type,rows[q],columns[q])
+      thisT = blockfct(type,rows[q],columns[q])
+      newblocks[counter] = Array(thisT)
       newind[counter] = (Lindexes[q],Rindexes[q])
       finalQblocksum[counter] = newQblocksum[q]
     end
@@ -257,6 +258,15 @@ function Qtens(optens::denstens,Qtensor::qarray;zero::Number=0.,currblock::currb
   Op = Array(optens)
   finalQnumMat = fullQnumMat(Qtensor.QnumMat,Qtensor.QnumSum)
   return Qtens(Op,finalQnumMat,zero=zero,currblock=currblock)
+end
+
+"""
+    Qt = Qtens(operator,QnumMat[,Arrows,zero=])
+
+Creates a dense `operator` (`denstens`) `Qt` as a Qtensor with quantum numbers `QnumMat` on each index (`Array{Array{Q,1},1}`) according to arrow convention `Arrows` and all elements equal to `zero` are not included (default 0)
+"""
+function Qtens(optens::qarray,Qtensor::qarray;zero::Number=0.,currblock::currblockTypes=Qtensor.currblock)
+  return Qtens(Array(optens),Qtensor,zero=zero,currblock=currblock)
 end
 
 """
