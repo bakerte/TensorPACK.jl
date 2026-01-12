@@ -142,7 +142,12 @@ end
 gets the size of a Qtensor (identical usage to dense `size` call)
 """
 function size(A::qarray, i::intType)::intType
-  return prod(w->length(A.QnumMat[w]),A.size[i])
+  if i > length(A.size)
+    out = 1
+  else
+    out = prod(w->length(A.QnumMat[w]),A.size[i])
+  end
+  return out
 end
 
 """
