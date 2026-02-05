@@ -90,6 +90,8 @@ import Base.eltype
 
 
 import Base.Array
+import Base.Matrix
+import Base.Vector
 
 
 import Base.setindex!
