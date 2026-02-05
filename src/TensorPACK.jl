@@ -61,7 +61,7 @@ export TENPACK
   end
 
   subdir = "tensor/"
-  files = ["tens.jl","diagonal.jl","Array.jl","undefMat.jl","dtens.jl","directedtens.jl","nametens.jl","network.jl"]
+  files = ["tens.jl","diagonal.jl","Array.jl","matrix.jl","vector.jl","undefMat.jl","dtens.jl","directedtens.jl","nametens.jl","network.jl"]
   for w = 1:length(files)
     include(libpath*subdir*files[w])
   end
