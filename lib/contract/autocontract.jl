@@ -35,7 +35,7 @@ function contract!(graph::network; exclude::Vector{intType} = intType[])
 		error("The given network is disjoint (note: will remain error message to indicate when graphs are disjoint; if intended then contract them individually, but this flag will remain to notify)")
 	elseif length(graph) == 2
 		answer = graph[1]*graph[2]
-  elseif ((length(graph.net)-num_connections)==1) # checks if the graph is a forest
+    elseif ((length(graph.net)-num_connections)==1) # checks if the graph is a forest
 		answer = greedy_contract(graph,shared_edges,exclude = exclude)
 	else
 		answer = local_contract(graph, shared_edges,exclude = exclude)
