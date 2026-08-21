@@ -5,7 +5,7 @@ version = "0.14.1"
 
 [compat]
 julia = "1.12.0"
-StrassOPen = "0.5.0"
+StrassOPen = "0.5.2"
 LinearAlgebra = "1.12.0"
 Distributed = "1.11.0"
 Printf = "1.11.0"
