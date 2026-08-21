@@ -20,6 +20,13 @@ function libmult(transA::AbstractChar,transB::AbstractChar,A::TensType,B::TensTy
 end
 
 function strassen_choice(transA::AbstractChar,transB::AbstractChar,A::TensType,B::TensType,safe_innerdim::Float64=0.5,strass_crossover::Int64=4096)
+
+  dimA = transA == 'N' ? 1 : 2
+  dimB = transB == 'N' ? 2 : 1
+
+  return ((size(A,dimA) >= strass_crossover || size(B,dimB) >= strass_crossover) && size(A,dimB) > size(A,dimA)*safe_innerdim)
+
+#=
   if transA == 'N' && transB == 'N'
     return ((size(A,1) >= strass_crossover || size(B,2) >= strass_crossover) && size(A,2) > size(A,1)*safe_innerdim)
   elseif transA != 'N' && transB == 'N'
@@ -29,6 +36,7 @@ function strassen_choice(transA::AbstractChar,transB::AbstractChar,A::TensType,B
   else
     return ((size(A,2) >= strass_crossover || size(B,1) >= strass_crossover) && size(A,1) > size(A,2)*safe_innerdim)
   end
+  =#
 end
 
 function libmult(transA::AbstractChar,transB::AbstractChar,alpha::Number,A::TensType,B::TensType,Lsize::Integer,innersizeL::Integer,innersizeR::Integer,Rsize::Integer;use_strassen::Bool=main_use_strassen,safe_innerdim::Float64=0.5,strass_crossover::Int64=4096,level::Int64=1)

@@ -71,9 +71,5 @@ Divides a tensor `A` by a number `num` with output `G`
 See also: [`div!`](@ref)
 """
 function /(M::TensType, num::Number)
-  P = copy(M)
-  @inbounds @simd for w = 1:length(P)
-    P[w] /= num
-  end
-  return P
+  return div!(copy(M),num)
 end

@@ -92,7 +92,7 @@ function Diagonal(alpha::Array{W,1},beta::Array{W,1}) where W <: Union{Array{S,2
 end
 
 """
-    A = Diagonal(alpha,beta)
+    A = diagonal(alpha,beta)
 
 Converts arrays of numbers `alpha` (diagonal column) and `beta` (off-diagonal elements) into a tridiagonal matrix
 """
@@ -101,10 +101,35 @@ function diagonal(alpha::Array{W,1},beta::Array{W,1}) where W <: Real
 end
 
 """
+    M = diagonal(alpha,beta)
+
+Converts arrays of arrays (either `Array{W,2}` or `tens{W}`) numbers `alpha` (diagonal column) and `beta` (off-diagonal elements) into a block-tridiagonal matrix
+"""
+function diagonal(alpha::Array{W,1},beta::Array{W,1}) where W <: Union{Array{S,2},tens{S},qarray} where S <: Number
+  return Diagonal(alpha,beta)
+end
+
+
+"""
     M = Diagonal(alpha,beta)
 
 Converts arrays of arrays (either `Array{W,2}` or `tens{W}`) numbers `alpha` (diagonal column) and `beta` (off-diagonal elements) into a block-tridiagonal matrix
 """
-function diagonal(alpha::Array{W,1},beta::Array{W,1}) where W <: Union{Array{S,2},tens{S}} where S <: Number
-  return Diagonal(alpha,beta)
+function Diagonal(alpha::Array{W,1},beta::Array{W,1}) where W <: qarray
+
+  p = 0
+  while p < length(alpha) && isassigned(alpha,p+1) && isassigned(beta,p+1)
+    p += 1
+  end
+
+  calpha = [Array(alpha[w]) for w = 1:p]
+  cbeta = [Array(beta[w]) for w = 1:p]
+
+  cM = Diagonal(calpha,cbeta)
+
+  LQlabels = vcat([recoverQNs(1,alpha[w]) for w = 1:p]...)
+  RQlabels = vcat([recoverQNs(2,alpha[w]) for w = 1:p]...)
+
+  return Qtens([LQlabels,RQlabels],cM)
 end
+

@@ -226,8 +226,8 @@ Creates an identity matrix based on indices `iA` (any number of integers) of `A`
 
 See also: [`trace`](@ref)
 """
-function eye(A::Array{W,N},iA::Integer...) where {W <: Number,N}
-  return eye(A,[iA...])
+function eye(A::Array{W,N},ciA::Integer,iA::Integer...) where {W <: Number,N}
+  return eye(A,[ciA,iA...])
 end
 
 """

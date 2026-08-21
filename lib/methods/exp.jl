@@ -242,3 +242,24 @@ function exp(C::Qtens{W,Q}) where {W <: Number, Q <: Qnum}
   return exp(C,W(1))
 end
 
+"""
+    B = exp(A)
+
+Create the exponential of an input `Diagonal` `A`
+"""
+function exp(C::Diagonal{W}) where W <: Number
+  return exp!(copy(C))
+end
+
+"""
+    B = exp!(A)
+
+Create the exponential of an input `Diagonal` `A` (in-place)
+"""
+function exp!(C::Diagonal{W}) where W <: Number
+  for w = 1:length(C)
+    C[w] = exp(C[w])
+  end
+  return C
+end
+

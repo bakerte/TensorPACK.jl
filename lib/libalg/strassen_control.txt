@@ -1,0 +1,4 @@
+partial = true
+innderdim = 0.5
+outerdim = 1024
+level = 1
